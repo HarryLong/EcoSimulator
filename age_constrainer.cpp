@@ -1,6 +1,6 @@
 #include "age_constrainer.h"
 
-AgeConstrainer::AgeConstrainer(const AgeingProperties * p_ageing_properties) : m_ageing_properties(p_ageing_properties), m_age(0), m_pre_prime_equation(NULL),
+AgeConstrainer::AgeConstrainer(std::shared_ptr<AgeingProperties> p_ageing_properties) : m_ageing_properties(p_ageing_properties), m_age(0), m_pre_prime_equation(NULL),
     m_post_prime_equation(NULL)
 {
     // Build the pre-prime linear equation
@@ -34,15 +34,11 @@ int AgeConstrainer::getStrength()
 {
     if(m_age <= m_ageing_properties->avg_prime_age)
     {
-        return 1000 - ((m_pre_prime_equation->a * m_age) + m_pre_prime_equation->b);
+        return 1000 - m_pre_prime_equation->calculateY<int>(m_age);
     }
-    else if(m_age <= m_ageing_properties->avg_max_age)
+    else // post prime
     {
-        return 1000 - ((m_post_prime_equation->a * m_age) + m_post_prime_equation->b);
-    }
-    else // Passed maximum age
-    {
-        return 1000 - (m_ageing_properties->probability_of_death_at_max);
+        return 1000 - m_post_prime_equation->calculateY<int>(m_age);
     }
 }
 

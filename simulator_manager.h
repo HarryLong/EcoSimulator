@@ -3,21 +3,18 @@
 
 #include "uchar.h"
 #include "time_manager.h"
-#include "display_area.h"
+#include "renderer.h"
 #include "plant_factory.h"
+#include "plants_storage.h"
+#include "helper.h"
+#include "constants.h"
 
 #include <QObject>
 #include <vector>
-#include <QRgb>
-#include <string>
-#include "constants.h"
-#include "helper.h"
 #include <map>
-#include <array>
+#include <unordered_set>
 
 class Plant;
-
-typedef std::map<long, Plant*> plant_map_type;
 
 class SimulatorManager : public QObject, public TimeListener
 {
@@ -26,34 +23,35 @@ public:
     SimulatorManager();
     ~SimulatorManager();
     void start();
-    DisplayArea * getDisplay() { return m_display; }
+    void stop();
     virtual void trigger();
     void addPlant(Plant * p_plant);
+    int getElapsedMonths() { return m_elapsed_months; }
 
-public slots:
-    void setTimeAcceleration(int p_acceleration);
+    PlantRenderDataContainer getPlantData();
+    PlantBoundingBoxContainer getBoundingBoxData();
+    void setMonthlyTriggerFrequency(int p_frequency);
+
+signals:
+    void update();
 
 private:
     TimeManager m_time_keeper;
 
-    DisplayArea * m_display;
-
-    QRgb * m_display_data;
-    std::array<std::vector<Plant*>,AREA_WIDTH*AREA_HEIGHT> m_world_plant_ref;
-
-    std::map<long,Plant*> m_plants;
-
+    PlantBoundingBoxContainer m_world_plant_id_ref;
+    PlantRenderDataContainer m_plant_rendering_data;
+    std::map<long, int> m_drawn_radii;
+    PlantStorage m_plant_storage;
     PlantFactory m_plant_factory;
 
     void remove_plant_data(Plant* p_plant);
+    int m_elapsed_months;
 
     // TEMPORARY
     void generate_random_plants();
-    Coordinate toCoord(int p_index);
-    int toIndex(Coordinate p_coord);
+    Coordinate to_coord(int p_index);
+    int to_index(Coordinate p_coord);
     int get_random_index();
-    bool check_position_valid(Coordinate c);
-    bool is_shadowed(const Plant * p_plant, const Coordinate & p_coord);
 };
 
 #endif //SIMULATOR_MANAGER_H

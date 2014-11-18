@@ -5,6 +5,8 @@
 #include <map>
 #include <set>
 
+class Plant;
+
 using namespace std;
 
 struct Coordinate{
@@ -23,6 +25,11 @@ public:
     double b;
 
     LinearEquation(double p_a, double p_b) : a(p_a), b(p_b) {
+    }
+
+    template <class T> double calculateY(T x)
+    {
+        return a * x + b;
     }
 };
 

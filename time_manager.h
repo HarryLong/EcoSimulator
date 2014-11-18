@@ -5,7 +5,6 @@
 #include <atomic>
 #include <thread>
 
-
 #define CLOCKS_PER_MILLISECONDS CLOCKS_PER_SEC/1000
 
 class TimeListener

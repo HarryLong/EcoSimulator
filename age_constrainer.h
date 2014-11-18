@@ -1,6 +1,7 @@
 #ifndef AGE_CONSTRAINER_H
 #define AGE_CONSTRAINER_H
 #include "helper.h"
+#include <memory>
 
 struct AgeingProperties {
     int probability_of_death_at_birth;
@@ -19,7 +20,7 @@ struct AgeingProperties {
 class AgeConstrainer
 {
 public:
-    AgeConstrainer(const AgeingProperties * p_ageing_properties);
+    AgeConstrainer(std::shared_ptr<AgeingProperties> p_ageing_properties);
     ~AgeConstrainer();
 
     void incrementAge(int months = 1);
@@ -28,7 +29,7 @@ public:
 
 private:
     int m_age;
-    const AgeingProperties * m_ageing_properties;
+    std::shared_ptr<AgeingProperties> m_ageing_properties;
     LinearEquation * m_pre_prime_equation;
     LinearEquation * m_post_prime_equation;
 

@@ -32,8 +32,9 @@ void TimeManager::start()
 
 void TimeManager::stop()
 {
-    setUnitTime(0); // This will ensure the current thread stops
     m_run.store(false);
+    setUnitTime(0); // This will ensure the current thread stops
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME*2)); // Ensure the timer has stopped
 }
 
 void TimeManager::setUnitTime(int p_unit_time_ms)
@@ -55,7 +56,7 @@ void TimeManager::process_one_unit_time()
     using namespace std::chrono;
 
     auto t_start = high_resolution_clock::now();
-    std::chrono::milliseconds sleep_time(50);
+    std::chrono::milliseconds sleep_time(SLEEP_TIME);
 
     high_resolution_clock::time_point t_end;
 

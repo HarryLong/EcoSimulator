@@ -7,7 +7,12 @@
 #include <qnamespace.h>
 #include <QVector>
 #include <QRgb>
-#define COLORS Qt::red, Qt::black, Qt::yellow, Qt::green, Qt::white, Qt::blue, Qt::magenta
+#define COLORS Qt::red, Qt::yellow, Qt::green, Qt::white, Qt::blue, Qt::magenta
+#define COLOR_COUNT 6
+
+#include <unordered_set>
+
+class Plant;
 
 class DisplayArea : public QWidget
 {
@@ -19,7 +24,10 @@ public:
 
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
-    void setData(uchar* p_image_data);
+    void drawPlants(const std::vector<Plant*> & p_incremental_sorted_plants);
+
+    // Test methods
+    void drawBoundingBoxes(const std::vector<std::unordered_set<int>*> & p_bounding_box_data);
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -33,6 +41,9 @@ private:
     QImage * m_image;
     QPalette m_pal;
     std::vector<Qt::GlobalColor> m_colors;
+
+    // Test method
+    QRgb get_random_color();
 };
 
 #endif //DISPLAY_AREA_H

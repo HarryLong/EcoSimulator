@@ -1,4 +1,5 @@
 #include "helper.h"
+#include <algorithm>
 
 extern bool operator==(Coordinate const& c1, Coordinate const& c2)
 {

@@ -1,45 +1,67 @@
 #ifndef PLANT_H
 #define PLANT_H
 
-#include "eco_data.h"
 #include <string>
-#include <QRgb>
-#include "growth_manager.h"
-#include "age_constrainer.h"
-#include "illumination_constrainer.h"
+#include <QColor>
+#include "helper.h"
+#include <unordered_set>
+#include "plants_storage.h"
+
+class AgeConstrainer;
+class IlluminationConstrainer;
+class GrowthManager;
+
+struct Strengths
+{
+    int age;
+    int illumination;
+
+    int getMin() { return min(age, illumination); }
+
+    Strengths() : age(1000), illumination(1000) {}
+};
 
 class Plant {
 public:
-    Plant(std::string p_name, QRgb p_color, Coordinate p_center_coord, long p_unique_id, int p_random_id,
+    Plant(std::string p_name, QColor p_color, Coordinate p_center_coord, long p_unique_id, int p_random_id,
           GrowthManager * p_growth_manager, AgeConstrainer * p_age_constrainer,
           IlluminationConstrainer * p_illumination_constrainer);
     ~Plant();
 
-    void newMonth();
+    void newMonth(); // Returns the radius increase
 
-    void setShadowedPointsRatio(float ratio) {
-       std::cout << "Ratio: " << ratio << "| Random id: " << m_random_id << std::endl;
-        m_shadowed_points_ratio = ratio;
+    float getHeight() const;
+    float getCanopyRadius() const;
+
+    bool survives() {
+        if(m_random_id < m_strengths.getMin())
+            return true;
+        else
+        {
+            if(m_strengths.age < m_strengths.illumination)
+                std::cout << "DEATH BY AGE!" << std::endl;
+            else
+                std::cout << "DEATH BY ILLUMINATION" << std::endl;
+            return false;
+        }
     }
 
-    float getHeight() const { return m_growth_manager->getHeight(); }
-    const CoordinateHolder & getNewPositions() const { return m_new_positions;}
-    const CoordinateHolder & getPositions() const { return m_positions;}
-    bool survives() { return m_random_id < m_overall_strength ;}
-
     const std::string m_name;
-    const QRgb m_color;
+    const QColor m_color;
     const int m_unique_id;
     const Coordinate m_center_position;
+
+    void addIntersectingPlantId(int p_plant_id);
+    void removeIntersectingPlantId(int p_plant_id);
+    const std::unordered_set<int> getIntersectingPlantIds() const { return m_intersecting_plant_ids; }
+
+    void addToWorldIndices(int index);
+    const std::vector<int> & getWorldIndices() const { return m_world_indices; }
+
+    void calculateStrength(const PlantStorage & p_plant_storage);
 private:
     void calculate_new_positions();
-    void calculate_overall_strength();
-
-    // All this could be moved into a seperate sizeing class
-    CoordinateHolder m_positions;
-    CoordinateHolder m_new_positions;
-    float m_shadowed_points_ratio;
-    int m_current_canopy_radius; // in pixels
+    float calculate_intersection_area(const Coordinate & p_circle_center, float p_circle_radius);
 
     // Managers
     GrowthManager * m_growth_manager;
@@ -48,8 +70,13 @@ private:
     AgeConstrainer * m_age_constrainer;
     IlluminationConstrainer * m_illumination_constrainer;
 
-    float m_overall_strength;
+    std::vector<int> m_world_indices;
+    std::unordered_set<int> m_intersecting_plant_ids;
+
+    Strengths m_strengths;
     int m_random_id;
+
+    int previously_appended_interesecting_plant_id;
 };
 
 #endif //PLANT_H
