@@ -9,6 +9,12 @@ class Plant;
 
 using namespace std;
 
+enum PlantStatus{
+    Alive,
+    DeathByAge,
+    DeathByIllumination
+};
+
 struct Coordinate{
 public:
     Coordinate() : x(0), y(0) {}
@@ -21,13 +27,13 @@ public:
 struct LinearEquation
 {
 public:
-    double a;
-    double b;
+    float a;
+    float b;
 
     LinearEquation(double p_a, double p_b) : a(p_a), b(p_b) {
     }
 
-    template <class T> double calculateY(T x)
+    float calculateY(float x)
     {
         return a * x + b;
     }

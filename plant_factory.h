@@ -2,9 +2,7 @@
 #define PLANT_FACTORY_H
 
 #include <map>
-#include "age_constrainer.h"
 #include "growth_manager.h"
-#include "illumination_constrainer.h"
 #include <string>
 #include <QColor>
 #include "dice_roller.h"
@@ -20,7 +18,7 @@ enum Specie {
     BANANA_TREE
 };
 
-struct AggregatedProperties {
+struct SpecieProperties {
     std::shared_ptr<AgeingProperties> ageing_properties;
     std::shared_ptr<GrowthProperties> growth_properties;
     std::shared_ptr<IlluminationProperties> illumination_properties;
@@ -28,7 +26,7 @@ struct AggregatedProperties {
     std::string name;
     QColor color;
 
-    AggregatedProperties(std::string p_name, QColor p_color, std::shared_ptr<AgeingProperties> p_ageing_properties,
+    SpecieProperties(std::string p_name, QColor p_color, std::shared_ptr<AgeingProperties> p_ageing_properties,
                          std::shared_ptr<GrowthProperties> p_growth_properties, std::shared_ptr<IlluminationProperties> p_illumination_properties) :
         name(p_name), color(p_color), ageing_properties(p_ageing_properties), growth_properties(p_growth_properties),
         illumination_properties(p_illumination_properties){}
@@ -46,7 +44,7 @@ public:
 private:
     void populate_db();
     void init_plant_properties();
-    std::map<Specie, AggregatedProperties> m_property_db;
+    std::map<Specie, SpecieProperties> m_property_db;
     DiceRoller m_dice_roller;
 
     // NOTE: ALL PROBABILITIES IN PER THOUSAND

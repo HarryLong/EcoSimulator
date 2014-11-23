@@ -5,115 +5,100 @@
 #include <algorithm>
 #include "boost/foreach.hpp"
 
+#include "debuger.h"
+
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 
-SimulatorManager::SimulatorManager() : m_time_keeper(), m_plant_storage(), m_plant_factory(), m_world_plant_id_ref(AREA_WIDTH*AREA_HEIGHT),
-    m_drawn_radii(), m_elapsed_months(0)
+SimulatorManager::SimulatorManager() : m_time_keeper(), m_plant_storage(), m_plant_factory(), m_elapsed_months(0), m_state(Stopped),
+    m_environment_mgr()
 {
-    std::generate(m_world_plant_id_ref.begin(), m_world_plant_id_ref.end(), []() { return new std::unordered_set<int>();});
-
     m_time_keeper.addListener(this);
-    generate_random_plants();
 }
 
 SimulatorManager::~SimulatorManager()
 {
-    for(int i = 0; i < AREA_WIDTH*AREA_HEIGHT; i++)
-    {
-        delete m_world_plant_id_ref[i];
-    }
 }
 
-void SimulatorManager::addPlant(Plant * p_plant)
+void SimulatorManager::add_plant(Plant * p_plant)
 {
     m_plant_storage.add(p_plant);
-    int index = to_index(p_plant->m_center_position);
-    p_plant->addToWorldIndices(index);
-    m_world_plant_id_ref[index]->insert(p_plant->m_unique_id);
-    m_drawn_radii[p_plant->m_unique_id] = 0;
+
+    emit newPlant(QString(p_plant->m_name.c_str()), p_plant->m_color);
 }
 
-void SimulatorManager::remove_plant_data(Plant * p_plant)
+void SimulatorManager::remove_plant(int p_plant_id)
 {
-    m_drawn_radii.erase(p_plant->m_unique_id);
-    BOOST_FOREACH(int index, p_plant->getWorldIndices())
-    {
-        m_world_plant_id_ref[index]->erase(p_plant->m_unique_id);
-    }
-
-    // Remove plants which reference it as an intersecting plant
-    BOOST_FOREACH(int intersecting_plant_id, p_plant->getIntersectingPlantIds())
-    {
-        m_plant_storage.removeIntersectingPlantId(intersecting_plant_id, p_plant->m_unique_id);
-    }
+    m_plant_storage.remove(p_plant_id);
 }
 
 void SimulatorManager::start()
 {
+    m_state = Running;
+    generate_random_plants();
+    m_stopping.store(false);
     m_time_keeper.start();
+}
+
+void SimulatorManager::resume()
+{
+    m_state = Running;
+    m_stopping.store(false);
+    m_time_keeper.start();
+}
+
+void SimulatorManager::pause()
+{
+    m_state = Paused;
+    m_stopping.store(true);
+    m_time_keeper.stop();
 }
 
 void SimulatorManager::stop()
 {
+    m_state = Stopped;
+    m_stopping.store(true);
     m_time_keeper.stop();
+
+    m_environment_mgr.reset();
+    m_plant_rendering_data.clear();
+    m_plant_storage.clear();
+    m_elapsed_months = 0;
+
+    emit update();// In order to remove on screen elements
 }
 
-void SimulatorManager::trigger()
+void SimulatorManager::newMonth()
 {
+    if(m_stopping.load())
+        return;
+
     m_elapsed_months++;
 
-    std::vector<int> plant_ids_to_remove;
-    std::set<int> intersecting_plant_ids;
     m_plant_rendering_data.clear();
+
+    // TODO: First iterate once calculating strength based on previously generated environment data
     BOOST_FOREACH(Plant * p, m_plant_storage.getSortedPlants())
     {
-        p->calculateStrength(m_plant_storage);
-        intersecting_plant_ids.clear();
-        if(p->survives())
+        // TODO: Build list of potential intersecting plant ids to pass with it for calculating the strength
+        float radius(p->getCanopyRadius());
+
+        // Get
+        float illumination (m_environment_mgr.getIlluminationPercentage(p->m_center_position, p->getCanopyRadius(), p->getHeight()));
+        p->calculateStrength(illumination);
+    }
+
+    std::vector<int> plant_ids_to_remove;
+
+    BOOST_FOREACH(Plant * p, m_plant_storage.getSortedPlants())
+    {
+        PlantStatus status (p->getStatus());
+        if(status == Alive)
         {
             p->newMonth();
-            int old_canopy_radius(m_drawn_radii[p->m_unique_id]);
-            int new_canopy_radius(METER_IN_PIXELS* (p->getCanopyRadius()/100));
-            if(new_canopy_radius - old_canopy_radius > 0)
-            {
-                int center_x(p->m_center_position.x);
-                int center_y(p->m_center_position.y);
-                for(int i = -new_canopy_radius; i <= new_canopy_radius; i++)
-                {
-                    for(int k = old_canopy_radius+1; k <= new_canopy_radius; k++)
-                    {
-                        std::vector<Coordinate> coordinates_to_add;
-                        // TOP
-                        coordinates_to_add.push_back(Coordinate(center_x + i, center_y + k));
-                        // BOTTOM
-                        coordinates_to_add.push_back(Coordinate(center_x + i, center_y - k));
 
-                        if(i >= - old_canopy_radius && i <= old_canopy_radius)
-                        {
-                            // LEFT
-                            coordinates_to_add.push_back(Coordinate(center_x - k, center_y + i));
-                            // RIGHT
-                            coordinates_to_add.push_back(Coordinate(center_x + k, center_y + i));
-                        }
+            // Update the environment
+            m_environment_mgr.setSize(p->m_center_position, p->getCanopyRadius(), p->getHeight(), p->m_unique_id);
 
-                        BOOST_FOREACH(Coordinate c, coordinates_to_add)
-                        {
-                            if(c.x < AREA_WIDTH && c.x >= 0 &&
-                                    c.y < AREA_HEIGHT && c.y > 0)
-                            {
-                                int index(to_index(c));
-                                p->addToWorldIndices(index);
-
-                                // Manage the intersecting plants
-                                m_plant_storage.addIntersectingPlantIds(p->m_unique_id, m_world_plant_id_ref[index]);
-                                // Add to the world map
-                                m_world_plant_id_ref[index]->insert(p->m_unique_id);
-                            }
-                        }
-                    }
-                }
-                m_drawn_radii[p->m_unique_id] = new_canopy_radius;
-            }
             // Insert the plant into list of plants to render
             m_plant_rendering_data.push_back(
                         PlantRenderingData(p->m_name, p->m_color, p->m_center_position, p->getHeight(), p->getCanopyRadius())
@@ -121,15 +106,15 @@ void SimulatorManager::trigger()
         }
         else
         {
-            std::cout << "REMOVING PLANT" << std::endl;
             plant_ids_to_remove.push_back(p->m_unique_id);
-            remove_plant_data(p);
+            m_environment_mgr.remove(p->m_center_position, p->getCanopyRadius(), p->m_unique_id);
+            emit removedPlant(QString(p->m_name.c_str()), plant_status_to_string(status));
         }
     }
     // Remove the plants
     BOOST_FOREACH(int id, plant_ids_to_remove)
     {
-        m_plant_storage.remove(id);
+        remove_plant(id);
     }
 
     std::sort(m_plant_rendering_data.begin(), m_plant_rendering_data.end(),
@@ -138,207 +123,49 @@ void SimulatorManager::trigger()
     emit update();
 }
 
-PlantRenderDataContainer SimulatorManager::getPlantData()
+PlantRenderDataContainer SimulatorManager::getPlantRenderingData()
 {
     return m_plant_rendering_data;
 }
 
-PlantBoundingBoxContainer SimulatorManager::getBoundingBoxData()
+IlluminationSpatialHashMap SimulatorManager::getIlluminationRenderingData()
 {
-    return m_world_plant_id_ref;
+    return m_environment_mgr.getIlluminationRenderingData();
 }
 
 void SimulatorManager::setMonthlyTriggerFrequency(int p_frequency)
 {
     m_time_keeper.setUnitTime(p_frequency);
-
-}
-
-Coordinate SimulatorManager::to_coord(int p_index)
-{
-    return Coordinate(p_index%AREA_WIDTH, (p_index/AREA_WIDTH));;
-}
-
-int SimulatorManager::to_index(Coordinate p_coord)
-{
-    return ((p_coord.y * AREA_WIDTH) + p_coord.x);
 }
 
 void SimulatorManager::generate_random_plants()
 {
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, to_coord(get_random_index())));
-
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-    addPlant(m_plant_factory.generate(Specie::OAK_TREE, to_coord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OAK_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::OLIVE_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::PEANUT_TREE, toCoord(get_random_index())));
-
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
-//    addPlant(m_plant_factory.generate(Specie::BANANA_TREE, toCoord(get_random_index())));
+    add(Specie::OAK_TREE, 100);
+    add(Specie::BANANA_TREE, 100);
+    add(Specie::OLIVE_TREE, 100);
+    add(Specie::PEANUT_TREE, 100);
 }
 
-int SimulatorManager::get_random_index()
+void SimulatorManager::add(Specie specie, int count)
 {
-    int random_position = rand()%(AREA_WIDTH*AREA_HEIGHT);    
-    while(!m_world_plant_id_ref[random_position]->empty())
-        random_position = rand()%(AREA_WIDTH*AREA_HEIGHT);
-    return random_position;
+    for(int i = 0; i < count; i++)
+        add_plant(m_plant_factory.generate(specie, generate_random_position()));
 }
+
+Coordinate SimulatorManager::generate_random_position()
+{
+    return Coordinate(rand()%AREA_WIDTH_HEIGHT, rand()%AREA_WIDTH_HEIGHT);
+}
+
+QString SimulatorManager::plant_status_to_string(PlantStatus status)
+{
+    switch (status){
+        case DeathByAge:
+            return QString("Age");
+        case DeathByIllumination:
+            return  QString("Light");
+    default:
+        return QString("This is a bug!");
+    }
+}
+

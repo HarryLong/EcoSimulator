@@ -7,76 +7,60 @@
 #include <unordered_set>
 #include "plants_storage.h"
 
-class AgeConstrainer;
-class IlluminationConstrainer;
 class GrowthManager;
 
-struct Strengths
-{
-    int age;
-    int illumination;
+class AgeingProperties;
+class IlluminationProperties;
+class GrowthProperties;
 
-    int getMin() { return min(age, illumination); }
+class AgeConstrainer;
+class IlluminationConstrainer;
 
-    Strengths() : age(1000), illumination(1000) {}
+enum ConstrainerType{
+    Age,
+    Illumination
+};
+
+typedef std::map<ConstrainerType, float> Strengths;
+
+struct Constrainers{
+    AgeConstrainer * age_constrainer;
+    IlluminationConstrainer * illumination_constrainer;
 };
 
 class Plant {
 public:
     Plant(std::string p_name, QColor p_color, Coordinate p_center_coord, long p_unique_id, int p_random_id,
-          GrowthManager * p_growth_manager, AgeConstrainer * p_age_constrainer,
-          IlluminationConstrainer * p_illumination_constrainer);
+          std::shared_ptr<GrowthProperties> p_growth_properties, std::shared_ptr<AgeingProperties> p_ageing_properties,
+          std::shared_ptr<IlluminationProperties> p_illumination_properties);
     ~Plant();
 
-    void newMonth(); // Returns the radius increase
+    void newMonth();
 
     float getHeight() const;
     float getCanopyRadius() const;
 
-    bool survives() {
-        if(m_random_id < m_strengths.getMin())
-            return true;
-        else
-        {
-            if(m_strengths.age < m_strengths.illumination)
-                std::cout << "DEATH BY AGE!" << std::endl;
-            else
-                std::cout << "DEATH BY ILLUMINATION" << std::endl;
-            return false;
-        }
-    }
+    PlantStatus getStatus();
+    void calculateStrength(float p_shaded_ratio);
 
     const std::string m_name;
     const QColor m_color;
     const int m_unique_id;
     const Coordinate m_center_position;
 
-    void addIntersectingPlantId(int p_plant_id);
-    void removeIntersectingPlantId(int p_plant_id);
-    const std::unordered_set<int> getIntersectingPlantIds() const { return m_intersecting_plant_ids; }
-
-    void addToWorldIndices(int index);
-    const std::vector<int> & getWorldIndices() const { return m_world_indices; }
-
-    void calculateStrength(const PlantStorage & p_plant_storage);
 private:
-    void calculate_new_positions();
-    float calculate_intersection_area(const Coordinate & p_circle_center, float p_circle_radius);
-
     // Managers
     GrowthManager * m_growth_manager;
 
     // Constrainers
-    AgeConstrainer * m_age_constrainer;
-    IlluminationConstrainer * m_illumination_constrainer;
-
-    std::vector<int> m_world_indices;
-    std::unordered_set<int> m_intersecting_plant_ids;
+    Constrainers m_constrainers;
 
     Strengths m_strengths;
-    int m_random_id;
+    ConstrainerType m_strength_bottleneck;
+    float m_min_strength;
 
-    int previously_appended_interesecting_plant_id;
+    int m_random_id; // Random number between 0 and 1000 used for statistical purposes
+    int m_age;
 };
 
 #endif //PLANT_H

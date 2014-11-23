@@ -10,6 +10,7 @@
 #include "helper.h"
 
 #include <unordered_set>
+#include "environment_manager.h"
 
 class Plant;
 
@@ -28,12 +29,16 @@ struct PlantRenderingData{
 };
 
 typedef std::vector<PlantRenderingData> PlantRenderDataContainer;
-typedef std::vector<std::unordered_set<int>*> PlantBoundingBoxContainer;
+struct RenderData {
+    PlantRenderDataContainer plant_render_data;
+    IlluminationSpatialHashMap environmnent_render_data;
+};
 
 class Renderer : public QWidget
 {
 public:
-    Renderer(int p_width, int p_height, QWidget *parent = 0);
+    Renderer(QWidget *parent = 0);
+    virtual void render(RenderData render_data) = 0;
     virtual ~Renderer();
 
     QSize minimumSizeHint() const;
@@ -41,16 +46,17 @@ public:
 
 protected:
     virtual void init_layout() = 0;
+    int to_screen_space(float p_distance_in_cm);
 
-    int m_width, m_height;
+    float m_screen_space_multiplier;
 };
 
 class PlantRenderer : public Renderer
 {
     Q_OBJECT
 public:
-    PlantRenderer(int p_width, int p_height, QWidget *parent = 0);
-    virtual void render(PlantRenderDataContainer render_data);
+    PlantRenderer(QWidget *parent = 0);
+    virtual void render(RenderData p_render_data);
 
 protected:
     virtual void paintEvent(QPaintEvent * event);
@@ -60,23 +66,18 @@ private:
     PlantRenderDataContainer m_plant_data;
 };
 
-#define COLORS Qt::red, Qt::yellow, Qt::green, Qt::white, Qt::blue, Qt::magenta
-#define COLOR_COUNT 6
-class BoundingBoxRenderer : public Renderer
+class LightingRenderer : public Renderer
 {
     Q_OBJECT
 public:
-    BoundingBoxRenderer(int p_width, int p_height, QWidget *parent = 0);
-    virtual void render(PlantBoundingBoxContainer render_data);
+    LightingRenderer(QWidget *parent = 0);
+    virtual void render(RenderData p_render_data);
 
 protected:
     virtual void init_layout();
 
 private:
-    void set_image(QImage & image);
-    QLabel m_container_label;
-
-    // Test method
-    QRgb get_random_color();
+    virtual void paintEvent(QPaintEvent * event);
+    IlluminationSpatialHashMap m_illumination_spatial_hashmap;
 };
 #endif //RENDERER_H

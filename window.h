@@ -5,21 +5,17 @@
 #include <QScopedPointer>
 #include <QComboBox>
 #include <QSlider>
-#include "display_area.h"
 #include "time_manager.h"
 #include "simulator_manager.h"
 #include <map>
+#include "overview_widget.h"
+#include "render_manager.h"
+#include <QPushButton>
 
-
-enum AltRenderType{
-    NONE = 0,
-    BOUNDING_BOX
-};
-
-struct AlternativeRenderers
-{
-    BoundingBoxRenderer * bounding_box;
-};
+const static QString START_BTN_TEXT = "Start";
+const static QString STOP_BTN_TEXT = "Stop";
+const static QString RESUME_BTN_TEXT = "Resume";
+const static QString PAUSE_BTN_TEXT = "Pause";
 
 class Window : public QWidget
 {
@@ -30,27 +26,33 @@ public:
 
 public slots:
     void updateRender();
-    void setAltRenderer(int index);
     void setTimeAcceleration(int acceleration);
 
 protected:
     virtual void closeEvent ( QCloseEvent * event );
 
+private slots:
+    void start_stop_btn_clicked();
+    void pause_resume_btn_clicked();
+
 private:
     void init_layout();
-    void init_renderers();
+    void init_widgets();
     void init_signals();
 
-    PlantRenderer * m_main_renderer;
-    AlternativeRenderers m_alt_renderers;
+    RendererManager m_render_manager;
+
     SimulatorManager m_simulator_manager;
+    OverViewWidget * m_overview_widget;
+    std::map<int, Renderer*> m_renderers_holder;
+
+    // UI ELEMENTS
     QSlider * m_time_control_slider;
     QLabel * m_trigger_frequency_lbl;
     QLabel * m_elapsed_time_lbl;
-    QComboBox * m_alt_render_cb;
-    std::map<int, Renderer*> m_alt_renderers_holder;
-
-    int alt_render_selected_index;
+    QComboBox * m_renderers_cb;
+    QPushButton * m_stop_start_button;
+    QPushButton * m_pause_resume_button;
 };
 
 #endif //WINDOW_H

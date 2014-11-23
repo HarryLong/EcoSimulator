@@ -2,13 +2,7 @@
 #define GROWTH_MANAGER_H
 
 #include <memory>
-
-struct GrowthProperties {
-    float monthly_growth; // cm per month
-    float height_to_radius_ratio;
-
-    GrowthProperties( float p_monthly_growth, float p_height_to_width_ratio) : monthly_growth(p_monthly_growth), height_to_radius_ratio(p_height_to_width_ratio) {}
-};
+#include "plant_properties.h"
 
 class GrowthManager
 {

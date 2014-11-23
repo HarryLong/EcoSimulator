@@ -5,12 +5,11 @@
 #include <QGridLayout>
 #include "constants.h"
 
-Window::Window() : m_simulator_manager(), m_alt_renderers_holder(), alt_render_selected_index(AltRenderType::NONE)
+Window::Window() : m_simulator_manager(), m_renderers_holder()
 {
-    init_renderers();
+    init_widgets();
     init_layout();
     init_signals();
-    m_simulator_manager.start();
 }
 
 Window::~Window()
@@ -32,13 +31,15 @@ void Window::init_layout()
 
     QVBoxLayout * info_heading_layout = new QVBoxLayout();
     {
-        // Alternative renderers combo box
+        // Renderers combo box
         QHBoxLayout * heading_layout = new QHBoxLayout();
-        m_alt_render_cb = new QComboBox();
-        m_alt_render_cb->addItem("None");
-        m_alt_render_cb->addItem("Bounding Box");
-        heading_layout->addWidget(new QLabel("Alternative Layout: "));
-        heading_layout->addWidget(m_alt_render_cb);
+        m_renderers_cb = new QComboBox();
+
+        for(QString renderer_name : m_render_manager.getRendererNames())
+            m_renderers_cb->addItem(renderer_name);
+
+        heading_layout->addWidget(new QLabel("Active Renderer: "));
+        heading_layout->addWidget(m_renderers_cb);
 
         // Trigger freuqncy label
         m_trigger_frequency_lbl = new QLabel();
@@ -46,64 +47,70 @@ void Window::init_layout()
         // Elapsed time label
         m_elapsed_time_lbl = new QLabel();
 
+        m_stop_start_button = new QPushButton(START_BTN_TEXT);
+        m_pause_resume_button = new QPushButton(PAUSE_BTN_TEXT);
+        m_pause_resume_button->setEnabled(false);
+
         info_heading_layout->addLayout(heading_layout);
         info_heading_layout->addWidget(m_trigger_frequency_lbl);
         info_heading_layout->addWidget(m_elapsed_time_lbl);
+        info_heading_layout->addWidget(m_stop_start_button);
+        info_heading_layout->addWidget(m_pause_resume_button);
     }
 
     QGridLayout * main_layout = new QGridLayout;
     main_layout->addLayout(info_heading_layout,0,0,1,2, Qt::AlignCenter);
-    main_layout->addWidget(m_main_renderer,1,0,9,1, Qt::AlignRight);
-    main_layout->addWidget(m_alt_renderers.bounding_box,1,1,9,1, Qt::AlignLeft);
+
+    // Add renderers
+    for(QWidget* renderer : m_render_manager.getRendererWidgets())
+        main_layout->addWidget(renderer,1,0,9,1, Qt::AlignCenter);
+
+    main_layout->addWidget(m_overview_widget,1,1,9,1, Qt::AlignCenter);
     main_layout->addLayout(slider_layout,10,0,1,2, Qt::AlignBottom);
 
     setLayout(main_layout);
     setWindowTitle("ECOSYSTEM SIMULATOR");
 }
 
-void Window::init_renderers()
+void Window::init_widgets()
 {
-    m_main_renderer = new PlantRenderer(AREA_WIDTH, AREA_HEIGHT);
-
-    // Bounding box
-    m_alt_renderers.bounding_box = new BoundingBoxRenderer(AREA_WIDTH, AREA_HEIGHT);
-    m_alt_renderers.bounding_box->setVisible(false);
-    m_alt_renderers_holder[AltRenderType::BOUNDING_BOX] = m_alt_renderers.bounding_box;
+    m_overview_widget = new OverViewWidget();
 }
 
 void Window::init_signals()
 {
+    // Start button
+    connect(m_stop_start_button, SIGNAL(clicked()), this, SLOT(start_stop_btn_clicked()));
+    connect(m_pause_resume_button, SIGNAL(clicked()), this, SLOT(pause_resume_btn_clicked()));
+
     // Slider accelerates times
     connect(m_time_control_slider, SIGNAL(valueChanged(int)), this, SLOT(setTimeAcceleration(int)));
+
     m_time_control_slider->setValue(TIME_SLIDER_DEFAULT); // Triggers the default value
 
     // Simulator manager update triggers a re-render
     connect(&m_simulator_manager, SIGNAL(update()),
             this, SLOT(updateRender()));
 
-    connect(m_alt_render_cb, SIGNAL(currentIndexChanged(int)), this, SLOT(setAltRenderer(int)));
+    connect(m_renderers_cb, SIGNAL( currentIndexChanged(QString) ), &m_render_manager, SLOT( setActiveRenderer(QString) ));
+
+    // The overview widget to the simulator
+    connect(&m_simulator_manager, SIGNAL(newPlant(QString, QColor)), m_overview_widget, SLOT(addPlant(QString,QColor)));
+    connect(&m_simulator_manager, SIGNAL(removedPlant(QString, QString)), m_overview_widget, SLOT(removePlant(QString,QString)));
 }
 
 void Window::updateRender()
 {
-    m_alt_renderers.bounding_box->render(m_simulator_manager.getBoundingBoxData());
-    m_main_renderer->render(m_simulator_manager.getPlantData());
+    RenderData render_data;
+    render_data.plant_render_data = m_simulator_manager.getPlantRenderingData();
+    render_data.environmnent_render_data = m_simulator_manager.getIlluminationRenderingData();
+    m_render_manager.render(render_data);
 
+    // Update info
     int total_elapsed_months(m_simulator_manager.getElapsedMonths());
     int elapsed_years(total_elapsed_months/12);
     int elapsed_months(total_elapsed_months%12);
     m_elapsed_time_lbl->setText(QString("Elapsed time: %1 years %2 months").arg(elapsed_years).arg(elapsed_months));
-}
-
-void Window::setAltRenderer(int index)
-{
-    if(alt_render_selected_index != AltRenderType::NONE)
-        m_alt_renderers_holder[alt_render_selected_index]->setVisible(false);
-
-    if(index != AltRenderType::NONE)
-        m_alt_renderers_holder[index]->setVisible(true);
-
-    alt_render_selected_index = index;
 }
 
 void Window::setTimeAcceleration(int p_acceleration)
@@ -111,6 +118,41 @@ void Window::setTimeAcceleration(int p_acceleration)
     int unit_time(MAX_UNIT_TIME+1-p_acceleration);
     m_trigger_frequency_lbl->setText(QString("Trigger frequency: %1 ms").arg(unit_time));
     m_simulator_manager.setMonthlyTriggerFrequency(unit_time);
+}
+
+void Window::start_stop_btn_clicked()
+{
+    if(m_simulator_manager.getState() == Stopped) // Starting
+    {
+        m_simulator_manager.start();
+        m_stop_start_button->setText("Stop");
+        // Enable pause/resume button
+        m_pause_resume_button->setEnabled(true);
+    }
+    else // Stopping
+    {
+        m_simulator_manager.stop();
+        m_overview_widget->reset();
+        m_stop_start_button->setText("Start");
+        m_pause_resume_button->setText("Pause");
+
+        // Disable pause/resume button
+        m_pause_resume_button->setEnabled(false);
+    }
+}
+
+void Window::pause_resume_btn_clicked()
+{
+    if(m_simulator_manager.getState() == Paused) // Resuming
+    {
+        m_simulator_manager.resume();
+        m_pause_resume_button->setText("Pause");
+    }
+    else // can only be RUNNING as the button is disabled if it is stopped
+    {
+        m_simulator_manager.pause();
+        m_pause_resume_button->setText("Resume");
+    }
 }
 
 void Window::closeEvent ( QCloseEvent * event )

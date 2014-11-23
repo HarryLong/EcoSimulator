@@ -15,8 +15,8 @@
 /************
  * RENDERER *
  ************/
-Renderer::Renderer(int p_width, int p_height, QWidget *parent)
-    : QWidget(parent), m_width(p_width), m_height(p_height)
+Renderer::Renderer(QWidget *parent)
+    : QWidget(parent), m_screen_space_multiplier(((float)RENDER_WINDOW_WIDTH_HEIGHT)/AREA_WIDTH_HEIGHT)
 {
 }
 
@@ -27,35 +27,40 @@ Renderer::~Renderer()
 
 QSize Renderer::minimumSizeHint() const
 {
-    return QSize(m_width, m_height);
+    return QSize(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT);
 }
 
 QSize Renderer::sizeHint() const
 {
-    return QSize(m_width+100, m_height+100);
+    return QSize(RENDER_WINDOW_WIDTH_HEIGHT+100, RENDER_WINDOW_WIDTH_HEIGHT+100);
+}
+
+int Renderer::to_screen_space(float p_distance_in_cm)
+{
+    return (p_distance_in_cm * m_screen_space_multiplier);
 }
 
 /******************
  * PLANT RENDERER *
  ******************/
-PlantRenderer::PlantRenderer(int p_width, int p_height, QWidget *parent) :
-    Renderer(p_width, p_height, parent)
+PlantRenderer::PlantRenderer(QWidget *parent) :
+    Renderer(parent)
 {
     init_layout();
 }
 
 void PlantRenderer::init_layout()
 {
-    setFixedSize(m_width, m_height);
+    setFixedSize(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT);
     QPalette pal(palette());
     pal.setColor(QPalette::Background, Qt::black);
     setPalette(pal);
     setAutoFillBackground(true);
 }
 
-void PlantRenderer::render(PlantRenderDataContainer p_render_data)
+void PlantRenderer::render(RenderData p_render_data)
 {
-    m_plant_data = p_render_data;
+    m_plant_data = p_render_data.plant_render_data;
     update();
 }
 
@@ -64,8 +69,8 @@ void PlantRenderer::paintEvent(QPaintEvent * event)
     QPainter painter(this);
     for(auto it = m_plant_data.begin(); it != m_plant_data.end(); it++)
     {
-        int r ( (it->canopy_radius/100.f) * METER_IN_PIXELS );
-        QPoint center(it->center_position.x, it->center_position.y);
+        int r ( to_screen_space(it->canopy_radius) );
+        QPoint center(to_screen_space(it->center_position.x), to_screen_space(it->center_position.y));
         painter.setPen( it->color );
         painter.setBrush( it->color );
         painter.drawEllipse( center, r, r );
@@ -75,45 +80,62 @@ void PlantRenderer::paintEvent(QPaintEvent * event)
 /****************
  * BOUNDING BOX *
  ****************/
-BoundingBoxRenderer::BoundingBoxRenderer(int p_width, int p_height, QWidget *parent) :
-    Renderer(p_width, p_height, parent), m_container_label()
+LightingRenderer::LightingRenderer(QWidget *parent) :
+    Renderer(parent)
 {
-    QImage init_image(m_width, m_height, QImage::Format::Format_RGB32);
-    init_image.fill(Qt::black);
-    set_image(init_image);
-
     init_layout();
 }
 
-void BoundingBoxRenderer::init_layout()
+void LightingRenderer::init_layout()
 {
-    QGridLayout * main_layout = new QGridLayout;
-    main_layout->addWidget(&m_container_label,0,0,1,1, Qt::AlignCenter);
-    setLayout(main_layout);
+    setFixedSize(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT);
+    QPalette pal(palette());
+    pal.setColor(QPalette::Background, Qt::black);
+    setPalette(pal);
+    setAutoFillBackground(true);
 }
 
-void BoundingBoxRenderer::render(PlantBoundingBoxContainer p_render_data)
+void LightingRenderer::render(RenderData p_render_data)
 {
-    static QRgb white(QColor(Qt::white).rgb());
+    m_illumination_spatial_hashmap = p_render_data.environmnent_render_data;
+    update();
+}
 
-    QImage image(m_width, m_height, QImage::Format::Format_RGB32);
-    image.fill(Qt::black);
+void LightingRenderer::paintEvent(QPaintEvent * event)
+{
+    QPainter painter(this);
+    painter.setPen(QColor(Qt::white));
 
-    for(int x = 0; x < m_width; x++)
+    int cell_width(m_illumination_spatial_hashmap.getCellWidth());
+    int cell_width_screen_space(to_screen_space(cell_width));
+    int cell_height(m_illumination_spatial_hashmap.getCellHeight());
+    int cell_height_screen_space(to_screen_space(cell_height));
+
+    int text_box_start_x_offset(cell_width_screen_space/4);
+    int text_box_start_y_offset(cell_height_screen_space/4);
+    int text_box_length(cell_height_screen_space/2);
+    int text_box_width(cell_height_screen_space/2);
+
+    bool draw_y_line(true);
+
+    for(int x ( 0 ); x < m_illumination_spatial_hashmap.getHorizontalCellCount(); x++)
     {
-        for(int y = 0; y < m_width; y++)
-        {
-            int index((y*m_width) + x);
+        int x_screen_space(to_screen_space(cell_width * x));
+        painter.drawLine(QPoint(x_screen_space, 0), QPoint(x_screen_space, RENDER_WINDOW_WIDTH_HEIGHT)); // Vertical lines
 
-            if(!p_render_data[index]->empty())
-                image.setPixel(x, y, white);
+        for(int y ( 0 ); y < m_illumination_spatial_hashmap.getVerticalCellCount(); y++)
+        {
+            int y_screen_space(to_screen_space(cell_height * y));
+            if(draw_y_line)
+                painter.drawLine(QPoint(0, y_screen_space), QPoint(RENDER_WINDOW_WIDTH_HEIGHT, y_screen_space)); // Horizontal lines
+
+            int max_height(m_illumination_spatial_hashmap.get(Coordinate(x,y))->max_height);
+
+            // TODO: Set color (lit / not lit)
+            painter.drawText(x_screen_space+text_box_start_x_offset, y_screen_space+text_box_start_y_offset,
+                             text_box_length, text_box_width, Qt::AlignCenter, QString::number(max_height) );
+
         }
     }
-    set_image(image);
-}
-
-void BoundingBoxRenderer::set_image(QImage & image)
-{
-    m_container_label.setPixmap(QPixmap::fromImage(image));
 }
 

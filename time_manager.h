@@ -10,7 +10,7 @@
 class TimeListener
 {
 public:
-    virtual void trigger() = 0;
+    virtual void newMonth() = 0;
 };
 
 class TimeManager
@@ -26,7 +26,7 @@ public:
 
 private:
     std::atomic<int> m_unit_time;
-    std::atomic<bool> m_run;
+    std::atomic<bool> m_stop;
 
     std::vector<TimeListener*> m_listeners;
     std::thread * m_time_keeper;

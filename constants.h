@@ -3,14 +3,13 @@
 
 #define SLEEP_TIME 20
 #define MAX_UNIT_TIME 5000
-#define TIME_SLIDER_MAX 4950 // 5000-4800 = 200
+#define TIME_SLIDER_MAX 4950 // 5000-4950 = 50
 #define TIME_SLIDER_DEFAULT 2000 // 1000ms
 #define TIME_SLIDER_MIN 0 // 5000 ms
 
-#define AREA_WIDTH 500
-#define AREA_HEIGHT 500
+#define AREA_WIDTH_HEIGHT 10000 // Centimeters
+#define RENDER_WINDOW_WIDTH_HEIGHT 800 // Pixels
 
-#define METER_IN_PIXELS 20
 /****************************
  * CONFIGURATION PARAMETERS *
  ***************************/
