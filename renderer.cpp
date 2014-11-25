@@ -12,11 +12,12 @@
 #include <QPainter>
 #include "boost/foreach.hpp"
 
-/************
- * RENDERER *
- ************/
+/*****************
+ * BASE RENDERER *
+ *****************/
 Renderer::Renderer(QWidget *parent)
-    : QWidget(parent), m_screen_space_multiplier(((float)RENDER_WINDOW_WIDTH_HEIGHT)/AREA_WIDTH_HEIGHT)
+    : QWidget(parent), m_screen_space_multiplier(((float)RENDER_WINDOW_WIDTH_HEIGHT)/AREA_WIDTH_HEIGHT),
+      m_render_ready(false)
 {
 }
 
@@ -35,107 +36,173 @@ QSize Renderer::sizeHint() const
     return QSize(RENDER_WINDOW_WIDTH_HEIGHT+100, RENDER_WINDOW_WIDTH_HEIGHT+100);
 }
 
+void Renderer::init_layout()
+{
+    setFixedSize(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT);
+    QPalette pal(palette());
+    pal.setColor(QPalette::Background, Qt::black);
+    setPalette(pal);
+    setAutoFillBackground(true);
+}
+
 int Renderer::to_screen_space(float p_distance_in_cm)
 {
     return (p_distance_in_cm * m_screen_space_multiplier);
 }
 
-/******************
- * PLANT RENDERER *
- ******************/
+/**********
+ * PLANTS *
+ **********/
 PlantRenderer::PlantRenderer(QWidget *parent) :
     Renderer(parent)
 {
     init_layout();
 }
 
-void PlantRenderer::init_layout()
-{
-    setFixedSize(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT);
-    QPalette pal(palette());
-    pal.setColor(QPalette::Background, Qt::black);
-    setPalette(pal);
-    setAutoFillBackground(true);
-}
-
 void PlantRenderer::render(RenderData p_render_data)
 {
     m_plant_data = p_render_data.plant_render_data;
+    m_render_ready = true;
     update();
 }
 
 void PlantRenderer::paintEvent(QPaintEvent * event)
 {
+    if(! m_render_ready)
+        return;
+
     QPainter painter(this);
     for(auto it = m_plant_data.begin(); it != m_plant_data.end(); it++)
     {
         int r ( to_screen_space(it->canopy_radius) );
-        QPoint center(to_screen_space(it->center_position.x), to_screen_space(it->center_position.y));
+        QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
         painter.setPen( it->color );
         painter.setBrush( it->color );
         painter.drawEllipse( center, r, r );
     }
 }
 
-/****************
- * BOUNDING BOX *
- ****************/
+/************
+ * LIGHTING *
+ ************/
 LightingRenderer::LightingRenderer(QWidget *parent) :
     Renderer(parent)
 {
     init_layout();
 }
 
-void LightingRenderer::init_layout()
-{
-    setFixedSize(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT);
-    QPalette pal(palette());
-    pal.setColor(QPalette::Background, Qt::black);
-    setPalette(pal);
-    setAutoFillBackground(true);
-}
-
 void LightingRenderer::render(RenderData p_render_data)
 {
-    m_illumination_spatial_hashmap = p_render_data.environmnent_render_data;
+    m_illumination_spatial_hashmap = p_render_data.illumination_render_data;
+    m_render_ready = true;
     update();
 }
 
 void LightingRenderer::paintEvent(QPaintEvent * event)
 {
+    static const QColor light(Qt::yellow);
+
+    if(! m_render_ready)
+        return;
+
     QPainter painter(this);
-    painter.setPen(QColor(Qt::white));
 
     int cell_width(m_illumination_spatial_hashmap.getCellWidth());
     int cell_width_screen_space(to_screen_space(cell_width));
     int cell_height(m_illumination_spatial_hashmap.getCellHeight());
     int cell_height_screen_space(to_screen_space(cell_height));
 
-    int text_box_start_x_offset(cell_width_screen_space/4);
-    int text_box_start_y_offset(cell_height_screen_space/4);
-    int text_box_length(cell_height_screen_space/2);
-    int text_box_width(cell_height_screen_space/2);
-
-    bool draw_y_line(true);
-
     for(int x ( 0 ); x < m_illumination_spatial_hashmap.getHorizontalCellCount(); x++)
     {
         int x_screen_space(to_screen_space(cell_width * x));
-        painter.drawLine(QPoint(x_screen_space, 0), QPoint(x_screen_space, RENDER_WINDOW_WIDTH_HEIGHT)); // Vertical lines
 
         for(int y ( 0 ); y < m_illumination_spatial_hashmap.getVerticalCellCount(); y++)
         {
             int y_screen_space(to_screen_space(cell_height * y));
-            if(draw_y_line)
-                painter.drawLine(QPoint(0, y_screen_space), QPoint(RENDER_WINDOW_WIDTH_HEIGHT, y_screen_space)); // Horizontal lines
 
-            int max_height(m_illumination_spatial_hashmap.get(Coordinate(x,y))->max_height);
-
-            // TODO: Set color (lit / not lit)
-            painter.drawText(x_screen_space+text_box_start_x_offset, y_screen_space+text_box_start_y_offset,
-                             text_box_length, text_box_width, Qt::AlignCenter, QString::number(max_height) );
-
+            IlluminationCellContent * cell_content(m_illumination_spatial_hashmap.get(QPoint(x,y)));
+            if(cell_content->lit && cell_content->max_height == .0f)
+                painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(light));
         }
     }
 }
 
+/*********
+ * ROOTS *
+ *********/
+RootsRenderer::RootsRenderer(QWidget *parent) :
+    Renderer(parent)
+{
+    init_layout();
+}
+
+void RootsRenderer::render(RenderData p_render_data)
+{
+    m_roots_data = p_render_data.plant_render_data;
+    m_render_ready = true;
+    update();
+}
+
+void RootsRenderer::paintEvent(QPaintEvent * event)
+{
+    if(! m_render_ready)
+        return;
+
+    QPainter painter(this);
+    for(auto it = m_roots_data.begin(); it != m_roots_data.end(); it++)
+    {
+        int r ( to_screen_space(it->roots_radius) );
+        QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
+        painter.setPen( it->color );
+        painter.setBrush( it->color );
+        painter.drawEllipse( center, r, r );
+    }
+}
+
+/*****************
+ * SOIL HUMIDITY *
+ *****************/
+SoilHumidityRenderer::SoilHumidityRenderer(QWidget *parent) :
+    Renderer(parent)
+{
+    init_layout();
+}
+
+void SoilHumidityRenderer::render(RenderData p_render_data)
+{
+    m_soil_humidity_spatial_hashmap = p_render_data.soil_humidity_render_data;
+    m_render_ready = true;
+    update();
+}
+
+void SoilHumidityRenderer::paintEvent(QPaintEvent * event)
+{
+    if(! m_render_ready)
+        return;
+
+    QPainter painter(this);
+
+    int cell_width(m_soil_humidity_spatial_hashmap.getCellWidth());
+    int cell_width_screen_space(to_screen_space(cell_width));
+    int cell_height(m_soil_humidity_spatial_hashmap.getCellHeight());
+    int cell_height_screen_space(to_screen_space(cell_height));
+
+    for(int x ( 0 ); x < m_soil_humidity_spatial_hashmap.getHorizontalCellCount(); x++)
+    {
+        int x_screen_space(to_screen_space(cell_width * x));
+
+        for(int y ( 0 ); y < m_soil_humidity_spatial_hashmap.getVerticalCellCount(); y++)
+        {
+            int y_screen_space(to_screen_space(cell_height * y));
+
+            SoilHumidityCellContent * cell_content(m_soil_humidity_spatial_hashmap.get(QPoint(x,y)));
+            if(cell_content->requests.size() == 0)
+            {
+                int humidity( cell_content->humidity_percentage );
+                QColor color( 0, 0, (humidity / 100.0f) * 255);
+                painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space),
+                                 QBrush(color));
+            }
+        }
+    }
+}

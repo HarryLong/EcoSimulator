@@ -2,21 +2,29 @@
 #define ENVIRONMENT_MANAGER_H
 
 #include "enviromnent_illumination.h"
+#include "environment_soil_humidity.h"
 
 struct Factors{
     EnvironmentIllumination illumination;
+    EnvironmentSoilHumidity soil_humidity;
 };
 
 class EnvironmentManager{
 public:
     EnvironmentManager();
 
-    float getIlluminationPercentage(Coordinate p_center, float p_radius, float p_height);
-    void setSize(Coordinate p_center, float p_radius, float p_height, int p_id);
-    void remove(Coordinate p_center, float p_radius, int p_id);
+    int getShadedPercentage(QPoint p_center, float p_canopy_radius, float p_height);
+    int getSoilHumidityPercentage(QPoint p_center, float p_roots_radius, int p_id);
+
+    void processResourceRequests();
+
+    void remove(QPoint p_center, float p_radius, int p_id);
     void reset();
 
+    void updateEnvironment(QPoint p_center, float p_canopy_radius, float p_height, float p_root_radius, int p_id, int p_minimum_soil_humidity_request);
+
     IlluminationSpatialHashMap getIlluminationRenderingData();
+    SoilHumiditySpatialHashMap getSoilHumidityRenderingData();
 
 private:
     Factors m_factors;

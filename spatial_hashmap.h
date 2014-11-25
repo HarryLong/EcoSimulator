@@ -2,12 +2,10 @@
 #define SPATIAL_HASHMAP_H
 
 #include <unordered_map>
+#include <QPoint>
 #include "helper.h"
-
 #include "constants.h"
-
-#define CELL_WIDTH 50 // Centimeters
-#define CELL_HEIGHT 50 // Centimeters
+#include "math.h"
 
 struct BoundingBox{
     int x_min;
@@ -16,45 +14,45 @@ struct BoundingBox{
     int y_max;
 };
 
-template <class T> class SpatialHashMap : protected unordered_map<Coordinate, T>{
+template <class T> class SpatialHashMap : protected unordered_map<QPoint, T>{
 public:
     SpatialHashMap() :
-        m_cell_width(CELL_WIDTH), m_cell_height(CELL_HEIGHT),
-        m_horizontal_cell_count(ceil(((float)AREA_WIDTH_HEIGHT)/CELL_WIDTH)),
-        m_vertical_cell_count(ceil(((float)AREA_WIDTH_HEIGHT)/CELL_HEIGHT)) {}
+        m_cell_width(SPATIAL_HASHMAP_CELL_WIDTH), m_cell_height(SPATIAL_HASHMAP_CELL_HEIGHT),
+        m_horizontal_cell_count(ceil(((float)AREA_WIDTH_HEIGHT)/SPATIAL_HASHMAP_CELL_WIDTH)),
+        m_vertical_cell_count(ceil(((float)AREA_WIDTH_HEIGHT)/SPATIAL_HASHMAP_CELL_HEIGHT)) {}
 
     int getHorizontalCellCount() { return m_horizontal_cell_count; }
     int getVerticalCellCount() { return m_vertical_cell_count; }
     int getCellWidth() { return m_cell_width; }
     int getCellHeight() { return m_cell_height; }
 
-    void insert(Coordinate key, T value)
+    void insert(QPoint key, T value)
     {
-        unordered_map<Coordinate, T>::insert(std::pair<Coordinate, T>(key, value));
+        unordered_map<QPoint, T>::insert(std::pair<QPoint, T>(key, value));
     }
 
-    BoundingBox getBoundingBox(Coordinate p_center, float p_radius)
+    BoundingBox getBoundingBox(QPoint p_center, float p_radius)
     {
-        float x_min(p_center.x-p_radius);
-        float x_max(p_center.x+p_radius);
+        float x_min(p_center.x()-p_radius);
+        float x_max(p_center.x()+p_radius);
 
-        float y_min(p_center.y-p_radius);
-        float y_max(p_center.y+p_radius);
+        float y_min(p_center.y()-p_radius);
+        float y_max(p_center.y()+p_radius);
 
         BoundingBox ret;
 
-        ret.x_min = (x_min/m_cell_width);
-        ret.x_max = (ceil(x_max/m_cell_width));
-        ret.y_min = (y_min/m_cell_height);
-        ret.y_max = (ceil(y_max/m_cell_height));
+        ret.x_min = max(0, (int) (x_min/m_cell_width));
+        ret.x_max = min(m_horizontal_cell_count, (int) (x_max/m_cell_width) + 1);
+        ret.y_min = max(0, (int) (y_min/m_cell_height));
+        ret.y_max = min(m_vertical_cell_count,(int) (y_max/m_cell_height) +1);
 
         return ret;
     }
 
-    T* get(Coordinate key)
+    T* get(QPoint key)
     {
-        auto it (unordered_map<Coordinate, T>::find(key));
-        if(it != unordered_map<Coordinate, T>::end())
+        auto it (unordered_map<QPoint, T>::find(key));
+        if(it != unordered_map<QPoint, T>::end())
             return &(it->second);
 
         return NULL;

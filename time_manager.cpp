@@ -40,7 +40,6 @@ void TimeManager::stop()
 
 void TimeManager::setUnitTime(int p_unit_time_ms)
 {
-    std::cout << "Setting unit time to: " << p_unit_time_ms << std::endl;
     m_unit_time.store(p_unit_time_ms);
 }
 

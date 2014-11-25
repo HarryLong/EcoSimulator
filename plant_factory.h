@@ -22,14 +22,19 @@ struct SpecieProperties {
     std::shared_ptr<AgeingProperties> ageing_properties;
     std::shared_ptr<GrowthProperties> growth_properties;
     std::shared_ptr<IlluminationProperties> illumination_properties;
+    std::shared_ptr<SoilHumidityProperties> soil_humidity_properties;
 
     std::string name;
     QColor color;
 
     SpecieProperties(std::string p_name, QColor p_color, std::shared_ptr<AgeingProperties> p_ageing_properties,
-                         std::shared_ptr<GrowthProperties> p_growth_properties, std::shared_ptr<IlluminationProperties> p_illumination_properties) :
-        name(p_name), color(p_color), ageing_properties(p_ageing_properties), growth_properties(p_growth_properties),
-        illumination_properties(p_illumination_properties){}
+                         std::shared_ptr<GrowthProperties> p_growth_properties, std::shared_ptr<IlluminationProperties> p_illumination_properties,
+                         std::shared_ptr<SoilHumidityProperties> p_soil_humidity_properties) :
+        name(p_name), color(p_color),
+        ageing_properties(p_ageing_properties),
+        growth_properties(p_growth_properties),
+        illumination_properties(p_illumination_properties),
+        soil_humidity_properties(p_soil_humidity_properties){}
 };
 
 typedef std::map<Specie, QColor> PlantColorMap;
@@ -38,7 +43,7 @@ class PlantFactory {
 public:
     PlantFactory();
     ~PlantFactory();
-    Plant* generate(Specie type, Coordinate p_center_coord);
+    Plant* generate(Specie type, QPoint p_center_coord);
     PlantColorMap getSpeciesColorMapping() { return m_plant_to_color_map; }
 
 private:
@@ -54,6 +59,7 @@ private:
     std::shared_ptr<GrowthProperties> oak_tree_growth_properties;
     std::shared_ptr<AgeingProperties> oak_tree_ageing_properties;
     std::shared_ptr<IlluminationProperties> oak_tree_illumination_properties;
+    std::shared_ptr<SoilHumidityProperties> oak_tree_soil_humidity_properties;
 
     /**************
      * OLIVE TREE *
@@ -61,6 +67,7 @@ private:
     std::shared_ptr<GrowthProperties> olive_tree_growth_properties;
     std::shared_ptr<AgeingProperties> olive_tree_ageing_properties;
     std::shared_ptr<IlluminationProperties> olive_tree_illumination_properties;
+    std::shared_ptr<SoilHumidityProperties> olive_tree_soil_humidity_properties;
 
     /***************
      * PEANUT TREE *
@@ -68,6 +75,7 @@ private:
     std::shared_ptr<GrowthProperties> peanut_tree_growth_properties;
     std::shared_ptr<AgeingProperties> peanut_tree_ageing_properties;
     std::shared_ptr<IlluminationProperties> peanut_tree_illumination_properties;
+    std::shared_ptr<SoilHumidityProperties> peanut_tree_soil_humidity_properties;
 
     /***************
      * BANANA TREE *
@@ -75,6 +83,7 @@ private:
     std::shared_ptr<GrowthProperties> banana_tree_growth_properties;
     std::shared_ptr<AgeingProperties> banana_tree_ageing_properties;
     std::shared_ptr<IlluminationProperties> banana_tree_illumination_properties;
+    std::shared_ptr<SoilHumidityProperties> banana_tree_soil_humidity_properties;
 
     PlantColorMap m_plant_to_color_map;
 };

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "plant_properties.h"
+#include "dice_roller.h"
 
 class GrowthManager
 {
@@ -11,11 +12,14 @@ public:
 
     float getHeight() const { return m_height; }
     float getCanopyRadius() const { return m_height * m_growth_properties->height_to_radius_ratio; }
+    float getRootsRadius() const { return m_root_radius; }
     void grow(int p_strength); // Must be called monthly!
 
 private:
     std::shared_ptr<GrowthProperties> m_growth_properties;
     float m_height;
+    float m_root_radius;
+    DiceRoller m_dice_roller;
 };
 
 #endif // GROWTH_MANAGER_H

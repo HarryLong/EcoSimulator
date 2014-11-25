@@ -3,7 +3,9 @@
 RendererManager::RendererManager() : m_active_renderer(s_plant_renderer)
 {
     m_renderers.insert(std::pair<QString, Renderer*>(s_plant_renderer, new PlantRenderer()));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_roots_renderer, new RootsRenderer()));
     m_renderers.insert(std::pair<QString, Renderer*>(s_lighting_renderer, new LightingRenderer()));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_soil_humidity_renderer, new SoilHumidityRenderer()));
 
     setActiveRenderer(s_plant_renderer);
 }

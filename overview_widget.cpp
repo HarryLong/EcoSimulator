@@ -2,6 +2,7 @@
 #include <iostream>
 #include <QHeaderView>
 #include "debuger.h"
+#include "constants.h"
 
 OverViewWidget::OverViewWidget(QWidget *parent)
     : QTableWidget(parent), m_data()
@@ -19,12 +20,14 @@ OverViewWidget::~OverViewWidget()
 
 QSize OverViewWidget::minimumSizeHint() const
 {
-    return QSize(700, 700);
+    return QSize(OVERVIEW_WIDGET_WINDOW_WIDTH_HEIGHT,
+                 OVERVIEW_WIDGET_WINDOW_WIDTH_HEIGHT);
 }
 
 QSize OverViewWidget::sizeHint() const
 {
-    return QSize(700, 700);
+    return QSize(OVERVIEW_WIDGET_WINDOW_WIDTH_HEIGHT,
+                 OVERVIEW_WIDGET_WINDOW_WIDTH_HEIGHT);
 }
 
 void OverViewWidget::addPlant(QString specie_name, QColor color)
@@ -65,9 +68,7 @@ void OverViewWidget::removePlant(QString specie_name, QString cause_of_death)
 void OverViewWidget::add_cause_of_death_column(QString name)
 {
     int m_column_id (columnCount());
-    DEBUG_MSG
     setColumnCount(m_column_id+1);
-    DEBUG_MSG
     m_causes_of_death_columns.insert(std::pair<QString, int>(name, m_column_id));
     setHorizontalHeaderItem(m_column_id,new QTableWidgetItem(name));
 }

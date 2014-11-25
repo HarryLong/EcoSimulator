@@ -2,38 +2,58 @@
 #define PLANT_PROPERTIES_H
 
 struct AgeingProperties {
-    float probability_of_death_at_birth;
-    float probabiity_of_death_at_prime;
-    float probability_of_death_at_upper;
+    const int probability_of_death_at_birth;
+    const int probability_of_death_at_upper;
 
-    int prime_age;
-    int upper_age;
+    const int prime_age_start;
+    const int prime_age_end;
+    const int upper_age;
 
-    AgeingProperties(int p_probability_of_death_at_birth, int p_probability_of_death_at_upper,
-                     int p_prime_age, int p_upper_age) :
+    AgeingProperties(int p_probability_of_death_at_birth,
+                     int p_probability_of_death_at_upper,
+                     int p_prime_age_start, int p_prime_age_end,
+                     int p_upper_age) :
         probability_of_death_at_birth(p_probability_of_death_at_birth),
         probability_of_death_at_upper(p_probability_of_death_at_upper),
-        prime_age(p_prime_age),
+        prime_age_start(p_prime_age_start),
+        prime_age_end(p_prime_age_end),
         upper_age(p_upper_age) {}
 };
 
 struct GrowthProperties {
-    float monthly_growth; // cm per month
-    float height_to_radius_ratio;
+    const float max_monthly_height_growth; // cm per month
+    const float max_monthly_root_growth; // cm per month
+    const float height_to_radius_ratio;
 
-    GrowthProperties( float p_monthly_growth, float p_height_to_width_ratio) : monthly_growth(p_monthly_growth), height_to_radius_ratio(p_height_to_width_ratio) {}
+    GrowthProperties( float p_max_monthly_height_growth, float p_max_monthly_root_growth,
+                      float p_height_to_width_ratio) :
+        max_monthly_height_growth(p_max_monthly_height_growth),
+        max_monthly_root_growth(p_max_monthly_root_growth),
+        height_to_radius_ratio(p_height_to_width_ratio) {}
 };
 
 struct IlluminationProperties {
-    float ratio_start_of_negative_impact;
-    float ratio_max_shade;
+    const int shadowed_percentage_start_of_negative_impact;
+    const int max_shadowed_percentage;
 
-    float probability_of_death_at_max_shade;
+    const int probability_of_death_at_max_shade;
 
-    IlluminationProperties( float p_ratio_start_of_negative_impact, float p_ratio_max_shade, float p_probability_of_death_at_max_shade) :
-        ratio_start_of_negative_impact(p_ratio_start_of_negative_impact),
-        ratio_max_shade(p_ratio_max_shade),
+    IlluminationProperties( int p_shadowed_percentage_start_of_negative_impact,
+                            int p_max_shadowed_percentage,
+                            int p_probability_of_death_at_max_shade) :
+        shadowed_percentage_start_of_negative_impact(p_shadowed_percentage_start_of_negative_impact),
+        max_shadowed_percentage(p_max_shadowed_percentage),
         probability_of_death_at_max_shade(p_probability_of_death_at_max_shade) {}
+};
+
+struct SoilHumidityProperties {
+    const int soil_humidity_percentage_prime_start;
+    const int soil_humidity_percentage_prime_end;
+
+    SoilHumidityProperties( int p_soil_humidity_percentage_prime_start,
+                        int p_soil_humidity_percentage_prime_end):
+        soil_humidity_percentage_prime_start(p_soil_humidity_percentage_prime_start),
+        soil_humidity_percentage_prime_end(p_soil_humidity_percentage_prime_end) {}
 };
 
 #endif

@@ -41,6 +41,7 @@ public:
 
     PlantRenderDataContainer getPlantRenderingData();
     IlluminationSpatialHashMap getIlluminationRenderingData();
+    SoilHumiditySpatialHashMap getSoilHumidityRenderingData();
 
 public slots:
     void start();
@@ -75,7 +76,7 @@ private:
     // TEMPORARY
     void generate_random_plants();
     void add(Specie specie, int count);
-    Coordinate generate_random_position();
+    QPoint generate_random_position();
 };
 
 #endif //SIMULATOR_MANAGER_H

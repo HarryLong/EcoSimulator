@@ -7,7 +7,9 @@
 #include "QObject"
 
 const static QString s_plant_renderer = "Plant Renderer";
+const static QString s_roots_renderer = "Roots Renderer";
 const static QString s_lighting_renderer = "Lighting Renderer";
+const static QString s_soil_humidity_renderer = "Soil humidity renderer";
 class RendererManager : public QObject
 {
 Q_OBJECT
@@ -17,6 +19,7 @@ public:
     void render(RenderData & render_data);
 
     std::vector<QString> getRendererNames();
+    QString getDefaultRederName() {return s_plant_renderer; }
 
     std::vector<Renderer*> getRendererWidgets();
 

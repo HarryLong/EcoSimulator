@@ -9,20 +9,24 @@ class Plant;
 
 using namespace std;
 
+#include <QPoint>
+
 enum PlantStatus{
     Alive,
     DeathByAge,
-    DeathByIllumination
+    DeathByIllumination,
+    DeathByDrought,
+    DeathByFlood
 };
 
-struct Coordinate{
-public:
-    Coordinate() : x(0), y(0) {}
-    Coordinate(int x, int y) : x(x), y(y) {}
-    Coordinate(const Coordinate & other) : x(other.x), y(other.y) {}
+//struct Coordinate{
+//public:
+//    Coordinate() : x(0), y(0) {}
+//    Coordinate(int x, int y) : x(x), y(y) {}
+//    Coordinate(const Coordinate & other) : x(other.x), y(other.y) {}
 
-    int x,y;
-};
+//    int x,y;
+//};
 
 struct LinearEquation
 {
@@ -37,26 +41,25 @@ public:
     {
         return a * x + b;
     }
+
+    void print()
+    {
+        std::cout << a << " X + " << b << std::endl;
+    }
 };
 
 namespace std {
   template <>
-  struct hash<Coordinate>
+  struct hash<QPoint>
   {
-    std::size_t operator()(const Coordinate & t) const
+    std::size_t operator()(const QPoint & t) const
     {
       std::size_t val = 0 ;
-      boost::hash_combine(val,t.x);
-      boost::hash_combine(val,t.y);
+      boost::hash_combine(val,t.x());
+      boost::hash_combine(val,t.y());
       return val;
     }
   };
 }
-
-extern bool operator==(Coordinate const& c1, Coordinate const& c2);
-
-typedef std::map<int, std::set<int> > CoordinateHolder; // X , set of y's
-
-extern void merge_coordinate_holders(CoordinateHolder & c1, const CoordinateHolder & c2);
 
 #endif // HELPER_H

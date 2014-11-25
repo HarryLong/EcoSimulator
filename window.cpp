@@ -93,6 +93,8 @@ void Window::init_signals()
             this, SLOT(updateRender()));
 
     connect(m_renderers_cb, SIGNAL( currentIndexChanged(QString) ), &m_render_manager, SLOT( setActiveRenderer(QString) ));
+    m_renderers_cb->setCurrentText(m_render_manager.getDefaultRederName());
+
 
     // The overview widget to the simulator
     connect(&m_simulator_manager, SIGNAL(newPlant(QString, QColor)), m_overview_widget, SLOT(addPlant(QString,QColor)));
@@ -101,9 +103,12 @@ void Window::init_signals()
 
 void Window::updateRender()
 {
-    RenderData render_data;
-    render_data.plant_render_data = m_simulator_manager.getPlantRenderingData();
-    render_data.environmnent_render_data = m_simulator_manager.getIlluminationRenderingData();
+    RenderData render_data(
+                m_simulator_manager.getPlantRenderingData(),
+                m_simulator_manager.getIlluminationRenderingData(),
+                m_simulator_manager.getSoilHumidityRenderingData()
+                );
+
     m_render_manager.render(render_data);
 
     // Update info

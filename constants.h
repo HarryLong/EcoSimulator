@@ -7,8 +7,15 @@
 #define TIME_SLIDER_DEFAULT 2000 // 1000ms
 #define TIME_SLIDER_MIN 0 // 5000 ms
 
-#define AREA_WIDTH_HEIGHT 10000 // Centimeters
-#define RENDER_WINDOW_WIDTH_HEIGHT 800 // Pixels
+#define AREA_WIDTH_HEIGHT 5000 // Centimeters
+#define RENDER_WINDOW_WIDTH_HEIGHT 700 // Pixels
+#define OVERVIEW_WIDGET_WINDOW_WIDTH_HEIGHT 700 // Pixels
+
+#define SPATIAL_HASHMAP_CELL_WIDTH 50 // Centimeters
+#define SPATIAL_HASHMAP_CELL_HEIGHT 50 // Centimeters
+
+#define MIN_STRENGTH -100
+#define MAX_STRENGTH 100
 
 /****************************
  * CONFIGURATION PARAMETERS *
