@@ -58,6 +58,11 @@ public:
         return NULL;
     }
 
+    void clear()
+    {
+        unordered_map<QPoint, T>::clear();
+    }
+
 private:
     int m_cell_width, m_cell_height, m_horizontal_cell_count, m_vertical_cell_count;
 };

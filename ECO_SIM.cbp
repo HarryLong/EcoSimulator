@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="ECO_SIM" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\..\;CMake Files\..\..\..\..\..\opt\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Widgets\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\;CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/harry/workspaces/qt-workspace/EcoSimulator" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="EcoSim">
+         <Option output="/home/harry/workspaces/qt-workspace/EcoSimulator/EcoSim" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/harry/workspaces/qt-workspace/EcoSimulator" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_WIDGETS_LIB" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add option="-DQT_NO_DEBUG" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 EcoSim" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="EcoSim/fast">
+         <Option output="/home/harry/workspaces/qt-workspace/EcoSimulator/EcoSim" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="/home/harry/workspaces/qt-workspace/EcoSimulator" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+            <Add option="-DQT_WIDGETS_LIB" />
+            <Add option="-DQT_GUI_LIB" />
+            <Add option="-DQT_CORE_LIB" />
+            <Add option="-DQT_NO_DEBUG" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include/QtCore" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include/QtGui" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/include/QtWidgets" />
+            <Add directory="/opt/Qt5.2.1/5.2.1/gcc_64/mkspecs/linux-g++" />
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 EcoSim/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="EcoSim_automoc">
+         <Option working_dir="/home/harry/workspaces/qt-workspace/EcoSimulator" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 EcoSim_automoc" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/harry/workspaces/qt-workspace/EcoSimulator" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/harry/workspaces/qt-workspace/EcoSimulator/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/constrainers.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/dice_roller.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/enviromnent_illumination.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/environment_manager.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/environment_soil_humidity.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/growth_manager.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/helper.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/input_widgets.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/overview_widget.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant_configuration_widget.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant_factory.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plants_storage.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/render_manager.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/renderer.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/simulator_manager.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/spatial_hashmap.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/start_config_dialog.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/time_manager.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/window.cpp">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/constants.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/constrainers.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/debuger.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/dice_roller.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/enviromnent_illumination.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/environment_manager.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/environment_soil_humidity.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/growth_manager.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/helper.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/input_widgets.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/overview_widget.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant_configuration_widget.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant_factory.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plant_properties.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/plants_storage.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/render_manager.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/renderer.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/simulator_manager.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/spatial_hashmap.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/start_config_dialog.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/time_manager.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/window.h">
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Widgets/Qt5WidgetsConfigVersion.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Widgets\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Widgets/Qt5WidgetsConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Widgets\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Widgets/Qt5WidgetsConfigExtras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Widgets\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Widgets/Qt5WidgetsMacros.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Widgets\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5GuiConfigVersion.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5GuiConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QJpegPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QWbmpPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QXcbIntegrationPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QEglFSIntegrationPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QLinuxFbIntegrationPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QTgaPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QOffscreenIntegrationPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QMngPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QMinimalIntegrationPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QTiffPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QGifPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QMinimalEglIntegrationPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QICOPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5Gui_QSvgPlugin.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5GuiConfigExtras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5GuiConfigVersion.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Gui/Qt5GuiConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Gui\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfigVersion.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfigExtras.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreMacros.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfigVersion.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+      <Unit filename="/home/harry/workspaces/qt-workspace/EcoSimulator/../../../../../opt/Qt5.2.1/5.2.1/gcc_64/lib/cmake/Qt5Core/Qt5CoreConfig.cmake">
+          <Option virtualFolder="CMake Files\..\..\..\..\..\opt\Qt5.2.1\5.2.1\gcc_64\lib\cmake\Qt5Core\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>

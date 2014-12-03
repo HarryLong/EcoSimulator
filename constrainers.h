@@ -27,9 +27,8 @@ public:
 
     void setAge(int p_age_in_months);
 
-    const int m_prime_age_start;
-    const int m_prime_age_end;
 private:
+    std::shared_ptr<AgeingProperties> m_properties;
     int m_age;
     LinearEquation * m_pre_prime_equation;
     LinearEquation * m_post_prime_equation;
@@ -48,9 +47,8 @@ public:
 
     void setShadedPercentage(int p_shaded_percentage);
 
-    const int m_ratio_start_of_negative_impact;
-
 private:
+    std::shared_ptr<IlluminationProperties> m_properties;
     LinearEquation * m_equation;
     int m_shaded_percentage;
 };
@@ -68,13 +66,12 @@ public:
     bool isInDrought();
 
     void setSoilHumidityPercentage(int p_soil_humidity_percentage);
+    int getMinimumPrimeSoilHumidity();
 
-    const int m_soil_humidity_prime_start_percentage;
-    const int m_soil_humidity_prime_end_percentage;
 private:
     LinearEquation * m_drought_equation;
     LinearEquation * m_flood_equation;
-
+    std::shared_ptr<SoilHumidityProperties> m_properties;
     int m_soil_humidity;
 };
 

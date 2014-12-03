@@ -36,8 +36,15 @@ public:
     void setMonthlyTriggerFrequency(int p_frequency);
 
     virtual void newMonth();
+
 //    SpatialHashMap getSpatialHashMap() { return m_plant_spatial_hashmap; }
     SimulationState getState() { return m_state; }
+
+    void addPlants(std::vector<Plant *> p_plants);
+    void addPlant(Plant * p_plant);
+
+    void setIllumination(const QImage* p_illumination_data);
+    void setSoilHumidity(const QImage* p_soil_humidity_data);
 
     PlantRenderDataContainer getPlantRenderingData();
     IlluminationSpatialHashMap getIlluminationRenderingData();
@@ -55,7 +62,6 @@ signals:
     void removedPlant(QString name, QString cause_of_death);
 
 private:
-    void add_plant(Plant * p_plant);
     void remove_plant(int p_plant_id);
 
     EnvironmentManager m_environment_mgr;
@@ -65,7 +71,6 @@ private:
     PlantRenderDataContainer m_plant_rendering_data;
 
     PlantStorage m_plant_storage;
-    PlantFactory m_plant_factory;
 
     QString plant_status_to_string(PlantStatus status);
 
@@ -74,8 +79,6 @@ private:
     SimulationState m_state;
 
     // TEMPORARY
-    void generate_random_plants();
-    void add(Specie specie, int count);
     QPoint generate_random_position();
 };
 

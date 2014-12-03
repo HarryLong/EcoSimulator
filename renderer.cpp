@@ -11,6 +11,7 @@
 #include <random>
 #include <QPainter>
 #include "boost/foreach.hpp"
+#include <iostream>
 
 /*****************
  * BASE RENDERER *
@@ -54,7 +55,7 @@ int Renderer::to_screen_space(float p_distance_in_cm)
  * PLANTS *
  **********/
 PlantRenderer::PlantRenderer(QWidget *parent) :
-    Renderer(parent)
+    Renderer(parent), m_filters()
 {
     init_layout();
 }
@@ -66,6 +67,16 @@ void PlantRenderer::render(RenderData p_render_data)
     update();
 }
 
+void PlantRenderer::filter(QString p_plant_name)
+{
+    m_filters.insert(p_plant_name);
+}
+
+void PlantRenderer::unfilter(QString p_plant_name)
+{
+    m_filters.erase(p_plant_name);
+}
+
 void PlantRenderer::paintEvent(QPaintEvent * event)
 {
     if(! m_render_ready)
@@ -74,11 +85,14 @@ void PlantRenderer::paintEvent(QPaintEvent * event)
     QPainter painter(this);
     for(auto it = m_plant_data.begin(); it != m_plant_data.end(); it++)
     {
-        int r ( to_screen_space(it->canopy_radius) );
-        QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
-        painter.setPen( it->color );
-        painter.setBrush( it->color );
-        painter.drawEllipse( center, r, r );
+        if(m_filters.find(it->name) == m_filters.end())
+        {
+            int r ( to_screen_space(it->canopy_radius) );
+            QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
+            painter.setPen( it->color );
+            painter.setBrush( it->color );
+            painter.drawEllipse( center, r, r );
+        }
     }
 }
 
@@ -196,7 +210,7 @@ void SoilHumidityRenderer::paintEvent(QPaintEvent * event)
             int y_screen_space(to_screen_space(cell_height * y));
 
             SoilHumidityCellContent * cell_content(m_soil_humidity_spatial_hashmap.get(QPoint(x,y)));
-            if(cell_content->requests.size() == 0)
+            if(cell_content->grants.size() == 0) // If there are no grants, there is humidity remaining in the soil
             {
                 int humidity( cell_content->humidity_percentage );
                 QColor color( 0, 0, (humidity / 100.0f) * 255);

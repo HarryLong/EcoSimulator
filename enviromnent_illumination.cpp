@@ -1,29 +1,33 @@
 #include "enviromnent_illumination.h"
+#include <QImage>
 
-EnvironmentIllumination::EnvironmentIllumination()
+EnvironmentIllumination::EnvironmentIllumination() : data_set(false)
 {
-    init();
 }
 
-void EnvironmentIllumination::init()
+void EnvironmentIllumination::setIlluminationData(const QImage* p_image)
 {
+    QImage scaled_image (p_image->scaled(QSize(m_spatial_hashmap.getHorizontalCellCount(), m_spatial_hashmap.getVerticalCellCount()),
+                                        Qt::IgnoreAspectRatio));
+
     for(int x = 0; x < m_spatial_hashmap.getHorizontalCellCount(); x++)
     {
         for(int y = 0; y < m_spatial_hashmap.getVerticalCellCount(); y++)
         {
-            m_spatial_hashmap.insert(QPoint(x,y),IlluminationCellContent());
+            m_spatial_hashmap.insert(QPoint(x,y),IlluminationCellContent(qRed(scaled_image.pixel(x,y)) > 0));
         }
     }
+    data_set = true;
 }
 
 float EnvironmentIllumination::getMaxHeight(QPoint p_cell_coord)
 {
-    m_spatial_hashmap.get(p_cell_coord)->max_height;
+    return m_spatial_hashmap.get(p_cell_coord)->max_height;
 }
 
-int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_radius, float p_height)
+int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_canopy_radius, float p_height)
 {
-    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_radius));
+    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_canopy_radius));
 
     int shaded_cell_count(0);
     int total_cell_count(0);
@@ -41,9 +45,9 @@ int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_radius
     return (((float)shaded_cell_count)/total_cell_count) * 100; // Return percentage
 }
 
-void EnvironmentIllumination::setData(QPoint p_center, float p_radius, float p_height, int p_id)
+void EnvironmentIllumination::setData(QPoint p_center, float p_canopy_radius, float p_height, int p_id)
 {
-    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_radius));
+    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_canopy_radius));
 
     for(int x = bb.x_min; x < bb.x_max; x++)
     {
@@ -67,9 +71,9 @@ void EnvironmentIllumination::setData(QPoint p_center, float p_radius, float p_h
     }
 }
 
-void EnvironmentIllumination::remove(QPoint p_center, float p_radius, int id)
+void EnvironmentIllumination::remove(QPoint p_center, float p_canopy_radius, int id)
 {
-    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_radius));
+    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_canopy_radius));
 
     for(int x = bb.x_min; x < bb.x_max; x++)
     {
@@ -103,13 +107,5 @@ void EnvironmentIllumination::remove(QPoint p_center, float p_radius, int id)
 
 void EnvironmentIllumination::reset()
 {
-    for(int x = 0; x < m_spatial_hashmap.getHorizontalCellCount(); x++)
-    {
-        for(int y = 0; y < m_spatial_hashmap.getVerticalCellCount(); y++)
-        {
-            IlluminationCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
-            cell_data->id_to_height.clear();
-            cell_data->max_height = .0f;
-        }
-    }
+    m_spatial_hashmap.clear();
 }

@@ -2,7 +2,7 @@
 #include <QColor>
 #include "plant.h"
 
-PlantFactory::PlantFactory() : m_property_db(), m_dice_roller(0,1000)
+PlantFactory::PlantFactory() : m_plant_db(), m_dice_roller(0,1000), m_real_plant_db()
 {
     init_plant_properties();
     populate_db();
@@ -13,11 +13,11 @@ PlantFactory::~PlantFactory()
 }
 
 static long unique_id = 1;
-Plant* PlantFactory::generate(Specie p_specie, QPoint p_center_coord)
+Plant* PlantFactory::generate(QString p_specie_name, QPoint p_center_coord)
 {
-    auto it = m_property_db.find(p_specie);
+    auto it = m_plant_db.find(p_specie_name);
 
-    if(it != m_property_db.end())
+    if(it != m_plant_db.end())
     {
         SpecieProperties specie_properties = it->second;
         return new Plant(specie_properties.name, specie_properties.color, p_center_coord, unique_id++, m_dice_roller.generate(),
@@ -30,13 +30,23 @@ Plant* PlantFactory::generate(Specie p_specie, QPoint p_center_coord)
     return NULL;
 }
 
+std::vector<QString> PlantFactory::getAllSpecieNames()
+{
+    std::vector<QString> ret;
+
+    for(auto it (m_plant_db.begin()); it != m_plant_db.end(); it++)
+        ret.push_back(it->first);
+
+    return ret;
+}
+
 void PlantFactory::populate_db()
 {
     /************
      * OAK TREE *
      ************/
-    m_property_db.insert(std::pair<Specie, SpecieProperties>(OAK_TREE,
-                                                                 SpecieProperties("Oak tree", m_plant_to_color_map[OAK_TREE],
+    m_plant_db.insert(std::pair<QString, SpecieProperties>(specie_name_oak_tree,
+                                                                 SpecieProperties(specie_name_oak_tree, m_plant_to_color_map[specie_name_oak_tree],
                                                                                       oak_tree_ageing_properties,
                                                                                       oak_tree_growth_properties,
                                                                                       oak_tree_illumination_properties,
@@ -44,8 +54,8 @@ void PlantFactory::populate_db()
     /**************
      * OLIVE TREE *
      **************/
-    m_property_db.insert(std::pair<Specie, SpecieProperties>(OLIVE_TREE,
-                                                                 SpecieProperties("Olive Tree", m_plant_to_color_map[OLIVE_TREE],
+    m_plant_db.insert(std::pair<QString, SpecieProperties>(specie_name_olive_tree,
+                                                                 SpecieProperties(specie_name_olive_tree, m_plant_to_color_map[specie_name_olive_tree],
                                                                                       olive_tree_ageing_properties,
                                                                                       olive_tree_growth_properties,
                                                                                       olive_tree_illumination_properties,
@@ -53,8 +63,8 @@ void PlantFactory::populate_db()
     /***************
      * PEANUT TREE *
      ***************/
-    m_property_db.insert(std::pair<Specie, SpecieProperties>(PEANUT_TREE,
-                                                                 SpecieProperties("Peanut Tree", m_plant_to_color_map[PEANUT_TREE],
+    m_plant_db.insert(std::pair<QString, SpecieProperties>(specie_name_peanut_tree,
+                                                                 SpecieProperties(specie_name_peanut_tree, m_plant_to_color_map[specie_name_peanut_tree],
                                                                                       peanut_tree_ageing_properties,
                                                                                       peanut_tree_growth_properties,
                                                                                       peanut_tree_illumination_properties,
@@ -62,8 +72,8 @@ void PlantFactory::populate_db()
     /***************
      * BANANA TREE *
      ***************/
-    m_property_db.insert(std::pair<Specie, SpecieProperties>(BANANA_TREE,
-                                                                 SpecieProperties("Banana Tree", m_plant_to_color_map[BANANA_TREE],
+    m_plant_db.insert(std::pair<QString, SpecieProperties>(specie_name_banana_tree,
+                                                                 SpecieProperties(specie_name_banana_tree, m_plant_to_color_map[specie_name_banana_tree],
                                                                                       banana_tree_ageing_properties,
                                                                                       banana_tree_growth_properties,
                                                                                       banana_tree_illumination_properties,
@@ -72,10 +82,10 @@ void PlantFactory::populate_db()
 
 void PlantFactory::init_plant_properties()
 {
-    m_plant_to_color_map[OAK_TREE] = QColor(Qt::GlobalColor::red);
-    m_plant_to_color_map[OLIVE_TREE] = QColor(Qt::GlobalColor::green);
-    m_plant_to_color_map[PEANUT_TREE] = QColor(Qt::GlobalColor::blue);
-    m_plant_to_color_map[BANANA_TREE] = QColor(Qt::GlobalColor::yellow);
+    m_plant_to_color_map[specie_name_oak_tree] = QColor(Qt::GlobalColor::red);
+    m_plant_to_color_map[specie_name_olive_tree] = QColor(Qt::GlobalColor::green);
+    m_plant_to_color_map[specie_name_peanut_tree] = QColor(Qt::GlobalColor::blue);
+    m_plant_to_color_map[specie_name_banana_tree] = QColor(Qt::GlobalColor::yellow);
 
     oak_tree_growth_properties = std::shared_ptr<GrowthProperties>(new GrowthProperties(.8f, // cm per month
                                                                                         1.2f,
@@ -89,8 +99,7 @@ void PlantFactory::init_plant_properties()
                                                                                         1200)); // upper limit age
 
     oak_tree_illumination_properties = std::shared_ptr<IlluminationProperties>(new IlluminationProperties(10, // Start of negative impact
-                                                                                                          60, // Max shade
-                                                                                                          85.f)); // Probability of death at max shade
+                                                                                                          90.f)); // Probability of death when completely shaded
 
     oak_tree_soil_humidity_properties = std::shared_ptr<SoilHumidityProperties>(new SoilHumidityProperties(30,50));
 
@@ -111,8 +120,7 @@ void PlantFactory::init_plant_properties()
                                                                                           180)); // upper limit age
 
     olive_tree_illumination_properties = std::shared_ptr<IlluminationProperties>(new IlluminationProperties(20, // Start of negative impact
-                                                                                                          60, // Max shade
-                                                                                                          85)); // Probability of death at max shade
+                                                                                                          98)); // Probability of death when completely shaded
 
     olive_tree_soil_humidity_properties = std::shared_ptr<SoilHumidityProperties>(new SoilHumidityProperties(10,20));
 
@@ -132,7 +140,6 @@ void PlantFactory::init_plant_properties()
                                                                                            600)); // upper limit age
 
     peanut_tree_illumination_properties = std::shared_ptr<IlluminationProperties>(new IlluminationProperties(20, // Start of negative impact
-                                                                                                          60, // Max shade
                                                                                                           85)); // Probability of death at max shade
 
     peanut_tree_soil_humidity_properties = std::shared_ptr<SoilHumidityProperties>(new SoilHumidityProperties(20,50));
@@ -152,7 +159,6 @@ void PlantFactory::init_plant_properties()
                                                                                            720)); // upper limit age
 
     banana_tree_illumination_properties = std::shared_ptr<IlluminationProperties>(new IlluminationProperties(20, // Start of negative impact
-                                                                                                          60, // Max shade
                                                                                                           85)); // Probability of death at max shade
 
     banana_tree_soil_humidity_properties = std::shared_ptr<SoilHumidityProperties>(new SoilHumidityProperties(50,70));

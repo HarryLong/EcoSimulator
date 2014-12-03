@@ -35,7 +35,7 @@ struct Constrainers{
 
 class Plant {
 public:
-    Plant(std::string p_name, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id,
+    Plant(QString p_name, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id,
           std::shared_ptr<GrowthProperties> p_growth_properties, std::shared_ptr<AgeingProperties> p_ageing_properties,
           std::shared_ptr<IlluminationProperties> p_illumination_properties, std::shared_ptr<SoilHumidityProperties> p_soil_himidity_properties);
     ~Plant();
@@ -51,7 +51,7 @@ public:
     PlantStatus getStatus();
     void calculateStrength(int p_shaded_percentage, int p_soil_humidity_percentage);
 
-    const std::string m_name;
+    const QString m_name;
     const QColor m_color;
     const int m_unique_id;
     const QPoint m_center_position;

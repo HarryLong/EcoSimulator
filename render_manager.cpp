@@ -45,3 +45,13 @@ void RendererManager::inactivate_all()
         it->second->setVisible(false);
     }
 }
+
+void RendererManager::filter(QString p_plant_name)
+{
+    static_cast<PlantRenderer*>(m_renderers.find(s_plant_renderer)->second)->filter(p_plant_name);
+}
+
+void RendererManager::unfilter(QString p_plant_name)
+{
+    static_cast<PlantRenderer*>(m_renderers.find(s_plant_renderer)->second)->unfilter(p_plant_name);
+}

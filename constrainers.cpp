@@ -7,9 +7,7 @@
  *******************/
 
 AgeConstrainer::AgeConstrainer(std::shared_ptr<AgeingProperties> p_ageing_properties) :
-    m_age(0), m_prime_age_start(p_ageing_properties->prime_age_start),
-    m_prime_age_end(p_ageing_properties->prime_age_end),
-    m_pre_prime_equation(NULL), m_post_prime_equation(NULL)
+    m_age(0), m_properties(p_ageing_properties)
 {
     // Build the pre-prime linear equation
     {
@@ -46,11 +44,11 @@ void AgeConstrainer::setAge(int p_age_in_months)
 
 int AgeConstrainer::getStrength()
 {
-    if(m_age < m_prime_age_start)
+    if(m_age < m_properties->prime_age_start)
     {
         return m_pre_prime_equation->calculateY(m_age);
     }
-    else if(m_age > m_prime_age_end)// post prime
+    else if(m_age > m_properties->prime_age_end)// post prime
     {
         return max((float) MIN_STRENGTH, m_post_prime_equation->calculateY(m_age));
     }
@@ -62,20 +60,16 @@ int AgeConstrainer::getStrength()
  * ILLUMINATION CONSTRAINER *
  ****************************/
 IlluminationConstrainer::IlluminationConstrainer(std::shared_ptr<IlluminationProperties> p_illumination_properties) :
-    m_shaded_percentage(.0f),
-    m_ratio_start_of_negative_impact(p_illumination_properties->shadowed_percentage_start_of_negative_impact)
+    m_shaded_percentage(.0f), m_properties(p_illumination_properties)
 {
     // Build the linear equation
-    float a ((MAX_STRENGTH + p_illumination_properties->probability_of_death_at_max_shade) /
-              (p_illumination_properties->max_shadowed_percentage -m_ratio_start_of_negative_impact));
+    float a ((MAX_STRENGTH + p_illumination_properties->probability_of_death_in_complete_shade) /
+              (100 - p_illumination_properties->shadowed_percentage_start_of_negative_impact));
     a *= -1; // Negative slope
 
-    float b ( (-1.0f * a * m_ratio_start_of_negative_impact) + MAX_STRENGTH);
+    float b ( (-1.0f * a * p_illumination_properties->shadowed_percentage_start_of_negative_impact) + MAX_STRENGTH);
 
     m_equation = new LinearEquation(a,b);
-
-//    std::cout << "Lighting equation";
-//    m_equation->print();
 }
 
 IlluminationConstrainer::~IlluminationConstrainer()
@@ -95,7 +89,7 @@ void IlluminationConstrainer::setShadedPercentage(int p_shaded_percentage)
  */
 int IlluminationConstrainer::getStrength()
 {
-    if(m_shaded_percentage > m_ratio_start_of_negative_impact )
+    if(m_shaded_percentage > m_properties->shadowed_percentage_start_of_negative_impact )
         return max((float)MIN_STRENGTH, m_equation->calculateY(m_shaded_percentage));
 
     return MAX_STRENGTH; // Full strength
@@ -105,21 +99,20 @@ int IlluminationConstrainer::getStrength()
  * SOIL HUMIDITY *
  *****************/
 
-SoilHumidityConstrainer::SoilHumidityConstrainer(std::shared_ptr<SoilHumidityProperties> p_humidity_properties) :
-    m_soil_humidity_prime_start_percentage (p_humidity_properties->soil_humidity_percentage_prime_start),
-    m_soil_humidity_prime_end_percentage (p_humidity_properties->soil_humidity_percentage_prime_end)
+SoilHumidityConstrainer::SoilHumidityConstrainer(std::shared_ptr<SoilHumidityProperties> p_soil_humidity_properties) :
+    m_properties(p_soil_humidity_properties)
 {
     // Build the drought equation
     {
-        float a ((MAX_STRENGTH*2) / m_soil_humidity_prime_start_percentage);
+        float a ((MAX_STRENGTH*2) / p_soil_humidity_properties->soil_humidity_percentage_prime_start);
         float b (MIN_STRENGTH);
         m_drought_equation = new LinearEquation(a,b);
     }
 
     // Build the flooding equation
     {
-        float a ((-2 * MAX_STRENGTH) / (100-m_soil_humidity_prime_end_percentage));
-        float b ( -1 * a * m_soil_humidity_prime_end_percentage + 100 );
+        float a ((-2 * MAX_STRENGTH) / (100-p_soil_humidity_properties->soil_humidity_percentage_prime_end));
+        float b ( -1 * a * p_soil_humidity_properties->soil_humidity_percentage_prime_end + 100 );
         m_flood_equation = new LinearEquation(a,b);
     }
 }
@@ -132,9 +125,9 @@ SoilHumidityConstrainer::~SoilHumidityConstrainer()
 
 int SoilHumidityConstrainer::getStrength()
 {
-    if(m_soil_humidity < m_soil_humidity_prime_start_percentage)
+    if(m_soil_humidity < m_properties->soil_humidity_percentage_prime_start)
         return m_drought_equation->calculateY(m_soil_humidity);
-    else if(m_soil_humidity > m_soil_humidity_prime_end_percentage)
+    else if(m_soil_humidity > m_properties->soil_humidity_percentage_prime_end)
         return m_flood_equation->calculateY(m_soil_humidity);
 
     // Else return maximum strength
@@ -143,10 +136,15 @@ int SoilHumidityConstrainer::getStrength()
 
 bool SoilHumidityConstrainer::isInDrought()
 {
-    return m_soil_humidity < m_soil_humidity_prime_start_percentage;
+    return m_soil_humidity < m_properties->soil_humidity_percentage_prime_start;
 }
 
 void SoilHumidityConstrainer::setSoilHumidityPercentage(int p_soil_humidity_percentage)
 {
     m_soil_humidity = p_soil_humidity_percentage;
+}
+
+int SoilHumidityConstrainer::getMinimumPrimeSoilHumidity()
+{
+    return m_properties->soil_humidity_percentage_prime_start;
 }

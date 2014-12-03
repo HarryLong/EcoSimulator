@@ -8,7 +8,7 @@
 
 #include "debuger.h"
 
-TimeManager::TimeManager() : m_unit_time(-1), m_listeners()
+TimeManager::TimeManager() : m_unit_time(-1), m_listeners(), m_time_keeper(NULL)
 {
 }
 

@@ -9,7 +9,7 @@
 
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 
-SimulatorManager::SimulatorManager() : m_time_keeper(), m_plant_storage(), m_plant_factory(), m_elapsed_months(0), m_state(Stopped),
+SimulatorManager::SimulatorManager() : m_time_keeper(), m_plant_storage(), m_elapsed_months(0), m_state(Stopped),
     m_environment_mgr()
 {
     m_time_keeper.addListener(this);
@@ -19,13 +19,19 @@ SimulatorManager::~SimulatorManager()
 {
 }
 
-void SimulatorManager::add_plant(Plant * p_plant)
+void SimulatorManager::addPlants(std::vector<Plant *> p_plants)
+{
+    for(Plant * p : p_plants)
+        addPlant(p);
+}
+
+void SimulatorManager::addPlant(Plant * p_plant)
 {
     m_plant_storage.add(p_plant);
     m_environment_mgr.updateEnvironment(p_plant->m_center_position, p_plant->getCanopyRadius(), p_plant->getHeight(), p_plant->getRootsRadius(),
                                         p_plant->m_unique_id, p_plant->getMinimumSoilHumidityRequirement()); // Update resources in environment
 
-    emit newPlant(QString(p_plant->m_name.c_str()), p_plant->m_color);
+    emit newPlant(p_plant->m_name, p_plant->m_color);
 }
 
 void SimulatorManager::remove_plant(int p_plant_id)
@@ -36,7 +42,6 @@ void SimulatorManager::remove_plant(int p_plant_id)
 void SimulatorManager::start()
 {
     m_state = Running;
-    generate_random_plants();
     m_stopping.store(false);
     m_time_keeper.start();
 }
@@ -119,8 +124,8 @@ void SimulatorManager::newMonth()
         else
         {
             plant_ids_to_remove.push_back(p->m_unique_id);
-            m_environment_mgr.remove(p->m_center_position, p->getCanopyRadius(), p->m_unique_id);
-            emit removedPlant(QString(p->m_name.c_str()), plant_status_to_string(status));
+            m_environment_mgr.remove(p->m_center_position, p->getCanopyRadius(), p->getRootsRadius(), p->m_unique_id);
+            emit removedPlant(p->m_name, plant_status_to_string(status));
         }
     }
 
@@ -134,6 +139,16 @@ void SimulatorManager::newMonth()
               [](const PlantRenderingData & lhs, const PlantRenderingData & rhs) {return lhs.height < rhs.height;});
 
     emit update();
+}
+
+void SimulatorManager::setIllumination(const QImage* p_illumination_data)
+{
+    m_environment_mgr.setIllumination(p_illumination_data);
+}
+
+void SimulatorManager::setSoilHumidity(const QImage* p_soil_humidity_data)
+{
+    m_environment_mgr.setSoilHumidity(p_soil_humidity_data);
 }
 
 PlantRenderDataContainer SimulatorManager::getPlantRenderingData()
@@ -154,25 +169,6 @@ SoilHumiditySpatialHashMap SimulatorManager::getSoilHumidityRenderingData()
 void SimulatorManager::setMonthlyTriggerFrequency(int p_frequency)
 {
     m_time_keeper.setUnitTime(p_frequency);
-}
-
-void SimulatorManager::generate_random_plants()
-{
-    add(Specie::OAK_TREE, 50);
-    add(Specie::BANANA_TREE, 50);
-    add(Specie::OLIVE_TREE, 50);
-    add(Specie::PEANUT_TREE, 50);
-}
-
-void SimulatorManager::add(Specie specie, int count)
-{
-    for(int i = 0; i < count; i++)
-        add_plant(m_plant_factory.generate(specie, generate_random_position()));
-}
-
-QPoint SimulatorManager::generate_random_position()
-{
-    return QPoint(rand()%AREA_WIDTH_HEIGHT, rand()%AREA_WIDTH_HEIGHT);
 }
 
 QString SimulatorManager::plant_status_to_string(PlantStatus status)

@@ -15,14 +15,14 @@
 class Plant;
 
 struct PlantRenderingData{
-    std::string name;
+    QString name;
     QColor color;
     QPoint center_position;
     float height;
     float roots_radius;
     float canopy_radius;
 
-    PlantRenderingData(std::string p_name, QColor p_color, QPoint p_center_position,
+    PlantRenderingData(QString p_name, QColor p_color, QPoint p_center_position,
                        float p_height, float p_canopy_radius, float p_roots_radius) : name(p_name), color(p_color),
         center_position(p_center_position), height(p_height), canopy_radius(p_canopy_radius), roots_radius(p_roots_radius) {}
 
@@ -71,12 +71,15 @@ class PlantRenderer : public Renderer
 public:
     PlantRenderer(QWidget *parent = 0);
     virtual void render(RenderData p_render_data);
+    void filter(QString p_plant_name);
+    void unfilter(QString p_plant_name);
 
 protected:
     virtual void paintEvent(QPaintEvent * event);
 
 private:
     PlantRenderDataContainer m_plant_data;
+    std::set<QString> m_filters;
 };
 
 /*********

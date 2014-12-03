@@ -8,15 +8,14 @@
 #include "dice_roller.h"
 #include <memory>
 #include "helper.h"
+#include "plant_db.h"
 
 class Plant;
 
-enum Specie {
-    OAK_TREE,
-    OLIVE_TREE,
-    PEANUT_TREE,
-    BANANA_TREE
-};
+static const QString specie_name_oak_tree = "Oak Tree";
+static const QString specie_name_olive_tree = "Olive Tree";
+static const QString specie_name_peanut_tree = "Peanut Tree";
+static const QString specie_name_banana_tree = "Banana Tree";
 
 struct SpecieProperties {
     std::shared_ptr<AgeingProperties> ageing_properties;
@@ -24,10 +23,10 @@ struct SpecieProperties {
     std::shared_ptr<IlluminationProperties> illumination_properties;
     std::shared_ptr<SoilHumidityProperties> soil_humidity_properties;
 
-    std::string name;
+    QString name;
     QColor color;
 
-    SpecieProperties(std::string p_name, QColor p_color, std::shared_ptr<AgeingProperties> p_ageing_properties,
+    SpecieProperties(QString p_name, QColor p_color, std::shared_ptr<AgeingProperties> p_ageing_properties,
                          std::shared_ptr<GrowthProperties> p_growth_properties, std::shared_ptr<IlluminationProperties> p_illumination_properties,
                          std::shared_ptr<SoilHumidityProperties> p_soil_humidity_properties) :
         name(p_name), color(p_color),
@@ -37,22 +36,23 @@ struct SpecieProperties {
         soil_humidity_properties(p_soil_humidity_properties){}
 };
 
-typedef std::map<Specie, QColor> PlantColorMap;
+typedef std::map<QString, QColor> PlantColorMap;
 
 class PlantFactory {
 public:
     PlantFactory();
     ~PlantFactory();
-    Plant* generate(Specie type, QPoint p_center_coord);
+    Plant* generate(QString p_specie_name, QPoint p_center_coord);
     PlantColorMap getSpeciesColorMapping() { return m_plant_to_color_map; }
+    std::vector<QString> getAllSpecieNames();
+
 
 private:
     void populate_db();
     void init_plant_properties();
-    std::map<Specie, SpecieProperties> m_property_db;
+    std::map<QString, SpecieProperties> m_plant_db;
     DiceRoller m_dice_roller;
 
-    // NOTE: ALL PROBABILITIES IN PER THOUSAND
     /************
      * OAK TREE *
      ************/
@@ -86,6 +86,8 @@ private:
     std::shared_ptr<SoilHumidityProperties> banana_tree_soil_humidity_properties;
 
     PlantColorMap m_plant_to_color_map;
+
+    PlantDB m_real_plant_db;
 };
 
 #endif // PLANT_FACTORY_H

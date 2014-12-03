@@ -7,12 +7,14 @@
 #include <map>
 #include <QObject>
 #include "helper.h"
+#include <QStyledItemDelegate>
 
-enum Columns{
+enum OverViewTableColumns{
     SpecieColumn = 0,
+    RenderColumn,
     ColorColumn,
     CountColumn,
-    NumberOfColumns
+    OverViewTableColumnCount
 };
 
 struct SpecieRow{
@@ -39,10 +41,20 @@ public slots:
     void removePlant(QString specie_name, QString cause_of_death);
     void reset();
 
+private slots:
+    void cell_changed(int row, int column);
+
+signals:
+    void filter(QString plant_name);
+    void unfilter(QString plant_name);
+
 protected:
 //    virtual void init_layout();
 
 private:
+    QTableWidgetItem * generate_read_only_cell(QString p_cell_content = "");
+    void init_signals();
+
     QStringList labels;
     std::map<QString,SpecieRow> m_data;
     std::map<QString, int> m_causes_of_death_columns;

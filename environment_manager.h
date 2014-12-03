@@ -18,13 +18,16 @@ public:
 
     void processResourceRequests();
 
-    void remove(QPoint p_center, float p_radius, int p_id);
+    void remove(QPoint p_center, float p_canopy_radius, float p_roots_radius, int p_id);
     void reset();
 
-    void updateEnvironment(QPoint p_center, float p_canopy_radius, float p_height, float p_root_radius, int p_id, int p_minimum_soil_humidity_request);
+    void updateEnvironment(QPoint p_center, float p_canopy_radius, float p_height, float p_roots_radius, int p_id, int p_minimum_soil_humidity_request);
 
     IlluminationSpatialHashMap getIlluminationRenderingData();
     SoilHumiditySpatialHashMap getSoilHumidityRenderingData();
+
+    void setIllumination(const QImage* p_illumination_data);
+    void setSoilHumidity(const QImage* p_soil_humidity_data);
 
 private:
     Factors m_factors;

@@ -21,29 +21,25 @@ struct AgeingProperties {
 };
 
 struct GrowthProperties {
-    const float max_monthly_height_growth; // cm per month
+    const float max_monthly_vertical_growth; // cm per month
     const float max_monthly_root_growth; // cm per month
-    const float height_to_radius_ratio;
+    const float max_monthly_canopy_growth; // cm per month
 
     GrowthProperties( float p_max_monthly_height_growth, float p_max_monthly_root_growth,
                       float p_height_to_width_ratio) :
-        max_monthly_height_growth(p_max_monthly_height_growth),
+        max_monthly_vertical_growth(p_max_monthly_height_growth),
         max_monthly_root_growth(p_max_monthly_root_growth),
-        height_to_radius_ratio(p_height_to_width_ratio) {}
+        max_monthly_canopy_growth(p_height_to_width_ratio) {}
 };
 
 struct IlluminationProperties {
     const int shadowed_percentage_start_of_negative_impact;
-    const int max_shadowed_percentage;
-
-    const int probability_of_death_at_max_shade;
+    const int probability_of_death_in_complete_shade;
 
     IlluminationProperties( int p_shadowed_percentage_start_of_negative_impact,
-                            int p_max_shadowed_percentage,
-                            int p_probability_of_death_at_max_shade) :
+                            int p_probability_of_death_in_complete_shade) :
         shadowed_percentage_start_of_negative_impact(p_shadowed_percentage_start_of_negative_impact),
-        max_shadowed_percentage(p_max_shadowed_percentage),
-        probability_of_death_at_max_shade(p_probability_of_death_at_max_shade) {}
+        probability_of_death_in_complete_shade(p_probability_of_death_in_complete_shade) {}
 };
 
 struct SoilHumidityProperties {

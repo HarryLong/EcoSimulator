@@ -1,22 +1,27 @@
-#include "window.h"
+#include "central_widget.h"
 
-#include <QtWidgets>
-#include <QApplication>
 #include <QGridLayout>
 #include "constants.h"
 
-Window::Window() : m_simulator_manager(), m_renderers_holder()
+#include <QPushButton>
+#include <QSlider>
+#include <QComboBox>
+#include"plant_db_editor.h"
+
+CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
+    QWidget(parent, f),
+    m_simulator_manager(), m_start_config_dialog(this)
 {
     init_widgets();
     init_layout();
     init_signals();
 }
 
-Window::~Window()
+CentralWidget::~CentralWidget()
 {
 }
 
-void Window::init_layout()
+void CentralWidget::init_layout()
 {
     // Time slider
     m_time_control_slider = new QSlider(Qt::Horizontal);
@@ -46,7 +51,9 @@ void Window::init_layout()
 
         // Elapsed time label
         m_elapsed_time_lbl = new QLabel();
+        update_elapsed_time_label(0);
 
+        // QButtons
         m_stop_start_button = new QPushButton(START_BTN_TEXT);
         m_pause_resume_button = new QPushButton(PAUSE_BTN_TEXT);
         m_pause_resume_button->setEnabled(false);
@@ -72,12 +79,12 @@ void Window::init_layout()
     setWindowTitle("ECOSYSTEM SIMULATOR");
 }
 
-void Window::init_widgets()
+void CentralWidget::init_widgets()
 {
     m_overview_widget = new OverViewWidget();
 }
 
-void Window::init_signals()
+void CentralWidget::init_signals()
 {
     // Start button
     connect(m_stop_start_button, SIGNAL(clicked()), this, SLOT(start_stop_btn_clicked()));
@@ -95,13 +102,19 @@ void Window::init_signals()
     connect(m_renderers_cb, SIGNAL( currentIndexChanged(QString) ), &m_render_manager, SLOT( setActiveRenderer(QString) ));
     m_renderers_cb->setCurrentText(m_render_manager.getDefaultRederName());
 
-
     // The overview widget to the simulator
     connect(&m_simulator_manager, SIGNAL(newPlant(QString, QColor)), m_overview_widget, SLOT(addPlant(QString,QColor)));
     connect(&m_simulator_manager, SIGNAL(removedPlant(QString, QString)), m_overview_widget, SLOT(removePlant(QString,QString)));
+
+    // The start config dialog upon accepted should forward data to the simulator
+    connect(&m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
+
+    // The overview widget render filter
+    connect(m_overview_widget, SIGNAL(filter(QString)), &m_render_manager, SLOT(filter(QString)));
+    connect(m_overview_widget, SIGNAL(unfilter(QString)), &m_render_manager, SLOT(unfilter(QString)));
 }
 
-void Window::updateRender()
+void CentralWidget::updateRender()
 {
     RenderData render_data(
                 m_simulator_manager.getPlantRenderingData(),
@@ -112,28 +125,27 @@ void Window::updateRender()
     m_render_manager.render(render_data);
 
     // Update info
-    int total_elapsed_months(m_simulator_manager.getElapsedMonths());
-    int elapsed_years(total_elapsed_months/12);
-    int elapsed_months(total_elapsed_months%12);
+    update_elapsed_time_label(m_simulator_manager.getElapsedMonths());
+}
+
+void CentralWidget::update_elapsed_time_label(int p_months)
+{
+    int elapsed_years(p_months/12);
+    int elapsed_months(p_months%12);
     m_elapsed_time_lbl->setText(QString("Elapsed time: %1 years %2 months").arg(elapsed_years).arg(elapsed_months));
 }
 
-void Window::setTimeAcceleration(int p_acceleration)
+void CentralWidget::setTimeAcceleration(int p_acceleration)
 {
     int unit_time(MAX_UNIT_TIME+1-p_acceleration);
     m_trigger_frequency_lbl->setText(QString("Trigger frequency: %1 ms").arg(unit_time));
     m_simulator_manager.setMonthlyTriggerFrequency(unit_time);
 }
 
-void Window::start_stop_btn_clicked()
+void CentralWidget::start_stop_btn_clicked()
 {
     if(m_simulator_manager.getState() == Stopped) // Starting
-    {
-        m_simulator_manager.start();
-        m_stop_start_button->setText("Stop");
-        // Enable pause/resume button
-        m_pause_resume_button->setEnabled(true);
-    }
+        m_start_config_dialog.exec();
     else // Stopping
     {
         m_simulator_manager.stop();
@@ -146,7 +158,7 @@ void Window::start_stop_btn_clicked()
     }
 }
 
-void Window::pause_resume_btn_clicked()
+void CentralWidget::pause_resume_btn_clicked()
 {
     if(m_simulator_manager.getState() == Paused) // Resuming
     {
@@ -160,19 +172,28 @@ void Window::pause_resume_btn_clicked()
     }
 }
 
-void Window::closeEvent ( QCloseEvent * event )
+void CentralWidget::start_simulation()
+{
+    StartConfiguration start_config(m_start_config_dialog.getStartConfiguration());
+
+    // Add the plants to create
+    m_simulator_manager.setIllumination(start_config.illumination);
+    m_simulator_manager.setSoilHumidity(start_config.soil_humidity);
+    m_simulator_manager.addPlants(start_config.m_plants);
+
+    m_stop_start_button->setText("Stop");
+    // Enable pause/resume button
+    m_pause_resume_button->setEnabled(true);
+    m_simulator_manager.start();
+}
+
+void CentralWidget::closeEvent ( QCloseEvent * event )
 {
     std::cout << "Stopping..." << std::endl;
     m_simulator_manager.stop();
 }
 
-int main(int argc, char *argv[])
+void CentralWidget::display_start_configuration_dialog()
 {
-    std::cout << "Starting..." << std::endl;
-    QApplication app(argc, argv);
-    Window w;
-    w.resize(w.sizeHint());
-    w.showMaximized();
-
-    return app.exec();
+    m_start_config_dialog.exec();
 }

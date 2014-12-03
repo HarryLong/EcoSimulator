@@ -1,20 +1,23 @@
 #include "environment_soil_humidity.h"
 #include "math.h"
 
-EnvironmentSoilHumidity::EnvironmentSoilHumidity() : m_refresh_required(true)
+EnvironmentSoilHumidity::EnvironmentSoilHumidity() : m_refresh_required(true), data_set(false)
 {
-    init();
 }
-
-void EnvironmentSoilHumidity::init()
+void EnvironmentSoilHumidity::setSoilHumidityData(const QImage* p_image)
 {
+    QImage scaled_image (p_image->scaled(QSize(m_spatial_hashmap.getHorizontalCellCount(), m_spatial_hashmap.getVerticalCellCount()),
+                                        Qt::IgnoreAspectRatio));
+
     for(int x = 0; x < m_spatial_hashmap.getHorizontalCellCount(); x++)
     {
         for(int y = 0; y < m_spatial_hashmap.getVerticalCellCount(); y++)
         {
-            m_spatial_hashmap.insert(QPoint(x,y),SoilHumidityCellContent());
+            int humidity_percentage((qBlue(scaled_image.pixel(x,y)) / 255.f) * 100);
+            m_spatial_hashmap.insert(QPoint(x,y),SoilHumidityCellContent(humidity_percentage));
         }
     }
+    data_set = true;
 }
 
 int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_radius, int p_id)
@@ -74,22 +77,14 @@ void EnvironmentSoilHumidity::remove(QPoint p_center, float p_radius, int p_id)
         {
             SoilHumidityCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
             cell_data->requests.erase(p_id);
+            cell_data->grants.erase(p_id);
         }
     }
 }
 
 void EnvironmentSoilHumidity::reset()
 {
-    for(int x = 0; x < m_spatial_hashmap.getHorizontalCellCount(); x++)
-    {
-        for(int y = 0; y < m_spatial_hashmap.getVerticalCellCount(); y++)
-        {
-            SoilHumidityCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
-
-            cell_data->requests.clear();
-            cell_data->grants.clear();
-        }
-    }
+    m_spatial_hashmap.clear();
 }
 
 void EnvironmentSoilHumidity::refresh_resource_distribution()

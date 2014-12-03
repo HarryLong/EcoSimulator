@@ -8,7 +8,7 @@
 #include "debuger.h"
 #include "constrainers.h"
 
-Plant::Plant(std::string p_name, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id,
+Plant::Plant(QString p_name, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id,
       std::shared_ptr<GrowthProperties>  p_growth_properties, std::shared_ptr<AgeingProperties> p_ageing_properties,
       std::shared_ptr<IlluminationProperties> p_illumination_properties, std::shared_ptr<SoilHumidityProperties> p_soil_himidity_properties) :
     m_name(p_name), m_color(p_color), m_center_position(p_center_coord), m_unique_id(p_unique_id), m_random_id(p_random_id), m_strengths(), m_age(0),
@@ -80,10 +80,10 @@ void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_perce
         min_strength = soil_humidity_strength;
         bottleneck = ConstrainerType::SoilHumidity;
     }
-    std::cout << "Soil humidity: " << p_soil_humidity_percentage <<
-                 " | Soil humidity range: [" << m_constrainers.soil_humidity_constrainer->m_soil_humidity_prime_start_percentage <<
-                                        " - " << m_constrainers.soil_humidity_constrainer->m_soil_humidity_prime_end_percentage  << "] " <<
-                 " | Calculated stength: " << soil_humidity_strength << std::endl;
+//    std::cout << "Soil humidity: " << p_soil_humidity_percentage <<
+//                 " | Soil humidity range: [" << m_constrainers.soil_humidity_constrainer->m_soil_humidity_prime_start_percentage <<
+//                                        " - " << m_constrainers.soil_humidity_constrainer->m_soil_humidity_prime_end_percentage  << "] " <<
+//                 " | Calculated stength: " << soil_humidity_strength << std::endl;
 
     m_min_strength = min_strength;
     m_strength_bottleneck = bottleneck;
@@ -106,7 +106,7 @@ float Plant::getRootsRadius() const
 
 int Plant::getMinimumSoilHumidityRequirement() const
 {
-    return m_constrainers.soil_humidity_constrainer->m_soil_humidity_prime_start_percentage;
+    return m_constrainers.soil_humidity_constrainer->getMinimumPrimeSoilHumidity();
 }
 
 int Plant::getVigor() const

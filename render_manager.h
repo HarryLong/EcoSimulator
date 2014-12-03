@@ -25,6 +25,8 @@ public:
 
 public slots:
     void setActiveRenderer(QString p_renderer);
+    void filter(QString p_plant_name);
+    void unfilter(QString p_plant_name);
 
 private:
     std::map<QString, Renderer*> m_renderers;

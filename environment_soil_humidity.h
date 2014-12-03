@@ -3,6 +3,7 @@
 
 #include "spatial_hashmap.h"
 #include <QPoint>
+#include <QImage>
 
 struct ResourceUsageRequest{
     int requested_amount;
@@ -21,7 +22,7 @@ struct SoilHumidityCellContent {
     RequestsMap requests;
     GrantsMap grants;
 
-    SoilHumidityCellContent() : humidity_percentage(40), requests(),grants() {}
+    SoilHumidityCellContent(int humidity_percentage) : humidity_percentage(humidity_percentage), requests(),grants() {}
 };
 typedef SpatialHashMap<SoilHumidityCellContent> SoilHumiditySpatialHashMap;
 class EnvironmentSoilHumidity
@@ -29,6 +30,7 @@ class EnvironmentSoilHumidity
 public:
     EnvironmentSoilHumidity();
 
+    void setSoilHumidityData(const QImage* p_image);
     int getHumidityPercentage(QPoint p_center, float p_radius, int p_id);
     void setData(QPoint p_center, float p_radius, int p_id, int p_minimum_humidity_percentage);
 
@@ -37,12 +39,12 @@ public:
     SoilHumiditySpatialHashMap getSoilHumiditySpatialHashmap() { return m_spatial_hashmap; }
 
 protected:
-    void init();
 
 private:
     void refresh_resource_distribution();
     SoilHumiditySpatialHashMap m_spatial_hashmap;
     bool m_refresh_required;
+    bool data_set;
 };
 
 #endif //ENVIRONMNENT_SOIL_HUMIDITY_H

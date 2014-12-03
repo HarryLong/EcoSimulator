@@ -4,25 +4,29 @@
 #include <QWidget>
 #include <QScopedPointer>
 #include <QComboBox>
-#include <QSlider>
 #include "time_manager.h"
 #include "simulator_manager.h"
 #include <map>
 #include "overview_widget.h"
 #include "render_manager.h"
-#include <QPushButton>
+#include "start_config_dialog.h"
+#include <QMainWindow>
+
+class QPushButton;
+class QSlider;
+class QComboBox;
 
 const static QString START_BTN_TEXT = "Start";
 const static QString STOP_BTN_TEXT = "Stop";
 const static QString RESUME_BTN_TEXT = "Resume";
 const static QString PAUSE_BTN_TEXT = "Pause";
 
-class Window : public QWidget
+class CentralWidget : public QWidget
 {
     Q_OBJECT
 public:
-    Window();
-    ~Window();
+    CentralWidget(QWidget * parent = 0, Qt::WindowFlags f = 0);
+    ~CentralWidget();
 
 public slots:
     void updateRender();
@@ -34,17 +38,22 @@ protected:
 private slots:
     void start_stop_btn_clicked();
     void pause_resume_btn_clicked();
+    void display_start_configuration_dialog();
+    void start_simulation();
 
 private:
     void init_layout();
     void init_widgets();
     void init_signals();
+    void update_elapsed_time_label(int p_months);
 
     RendererManager m_render_manager;
 
     SimulatorManager m_simulator_manager;
     OverViewWidget * m_overview_widget;
-    std::map<int, Renderer*> m_renderers_holder;
+
+    // DIALOGS
+    StartConfigDialog m_start_config_dialog;
 
     // UI ELEMENTS
     QSlider * m_time_control_slider;
