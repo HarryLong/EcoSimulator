@@ -19,11 +19,10 @@ enum OverViewTableColumns{
 
 struct SpecieRow{
     int occurence_count;
-    QColor color;
     int row_id;
 
     std::map<QString, int> causes_of_death_count;
-    SpecieRow(int row_id, QColor color) : occurence_count(0), color(color), causes_of_death_count(), row_id(row_id) {}
+    SpecieRow(int row_id) : occurence_count(0), causes_of_death_count(), row_id(row_id) {}
 };
 
 class OverViewWidget : public QTableWidget
@@ -37,7 +36,7 @@ public:
     QSize sizeHint() const;
 
 public slots:
-    void addPlant(QString specie_name, QColor color);
+    void addPlant(QString specie_name, const QColor * color);
     void removePlant(QString specie_name, QString cause_of_death);
     void reset();
 

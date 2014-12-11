@@ -17,17 +17,19 @@
  *******************/
 class PixelData {
 public:
-    PixelData(int width, int height) : m_width(width), m_height(height) {}
+    PixelData(int width, int height);
     virtual ~PixelData() {}
+    virtual void resetAll();
+    virtual const QImage & toImage() const;
+    virtual void setData(QImage image);
+    virtual void reset(QPoint p_point);
     virtual void set(QPoint p_point, int p_percentage_of_max) = 0;
-    virtual void reset(QPoint p_point) = 0;
-    virtual void resetAll() = 0;
     virtual void fillAll(int p_percentage_of_max) = 0;
     virtual int getValue(QPoint point) = 0;
-    virtual QImage * toImage() = 0;
 
 protected:
     int m_width, m_height;
+    QImage m_image;
 };
 
 /******************
@@ -78,7 +80,7 @@ public:
 
     QSize sizeHint() const;
 
-    const QImage * getData();
+    const QImage & getData() const;
 
 private slots:
     void set_cursor_size(int p_size);
@@ -91,6 +93,8 @@ private slots:
     void refresh_cursor_type(QString type);
     void reset_all_clicked();
     void fill_all();
+    void load_btn_clicked();
+    void save_btn_clicked();
 
 private:
     void refresh();
@@ -107,6 +111,9 @@ private:
     QComboBox * m_cursor_type_cb;
     QPushButton * m_reset_all_btn;
     QPushButton * m_fill_all_btn;
+
+    QPushButton * m_save_btn;
+    QPushButton * m_load_btn;
 
     QCursor m_custom_cursor;
     QCursor m_default_cursor;
@@ -127,15 +134,11 @@ public:
     SoilHumidityPixelData(int width, int height);
     ~SoilHumidityPixelData();
     virtual void set(QPoint p_point,int p_percentage_of_max);
-    virtual void reset(QPoint p_point);
-    virtual void resetAll();
-    int getValue(QPoint point);
-    QImage * toImage();
     virtual void fillAll(int p_percentage_of_max);
+    int getValue(QPoint point);
 
 private:
     int get_blue(QPoint p_point);
-    QImage * m_image;
 };
 class SoilHumidityInputWidget : public InputWidget
 {
@@ -152,18 +155,12 @@ public:
     IlluminationPixelData(int width, int height);
     ~IlluminationPixelData();
     virtual void set(QPoint p_point,int p_percentage_of_max);
-    virtual void reset(QPoint p_point);
-    virtual void resetAll();
     virtual void fillAll(int p_percentage_of_max);
-    int getValue(QPoint point);
-    QImage * toImage();
-
-private:
-    QImage * m_image;
+    int getValue(QPoint point);        
 };
 class IlluminationInputWidget : public InputWidget
 {
 public:
-    IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new IlluminationPixelData(width, height), width, height, false, parent) {}
+    IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new IlluminationPixelData(width, height), width, height, true, parent) {}
 };
 #endif // INPUT_WIDGETS_H

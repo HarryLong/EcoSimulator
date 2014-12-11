@@ -60,3 +60,9 @@ int main(int argc, char *argv[])
 
     return app.exec();
 }
+
+void MainWindow::closeEvent ( QCloseEvent * event )
+{
+    std::cout << "Stopping..." << std::endl;
+    m_central_widget->stop_simulation();
+}

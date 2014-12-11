@@ -6,11 +6,12 @@
 #include "boost/foreach.hpp"
 
 #include "debuger.h"
+#include <mutex>
 
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 
 SimulatorManager::SimulatorManager() : m_time_keeper(), m_plant_storage(), m_elapsed_months(0), m_state(Stopped),
-    m_environment_mgr()
+    m_environment_mgr(), m_plant_rendering_data()
 {
     m_time_keeper.addListener(this);
 }
@@ -31,7 +32,7 @@ void SimulatorManager::addPlant(Plant * p_plant)
     m_environment_mgr.updateEnvironment(p_plant->m_center_position, p_plant->getCanopyRadius(), p_plant->getHeight(), p_plant->getRootsRadius(),
                                         p_plant->m_unique_id, p_plant->getMinimumSoilHumidityRequirement()); // Update resources in environment
 
-    emit newPlant(p_plant->m_name, p_plant->m_color);
+    emit newPlant(p_plant->m_specie_name, p_plant->getColor());
 }
 
 void SimulatorManager::remove_plant(int p_plant_id)
@@ -66,6 +67,8 @@ void SimulatorManager::stop()
     m_stopping.store(true);
     m_time_keeper.stop();
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(250)); // Wait a delay to ensure all data processing has stopped from the previous trigger
+
     m_environment_mgr.reset();
     m_plant_rendering_data.clear();
     m_plant_storage.clear();
@@ -74,14 +77,18 @@ void SimulatorManager::stop()
     emit update();// In order to remove on screen elements
 }
 
-void SimulatorManager::newMonth()
+void SimulatorManager::trigger()
 {
     if(m_stopping.load())
         return;
 
     m_elapsed_months++;
 
+    m_plant_rendering_data.lock();
+
     m_plant_rendering_data.clear();
+
+//    std::shared_lock
 
     /*
      * ITERATION # 1:
@@ -92,6 +99,7 @@ void SimulatorManager::newMonth()
     {
         // Shade
         int shaded_percentage (m_environment_mgr.getShadedPercentage(p->m_center_position, p->getCanopyRadius(), p->getHeight()));
+
         // Humidity
         int soil_humidity_percentage(m_environment_mgr.getSoilHumidityPercentage(p->m_center_position, p->getRootsRadius(), p->m_unique_id));
 
@@ -119,13 +127,13 @@ void SimulatorManager::newMonth()
 
             // Insert the plant into list of plants to render
             m_plant_rendering_data.push_back(
-                        PlantRenderingData(p->m_name, p->m_color, p->m_center_position, p->getHeight(), p->getCanopyRadius(), p->getRootsRadius()));
+                        PlantRenderingData(p->m_specie_name, p->getColor(), p->m_center_position, p->getHeight(), p->getCanopyRadius(), p->getRootsRadius()));
         }
         else
         {
             plant_ids_to_remove.push_back(p->m_unique_id);
             m_environment_mgr.remove(p->m_center_position, p->getCanopyRadius(), p->getRootsRadius(), p->m_unique_id);
-            emit removedPlant(p->m_name, plant_status_to_string(status));
+            emit removedPlant(p->m_specie_name, plant_status_to_string(status));
         }
     }
 
@@ -138,32 +146,24 @@ void SimulatorManager::newMonth()
     std::sort(m_plant_rendering_data.begin(), m_plant_rendering_data.end(),
               [](const PlantRenderingData & lhs, const PlantRenderingData & rhs) {return lhs.height < rhs.height;});
 
+    m_plant_rendering_data.unlock();
+
     emit update();
 }
 
-void SimulatorManager::setIllumination(const QImage* p_illumination_data)
+void SimulatorManager::setEnvironmentData(const QImage & p_illumination_data, const QImage & p_soil_humidity_data)
 {
-    m_environment_mgr.setIllumination(p_illumination_data);
+    m_environment_mgr.setEnvironmentProperties(p_illumination_data, p_soil_humidity_data);
 }
 
-void SimulatorManager::setSoilHumidity(const QImage* p_soil_humidity_data)
-{
-    m_environment_mgr.setSoilHumidity(p_soil_humidity_data);
-}
-
-PlantRenderDataContainer SimulatorManager::getPlantRenderingData()
+const PlantRenderDataContainer& SimulatorManager::getPlantRenderingData()
 {
     return m_plant_rendering_data;
 }
 
-IlluminationSpatialHashMap SimulatorManager::getIlluminationRenderingData()
+const EnvironmentSpatialHashMap & SimulatorManager::getEnvironmentRenderingData()
 {
-    return m_environment_mgr.getIlluminationRenderingData();
-}
-
-SoilHumiditySpatialHashMap SimulatorManager::getSoilHumidityRenderingData()
-{
-    return m_environment_mgr.getSoilHumidityRenderingData();
+    return m_environment_mgr.getRenderingData();
 }
 
 void SimulatorManager::setMonthlyTriggerFrequency(int p_frequency)

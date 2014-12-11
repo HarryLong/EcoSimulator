@@ -10,7 +10,8 @@
 
 CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
     QWidget(parent, f),
-    m_simulator_manager(), m_start_config_dialog(this)
+    m_simulator_manager(),
+    m_render_manager(m_simulator_manager.getPlantRenderingData(), m_simulator_manager.getEnvironmentRenderingData())
 {
     init_widgets();
     init_layout();
@@ -103,11 +104,8 @@ void CentralWidget::init_signals()
     m_renderers_cb->setCurrentText(m_render_manager.getDefaultRederName());
 
     // The overview widget to the simulator
-    connect(&m_simulator_manager, SIGNAL(newPlant(QString, QColor)), m_overview_widget, SLOT(addPlant(QString,QColor)));
+    connect(&m_simulator_manager, SIGNAL(newPlant(QString, const QColor*)), m_overview_widget, SLOT(addPlant(QString,const QColor*)));
     connect(&m_simulator_manager, SIGNAL(removedPlant(QString, QString)), m_overview_widget, SLOT(removePlant(QString,QString)));
-
-    // The start config dialog upon accepted should forward data to the simulator
-    connect(&m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
 
     // The overview widget render filter
     connect(m_overview_widget, SIGNAL(filter(QString)), &m_render_manager, SLOT(filter(QString)));
@@ -116,14 +114,6 @@ void CentralWidget::init_signals()
 
 void CentralWidget::updateRender()
 {
-    RenderData render_data(
-                m_simulator_manager.getPlantRenderingData(),
-                m_simulator_manager.getIlluminationRenderingData(),
-                m_simulator_manager.getSoilHumidityRenderingData()
-                );
-
-    m_render_manager.render(render_data);
-
     // Update info
     update_elapsed_time_label(m_simulator_manager.getElapsedMonths());
 }
@@ -132,7 +122,8 @@ void CentralWidget::update_elapsed_time_label(int p_months)
 {
     int elapsed_years(p_months/12);
     int elapsed_months(p_months%12);
-    m_elapsed_time_lbl->setText(QString("Elapsed time: %1 years %2 months").arg(elapsed_years).arg(elapsed_months));
+    m_elapsed_time_lbl->setText(QString("Elapsed time: %1 years %2 months (%3 months)").arg(elapsed_years)
+                                .arg(elapsed_months).arg(p_months));
 }
 
 void CentralWidget::setTimeAcceleration(int p_acceleration)
@@ -145,7 +136,7 @@ void CentralWidget::setTimeAcceleration(int p_acceleration)
 void CentralWidget::start_stop_btn_clicked()
 {
     if(m_simulator_manager.getState() == Stopped) // Starting
-        m_start_config_dialog.exec();
+        display_start_configuration_dialog();
     else // Stopping
     {
         m_simulator_manager.stop();
@@ -174,11 +165,10 @@ void CentralWidget::pause_resume_btn_clicked()
 
 void CentralWidget::start_simulation()
 {
-    StartConfiguration start_config(m_start_config_dialog.getStartConfiguration());
+    StartConfiguration start_config(m_start_config_dialog->getStartConfiguration());
 
     // Add the plants to create
-    m_simulator_manager.setIllumination(start_config.illumination);
-    m_simulator_manager.setSoilHumidity(start_config.soil_humidity);
+    m_simulator_manager.setEnvironmentData(start_config.illumination, start_config.soil_humidity);
     m_simulator_manager.addPlants(start_config.m_plants);
 
     m_stop_start_button->setText("Stop");
@@ -187,13 +177,16 @@ void CentralWidget::start_simulation()
     m_simulator_manager.start();
 }
 
-void CentralWidget::closeEvent ( QCloseEvent * event )
+void CentralWidget::stop_simulation()
 {
-    std::cout << "Stopping..." << std::endl;
-    m_simulator_manager.stop();
+    if(m_simulator_manager.getState() == Running) // Starting
+        m_simulator_manager.stop();
 }
 
 void CentralWidget::display_start_configuration_dialog()
 {
-    m_start_config_dialog.exec();
+    // The start config dialog upon accepted should forward data to the simulator
+    m_start_config_dialog = new StartConfigDialog(this);
+    connect(m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
+    m_start_config_dialog->exec();
 }

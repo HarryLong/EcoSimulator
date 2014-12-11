@@ -11,7 +11,7 @@ class Constrainer
 public:
     virtual ~Constrainer() {}
 
-    virtual int getStrength() = 0;
+    virtual int getStrength() const = 0;
 };
 
 /*******************
@@ -20,36 +20,36 @@ public:
 class AgeConstrainer : public Constrainer
 {
 public:
-    AgeConstrainer(std::shared_ptr<AgeingProperties> p_ageing_properties);
+    AgeConstrainer(const AgeingProperties * p_ageing_properties);
     ~AgeConstrainer();
 
-    virtual int getStrength();
+    virtual int getStrength() const ;
 
     void setAge(int p_age_in_months);
 
 private:
-    std::shared_ptr<AgeingProperties> m_properties;
     int m_age;
-    LinearEquation * m_pre_prime_equation;
-    LinearEquation * m_post_prime_equation;
+    AgeingProperties m_properties;
+    LinearEquation m_pre_prime_equation;
+    LinearEquation m_post_prime_equation;
 };
 
-/****************************
- * ILLUMINATION CONSTRAINER *
- ****************************/
+/*********************
+ * SHADE CONSTRAINER *
+ *********************/
 class IlluminationConstrainer : public Constrainer
 {
 public:
-    IlluminationConstrainer(std::shared_ptr<IlluminationProperties> p_illumination_properties);
+    IlluminationConstrainer(const IlluminationProperties * p_illumination_properties);
     ~IlluminationConstrainer();
 
-    virtual int getStrength();
+    virtual int getStrength() const;
 
     void setShadedPercentage(int p_shaded_percentage);
 
 private:
-    std::shared_ptr<IlluminationProperties> m_properties;
-    LinearEquation * m_equation;
+    IlluminationProperties m_properties;
+    LinearEquation m_equation;
     int m_shaded_percentage;
 };
 
@@ -59,20 +59,40 @@ private:
 class SoilHumidityConstrainer : public Constrainer
 {
 public:
-    SoilHumidityConstrainer(std::shared_ptr<SoilHumidityProperties> p_humidity_properties);
+    SoilHumidityConstrainer(const SoilHumidityProperties * p_humidity_properties);
     ~SoilHumidityConstrainer();
 
-    virtual int getStrength();
-    bool isInDrought();
+    virtual int getStrength() const;
+    bool isInDrought() const;
 
     void setSoilHumidityPercentage(int p_soil_humidity_percentage);
-    int getMinimumPrimeSoilHumidity();
+    int getMinimumPrimeSoilHumidity() const;
 
 private:
-    LinearEquation * m_drought_equation;
-    LinearEquation * m_flood_equation;
-    std::shared_ptr<SoilHumidityProperties> m_properties;
+    LinearEquation m_drought_equation;
+    LinearEquation m_flood_equation;
+    SoilHumidityProperties m_properties;
     int m_soil_humidity;
+};
+
+/***************
+ * TEMPERATURE *
+ ***************/
+class TemperatureConstrainer : public Constrainer
+{
+public:
+    TemperatureConstrainer(const TemperatureProperties * p_temperature_properties);
+    ~TemperatureConstrainer();
+
+    virtual int getStrength() const;
+
+    void setGroundTemperature(int p_ground_temperature);
+
+private:
+    LinearEquation m_coldness_equation;
+    LinearEquation m_heat_equation;
+    TemperatureProperties m_properties;
+    int m_ground_temperature;
 };
 
 #endif //CONSTRAINERS_H

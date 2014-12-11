@@ -3,66 +3,274 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QPushButton>
+#include <QScrollArea>
+#include <QLineEdit>
 
+const static char * EDIT_BTN_TEXT = "Edit";
+const static char * SAVE_EDITS_BTN_TEXT = "Save";
+const static char * CANCEL_BTN_TEXT = "Cancel";
+const static char * NEW_BTN_TEXT = "New";
+const static char * CONFIRM_BTN_TEXT = "Commit";
+const static char * REMOVE_BTN_TEXT = "Delete";
+
+/****************************
+ * PROPERTY WIDGETS WRAPPER *
+ ****************************/
+PropertyWidgetsWrapper::PropertyWidgetsWrapper() :
+    m_specie_name_widget(new QLineEdit),
+    growth_property_widget(new GrowthPropertiesWidget),
+    ageing_properties_widget(new AgeingPropertiesWidget),
+    illumination_properties_widget(new IlluminationPropertiesWidget),
+    soil_humidity_properties_widget(new SoilHumidityPropertiesWidget)
+{
+    init_layout();
+}
+
+void PropertyWidgetsWrapper::setProperties(const SpecieProperties * p_plant_data)
+{
+    m_specie_name_widget->setText(p_plant_data->specie_name);
+    ageing_properties_widget->setProperties(p_plant_data->ageing_properties);
+    growth_property_widget->setProperties(p_plant_data->growth_properties);
+    illumination_properties_widget->setProperties(p_plant_data->illumination_properties);
+    soil_humidity_properties_widget->setProperties(p_plant_data->soil_humidiry_properties);
+}
+
+void PropertyWidgetsWrapper::setEnabled(bool p_enabled)
+{
+    m_specie_name_widget->setEnabled(p_enabled);
+    ageing_properties_widget->setEnabled(p_enabled);
+    growth_property_widget->setEnabled(p_enabled);
+    illumination_properties_widget->setEnabled(p_enabled);
+    soil_humidity_properties_widget->setEnabled(p_enabled);
+}
+
+void PropertyWidgetsWrapper::clear()
+{
+    m_specie_name_widget->clear();
+    ageing_properties_widget->clear();
+    growth_property_widget->clear();
+    illumination_properties_widget->clear();
+    soil_humidity_properties_widget->clear();
+}
+
+void PropertyWidgetsWrapper::init_layout()
+{
+    QFont title_font( "Arial", 16, QFont::Bold );
+
+    QVBoxLayout * main_layout = new QVBoxLayout;
+
+    QLabel * specie_name_title = new QLabel("Specie Name: ");
+    specie_name_title->setFont(title_font);
+    main_layout->addWidget(specie_name_title);
+    main_layout->addWidget(m_specie_name_widget);
+
+    // Growth properties
+    QLabel * growth_title_lbl = new QLabel("Growth Properties");
+    growth_title_lbl->setFont(title_font);
+    main_layout->addWidget(growth_title_lbl);
+    main_layout->addWidget(growth_property_widget);
+
+    // Ageing properties
+    QLabel * ageing_title_lbl = new QLabel("Ageing Properties");
+    ageing_title_lbl->setFont(title_font);
+    main_layout->addWidget(ageing_title_lbl);
+    main_layout->addWidget(ageing_properties_widget);
+
+    // Illumination properties
+    QLabel * illumination_title_lbl = new QLabel("Illumination Properties");
+    illumination_title_lbl->setFont(title_font);
+    main_layout->addWidget(illumination_title_lbl);
+    main_layout->addWidget(illumination_properties_widget);
+
+    // Soil humidity properties
+    QLabel * soil_humidity_title_lbl = new QLabel("Soil Humidity Properties");
+    soil_humidity_title_lbl->setFont(title_font);
+    main_layout->addWidget(soil_humidity_title_lbl);
+    main_layout->addWidget(soil_humidity_properties_widget);
+
+    setLayout(main_layout);
+}
+
+
+SpecieProperties * PropertyWidgetsWrapper::toProperties()
+{
+    return new SpecieProperties(m_specie_name_widget->text(),
+                           ageing_properties_widget->getProperties(),
+                           growth_property_widget->getProperties(),
+                           illumination_properties_widget->getProperties(),
+                           soil_humidity_properties_widget->getProperties());
+}
+
+
+/*******************
+ * PLANT DB EDITOR *
+ *******************/
 PlantDBEditor::PlantDBEditor(QWidget *parent, Qt::WindowFlags f) :
   m_plant_db(),
   m_available_plants_list ( new QListWidget() ),
   m_plant_data(m_plant_db.getAllPlantData()),
-  m_specie_name_te(new QTextEdit),
-  m_property_widgets(
-      new GrowthPropertiesWidget(this),
-      new AgeingPropertiesWidget(this),
-      new IlluminationPropertiesWidget(this),
-      new SoilHumidityPropertiesWidget(this)),
-  m_edit_confirm_btn( new QPushButton("Edit")),
-  m_cancel_btn( new QPushButton("Cancel")),
-  m_new_btn( new QPushButton("New") ),
-  m_edit_mode_on( false )
+  m_property_widgets_wrapper(new PropertyWidgetsWrapper),
+  m_edit_save_edits_btn( new QPushButton()),
+  m_cancel_btn( new QPushButton(CANCEL_BTN_TEXT)),
+  m_new_confirm_btn( new QPushButton()),
+  m_remove_btn(new QPushButton(REMOVE_BTN_TEXT))
 {
+    m_available_plants_list->setSelectionMode(QAbstractItemView::SingleSelection);
+    setWindowTitle("Plant DB");
     init_layout();
     init_content();
     init_signals();
-    set_widgets_enabled(false);
+
+    // Initial conditions
+    set_mode(READ_ONLY);
 }
 
 PlantDBEditor::~PlantDBEditor()
 {
+    for(auto it (m_plant_data.begin()); it != m_plant_data.end(); it++)
+        delete it->second;
 }
 
 void PlantDBEditor::init_signals()
 {
-    connect(m_available_plants_list, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(update_widgets(QListWidgetItem*)));
-    connect(m_edit_confirm_btn, SIGNAL(clicked()), this, SLOT(edit_btn_clicked()));
+    connect(m_available_plants_list, SIGNAL(itemSelectionChanged()), this, SLOT(refresh_property_widgets()));
+    connect(m_edit_save_edits_btn, SIGNAL(clicked()), this, SLOT(edit_btn_clicked()));
     connect(m_cancel_btn, SIGNAL(clicked()), this, SLOT(cancel_btn_clicked()));
-    connect(m_new_btn, SIGNAL(clicked()), this, SLOT(new_btn_clicked()));
+    connect(m_new_confirm_btn, SIGNAL(clicked()), this, SLOT(new_btn_clicked()));
+    connect(m_remove_btn, SIGNAL(clicked()), this, SLOT(remove_btn_clicked()));
 }
 
 void PlantDBEditor::edit_btn_clicked()
 {
-    if(m_edit_mode_on)
+    if(m_current_mode == EDITING)
     {
-        m_edit_confirm_btn->setText("Edit");
+        commit(true);
+        set_mode(READ_ONLY);
     }
-    else
+    else // In read only
     {
-        m_edit_confirm_btn->setText("Confirm");
-
+        set_mode(EDITING);
     }
 }
 
 void PlantDBEditor::cancel_btn_clicked()
 {
-
+    set_mode(READ_ONLY);
 }
 
 void PlantDBEditor::new_btn_clicked()
 {
+    if(m_current_mode == ADDING)
+    {
+        commit(false);
+        set_mode(READ_ONLY);
+    }
+    else // READ ONLY
+    {
+        QListWidgetItem * selected_list_item(get_current_selected_specie());
+        if(selected_list_item != NULL) // unselect current item
+            m_available_plants_list->setItemSelected(selected_list_item, false);
 
+        set_mode(ADDING);
+    }
 }
 
-void PlantDBEditor::update_widgets(QListWidgetItem* p_selected_list_item)
+void PlantDBEditor::remove_btn_clicked()
 {
+    auto it (m_plant_data.find(get_current_selected_specie()->text()));
 
+    m_plant_db.removePlant(it->second->specie_id); // remove from the db
+    m_plant_data.erase(it); // Remove from current data
+    delete m_available_plants_list->takeItem(m_available_plants_list->currentRow()); // Remove current item from list
+}
+
+void PlantDBEditor::set_mode(Mode p_mode)
+{
+    refresh_property_widgets();
+
+    switch (p_mode)
+    {
+    case READ_ONLY:
+        m_current_mode = READ_ONLY;
+        set_property_widgets_enabled(false);
+        // Edit button
+        m_edit_save_edits_btn->setText(EDIT_BTN_TEXT);
+        m_edit_save_edits_btn->setEnabled(m_available_plants_list->selectedItems().size() > 0); // Enabled only if an item is currently selected
+        // Cancel button
+        m_cancel_btn->setEnabled(false);
+        // New/Confirm button
+        m_new_confirm_btn->setText(NEW_BTN_TEXT);
+        m_new_confirm_btn->setEnabled(true);
+        break;
+    case EDITING:
+        m_current_mode = EDITING;
+        set_property_widgets_enabled(true);
+        // Edit button
+        m_edit_save_edits_btn->setText(SAVE_EDITS_BTN_TEXT);
+        // Cancel button
+        m_cancel_btn->setEnabled(true);
+        // New/Confirm button
+        m_new_confirm_btn->setText(NEW_BTN_TEXT);
+        m_new_confirm_btn->setEnabled(false);
+        break;
+    case ADDING:
+        m_current_mode = ADDING;
+        m_property_widgets_wrapper->clear();
+        set_property_widgets_enabled(true);
+        // Edit button
+        m_edit_save_edits_btn->setText(EDIT_BTN_TEXT);
+        m_edit_save_edits_btn->setEnabled(false);
+        // Cancel button
+        m_cancel_btn->setEnabled(true);
+        // New/Confirm button
+        m_new_confirm_btn->setText(CONFIRM_BTN_TEXT);
+        m_new_confirm_btn->setEnabled(true);
+        break;
+    }
+}
+
+void PlantDBEditor::commit(bool update)
+{
+    // TODO: Update the internal data map
+    SpecieProperties * properties(m_property_widgets_wrapper->toProperties());
+
+    if(update)
+    {
+        // Retrieve the id
+        auto it (m_plant_data.find(get_current_selected_specie()->text()));
+        properties->specie_id = it->second->specie_id;
+        m_plant_data.erase(it); // Remove from current data (it will be re-inserted later)
+        delete m_available_plants_list->takeItem(m_available_plants_list->currentRow()); // Remove current item from list
+
+        m_plant_db.updatePlantData(properties);
+    }
+    else
+    {
+        m_plant_db.insertNewPlantData(properties);
+    }
+
+    m_plant_data.insert(std::pair<QString, const SpecieProperties *>(properties->specie_name, const_cast<const SpecieProperties*>(properties)));
+    m_available_plants_list->addItem(new QListWidgetItem(properties->specie_name));
+}
+
+void PlantDBEditor::refresh_property_widgets()
+{
+    QListWidgetItem* selected_list_item(get_current_selected_specie());
+
+    if(selected_list_item == NULL)
+    {
+        m_edit_save_edits_btn->setEnabled(false);
+        m_remove_btn->setEnabled(false);
+        m_property_widgets_wrapper->clear();
+    }
+    else
+    {
+        const SpecieProperties* plant_data(m_plant_data.find(get_current_selected_specie()->text())->second);
+        m_property_widgets_wrapper->setProperties(plant_data);
+        m_edit_save_edits_btn->setEnabled(true);
+        m_remove_btn->setEnabled(true);
+    }
 }
 
 QSize PlantDBEditor::minimumSizeHint() const
@@ -80,8 +288,16 @@ void PlantDBEditor::init_content()
     // The list of available species
     for(auto it (m_plant_data.begin()); it != m_plant_data.end(); it++)
     {
-        m_available_plants_list->addItem(new QListWidgetItem(QString(it->first.c_str())));
+        m_available_plants_list->addItem(new QListWidgetItem(it->first));
     }
+}
+
+QListWidgetItem* PlantDBEditor::get_current_selected_specie()
+{
+    if(m_available_plants_list->selectedItems().size() > 0)
+        return m_available_plants_list->currentItem();
+
+    return NULL;
 }
 
 void PlantDBEditor::init_layout()
@@ -97,300 +313,34 @@ void PlantDBEditor::init_layout()
         plants_v_layout->addWidget(m_available_plants_list);
     }
 
-    // The property widgets
-    QVBoxLayout * widgets_v_layout = new QVBoxLayout();
+    QScrollArea* property_widgets_scroll_area = new QScrollArea;
+    property_widgets_scroll_area->setWidget(m_property_widgets_wrapper);
+
+    // main layout
+    QHBoxLayout * main_h_layout = new QHBoxLayout;
     {
-        // The specie name TextEdit
-        QHBoxLayout * specie_name_layout = new QHBoxLayout;
-        {
-            QFont custom_title_font( "Arial", 12, QFont::Bold );
-            QLabel * specie_name_title = new QLabel("Specie Name: ");
-            specie_name_title->setFont(custom_title_font);
-            specie_name_layout->addWidget(specie_name_title, 1, Qt::AlignLeft);
-            specie_name_layout->addWidget(m_specie_name_te, 0, Qt::AlignRight);
-        }
-        widgets_v_layout->addLayout(specie_name_layout);
-
-        // Growth properties
-        QLabel * growth_title_lbl = new QLabel("Growth Properties");
-        growth_title_lbl->setFont(title_font);
-        widgets_v_layout->addWidget(growth_title_lbl);
-        widgets_v_layout->addWidget(m_property_widgets.growth_property_widget);
-
-        // Ageing properties
-        QLabel * ageing_title_lbl = new QLabel("Ageing Properties");
-        ageing_title_lbl->setFont(title_font);
-        widgets_v_layout->addWidget(ageing_title_lbl);
-        widgets_v_layout->addWidget(m_property_widgets.ageing_properties_widget);
-
-        // Illumination properties
-        QLabel * illumination_title_lbl = new QLabel("Illumination Properties");
-        illumination_title_lbl->setFont(title_font);
-        widgets_v_layout->addWidget(illumination_title_lbl);
-        widgets_v_layout->addWidget(m_property_widgets.illumination_properties_widget);
-
-        // Soil humidity properties
-        QLabel * soil_humidity_title_lbl = new QLabel("Soil Humidity Properties");
-        soil_humidity_title_lbl->setFont(title_font);
-        widgets_v_layout->addWidget(soil_humidity_title_lbl);
-        widgets_v_layout->addWidget(m_property_widgets.soil_humidity_properties_widget);
+        main_h_layout->addLayout(plants_v_layout, 0);
+        main_h_layout->addWidget(property_widgets_scroll_area, 1);
     }
 
-    QGridLayout * main_layout = new QGridLayout;
-    main_layout->addLayout(plants_v_layout,0,0,1,1,Qt::AlignTop);
-    main_layout->addLayout(widgets_v_layout,0,1,1,5,Qt::AlignTop);
+    // The buttons
+    QHBoxLayout * buttons_h_layout = new QHBoxLayout;
+    {
+        buttons_h_layout->addWidget(m_cancel_btn, 0, Qt::AlignCenter);
+        buttons_h_layout->addWidget(m_edit_save_edits_btn, 0, Qt::AlignCenter);
+        buttons_h_layout->addWidget(m_new_confirm_btn, 0, Qt::AlignCenter);
+        buttons_h_layout->addWidget(m_remove_btn, 0, Qt::AlignCenter);
+    }
+
+    QVBoxLayout * main_layout = new QVBoxLayout;
+
+    main_layout->addLayout(main_h_layout, 1);
+    main_layout->addLayout(buttons_h_layout, 0);
 
     setLayout(main_layout);
 }
 
-void PlantDBEditor::set_widgets_enabled(bool enabled)
+void PlantDBEditor::set_property_widgets_enabled(bool enabled)
 {
-    m_specie_name_te->setEnabled(enabled);
-    m_property_widgets.growth_property_widget->setEnabled(enabled);
-    m_property_widgets.ageing_properties_widget->setEnabled(enabled);
-    m_property_widgets.illumination_properties_widget->setEnabled(enabled);
-    m_property_widgets.soil_humidity_properties_widget->setEnabled(enabled);
+    m_property_widgets_wrapper->setEnabled(enabled);
 }
-
-/****************************
- * GROWTH PROPERTIES WIDGET *
- ****************************/
-GrowthPropertiesWidget::GrowthPropertiesWidget(QWidget* parent, Qt::WindowFlags f):
-    QWidget(parent, f)
-{
-    // Init UI elements
-    m_max_vertical_growth_dsb = new MyCustomDoubleSpinBox();
-    m_max_canopy_growth_dsb = new MyCustomDoubleSpinBox();
-    m_max_roots_growth_dsb = new MyCustomDoubleSpinBox();;
-
-    init_layout();
-}
-
-GrowthPropertiesWidget::~GrowthPropertiesWidget()
-{
-}
-
-GrowthProperties GrowthPropertiesWidget::getProperties()
-{
-}
-
-void GrowthPropertiesWidget::setProperties(GrowthProperties p_properties)
-{
-
-}
-
-void GrowthPropertiesWidget::init_layout()
-{
-    QGridLayout * main_layout = new QGridLayout;
-
-    int row(0);
-
-    // Max monthly vertical growth
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Max monthly vertical growth: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_max_vertical_growth_dsb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("Cm"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-    // Max monthly canopy growth
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Max monthly canopy growth: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_max_canopy_growth_dsb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("Cm"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Max monthly roots growth: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_max_roots_growth_dsb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("Cm"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-
-    setLayout(main_layout);
-}
-
-/****************************
- * AGEING PROPERTIES WIDGET *
- ****************************/
-AgeingPropertiesWidget::AgeingPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
-{
-    // Init UI elements
-    m_prob_of_death_at_birth = new MyPercentageSpinBox();
-    m_prob_of_death_at_upper = new MyPercentageSpinBox();
-
-    m_prime_age_start_sb = new QSpinBox();
-    m_prime_age_end_sb = new QSpinBox();
-    m_upper_age_sb = new QSpinBox();
-
-    init_layout();
-}
-
-AgeingPropertiesWidget::~AgeingPropertiesWidget()
-{
-
-}
-
-AgeingProperties AgeingPropertiesWidget::getProperties()
-{
-
-}
-
-void AgeingPropertiesWidget::setProperties(AgeingProperties p_properties)
-{
-
-}
-
-void AgeingPropertiesWidget::init_layout()
-{
-    QGridLayout * main_layout = new QGridLayout;
-
-     int row(0);
-
-     // Prob death at birth
-     {
-         QHBoxLayout * h_layout = new QHBoxLayout();
-         h_layout->addWidget(new QLabel("Probability of death at birth: "),0,Qt::AlignLeft);
-         h_layout->addWidget(m_prob_of_death_at_birth,0,Qt::AlignRight);
-         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-      // Prob death at upper
-     {
-         QHBoxLayout * h_layout = new QHBoxLayout();
-         h_layout->addWidget(new QLabel("Probability of death at upper: "),0,Qt::AlignLeft);
-         h_layout->addWidget(m_prob_of_death_at_upper,0,Qt::AlignRight);
-         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-     // Prime age start
-     {
-         QHBoxLayout * h_layout = new QHBoxLayout();
-         h_layout->addWidget(new QLabel("Start of prime age: "),0,Qt::AlignLeft);
-         h_layout->addWidget(m_prime_age_start_sb,0,Qt::AlignRight);
-         h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
-         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-      // Prime age end
-     {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("End of prime age: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prime_age_end_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-     // Upper age
-     {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Upper age: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_upper_age_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-     setLayout(main_layout);
-}
-
-/**********************************
- * ILLUMINATION PROPERTIES WIDGET *
- **********************************/
-IlluminationPropertiesWidget::IlluminationPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
-{
-    m_shadowed_percentage_start_of_negative_impact_sb = new MyPercentageSpinBox();
-    m_prob_of_death_in_complete_shade_sb = new MyPercentageSpinBox();
-
-    init_layout();
-}
-
-IlluminationPropertiesWidget::~IlluminationPropertiesWidget()
-{
-}
-
-IlluminationProperties IlluminationPropertiesWidget::getProperties()
-{
-}
-
-void IlluminationPropertiesWidget::setProperties(IlluminationProperties p_properties)
-{
-}
-
-void IlluminationPropertiesWidget::init_layout()
-{
-    QGridLayout * main_layout = new QGridLayout;
-
-    int row(0);
-
-    // Start of negative impact
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Start of negative impact shading: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_shadowed_percentage_start_of_negative_impact_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-    // Prob death when completely shaded
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Probability of death when completely shaded: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prob_of_death_in_complete_shade_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-
-    setLayout(main_layout);
-}
-
-/***********************************
- * SOIL HUMIDITY PROPERTIES WIDGET *
- ***********************************/
-SoilHumidityPropertiesWidget::SoilHumidityPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
-{
-    m_prime_soil_humidity_percentage_start_sb = new MyPercentageSpinBox();
-    m_prime_soil_humidity_percentage_end_sb = new MyPercentageSpinBox();
-
-    init_layout();
-}
-
-SoilHumidityPropertiesWidget::~SoilHumidityPropertiesWidget()
-{
-
-}
-
-SoilHumidityProperties SoilHumidityPropertiesWidget::getProperties()
-{
-
-}
-
-void SoilHumidityPropertiesWidget::setProperties(SoilHumidityProperties p_properties)
-{
-
-}
-
-void SoilHumidityPropertiesWidget::init_layout()
-{
-    QGridLayout * main_layout = new QGridLayout;
-
-    int row(0);
-
-    // Start of prime
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Start of prime humidity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prime_soil_humidity_percentage_start_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-    // Prob death when completely shaded
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("End of prime humidity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prime_soil_humidity_percentage_end_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
-
-    setLayout(main_layout);
-}
-
-

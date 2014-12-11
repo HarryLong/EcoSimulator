@@ -10,7 +10,7 @@
 class TimeListener
 {
 public:
-    virtual void newMonth() = 0;
+    virtual void trigger() = 0;
 };
 
 class TimeManager

@@ -173,7 +173,7 @@ QWidget * NumberDelegate::createEditor(QWidget *parent, const QStyleOptionViewIt
     QSpinBox *editor = new QSpinBox(parent);
     editor->setFrame(false);
     editor->setMinimum(0);
-    editor->setMaximum(10000);
+    editor->setMaximum(100000);
 
     return editor;
 }

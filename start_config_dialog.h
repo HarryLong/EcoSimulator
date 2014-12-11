@@ -3,7 +3,6 @@
 
 #define DIALOG_WIDTH 800
 #define DIALOG_HEIGHT 800
-#define WINDOW_TITLE "Starting Configuration"
 
 #include <QDialog>
 
@@ -24,8 +23,14 @@ enum WidgetType {
 
 struct StartConfiguration {
     std::vector<Plant*> m_plants;
-    const QImage * soil_humidity;
-    const QImage * illumination;
+    const QImage soil_humidity;
+    const QImage illumination;
+
+    StartConfiguration(std::vector<Plant*> plants, const QImage & soil_humidity, const QImage & illumination):
+        m_plants(plants),
+        soil_humidity(soil_humidity),
+        illumination(illumination)
+    {}
 };
 
 /*****************
@@ -37,11 +42,11 @@ public:
     ~StartConfigDialogWidgets();
 
     void add(WidgetType p_type, QWidget* p_widget);
-    void resetAll();
     bool hasNext();
     bool hasPrevious();
-    void displayPrevious();
-    void displayNext();
+    QString getTitle();
+    QString displayPrevious();
+    QString displayNext();
     QWidget* get(WidgetType p_type);
     std::vector<QWidget*> getAllWidgets();
 
@@ -52,6 +57,8 @@ private:
     std::map<WidgetType, QWidget*> m_widgets;
     WidgetType m_current_widget;
     int m_current_widget_index;
+
+    std::map<WidgetType, QString> m_titles;
 };
 
 class StartConfigDialog : public QDialog
@@ -62,8 +69,6 @@ public:
     ~StartConfigDialog();
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
-    void reset();
-
     StartConfiguration getStartConfiguration();
 
 private slots:

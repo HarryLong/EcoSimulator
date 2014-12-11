@@ -11,34 +11,41 @@
 
 #include <unordered_set>
 #include "environment_manager.h"
+#include <mutex>
 
 class Plant;
 
 struct PlantRenderingData{
     QString name;
-    QColor color;
     QPoint center_position;
+    const QColor* color;
     float height;
     float roots_radius;
     float canopy_radius;
 
-    PlantRenderingData(QString p_name, QColor p_color, QPoint p_center_position,
-                       float p_height, float p_canopy_radius, float p_roots_radius) : name(p_name), color(p_color),
-        center_position(p_center_position), height(p_height), canopy_radius(p_canopy_radius), roots_radius(p_roots_radius) {}
+    PlantRenderingData(QString p_name, const QColor* p_color, QPoint p_center_position, float p_height, float p_canopy_radius,
+                       float p_roots_radius) : name(p_name), color(p_color), center_position(p_center_position), height(p_height),
+        canopy_radius(p_canopy_radius), roots_radius(p_roots_radius) {}
 
-//    PlantRenderingData() : name("unset"), color(QColor(Qt::black)), center_position(QPoint(0,0)), height(.0f), canopy_radius(.0f), roots_radius(.0f) {}
 };
 
-typedef std::vector<PlantRenderingData> PlantRenderDataContainer;
-struct RenderData {
-    PlantRenderDataContainer plant_render_data;
-    IlluminationSpatialHashMap illumination_render_data;
-    SoilHumiditySpatialHashMap soil_humidity_render_data;
+struct PlantRenderDataContainer : public std::vector<PlantRenderingData>
+{
+public:
+    PlantRenderDataContainer() : mutex() {}
 
-    RenderData(PlantRenderDataContainer p_plant_render_data, IlluminationSpatialHashMap p_illumination_render_data, SoilHumiditySpatialHashMap p_soil_humidity_render_data) :
-        plant_render_data(p_plant_render_data),
-        illumination_render_data(p_illumination_render_data),
-        soil_humidity_render_data(p_soil_humidity_render_data) {}
+    void lock() const
+    {
+        mutex.lock();
+    }
+
+    void unlock() const
+    {
+        mutex.unlock();
+    }
+
+private:
+    mutable std::mutex mutex;
 };
 
 /*****************
@@ -47,19 +54,22 @@ struct RenderData {
 class Renderer : public QWidget
 {
 public:
-    Renderer(QWidget *parent = 0);
-    virtual void render(RenderData render_data) = 0;
+    Renderer(QWidget *parent);
+    virtual void render();
     virtual ~Renderer();
 
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
+
+    void filter(QString p_plant_name);
+    void unfilter(QString p_plant_name);
 
 protected:
     virtual void init_layout();
     int to_screen_space(float p_distance_in_cm);
 
     float m_screen_space_multiplier;
-    bool m_render_ready;
+    std::set<QString> m_filters;
 };
 
 /**********
@@ -69,17 +79,13 @@ class PlantRenderer : public Renderer
 {
     Q_OBJECT
 public:
-    PlantRenderer(QWidget *parent = 0);
-    virtual void render(RenderData p_render_data);
-    void filter(QString p_plant_name);
-    void unfilter(QString p_plant_name);
+    PlantRenderer(const PlantRenderDataContainer & render_data, QWidget *parent = 0);
 
 protected:
     virtual void paintEvent(QPaintEvent * event);
 
 private:
-    PlantRenderDataContainer m_plant_data;
-    std::set<QString> m_filters;
+    const PlantRenderDataContainer & m_render_data;
 };
 
 /*********
@@ -89,31 +95,29 @@ class RootsRenderer : public Renderer
 {
     Q_OBJECT
 public:
-    RootsRenderer(QWidget *parent = 0);
-    virtual void render(RenderData p_render_data);
+    RootsRenderer(const PlantRenderDataContainer & render_data, QWidget *parent = 0);
 
 protected:
     virtual void paintEvent(QPaintEvent * event);
 
 private:
-    PlantRenderDataContainer m_roots_data;
+    const PlantRenderDataContainer & m_render_data;
 };
 
 /************
  * LIGHTING *
  ************/
-class LightingRenderer : public Renderer
+class IlluminationRenderer : public Renderer
 {
     Q_OBJECT
 public:
-    LightingRenderer(QWidget *parent = 0);
-    virtual void render(RenderData p_render_data);
+    IlluminationRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent = 0);
 
 protected:
 
 private:
     virtual void paintEvent(QPaintEvent * event);
-    IlluminationSpatialHashMap m_illumination_spatial_hashmap;
+    const EnvironmentSpatialHashMap & m_render_data;
 };
 
 /*****************
@@ -123,13 +127,12 @@ class SoilHumidityRenderer : public Renderer
 {
     Q_OBJECT
 public:
-    SoilHumidityRenderer(QWidget *parent = 0);
-    virtual void render(RenderData p_render_data);
+    SoilHumidityRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent = 0);
 
 protected:
 
 private:
     virtual void paintEvent(QPaintEvent * event);
-    SoilHumiditySpatialHashMap m_soil_humidity_spatial_hashmap;
+    const EnvironmentSpatialHashMap & m_render_data;
 };
 #endif //RENDERER_H

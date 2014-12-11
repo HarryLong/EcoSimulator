@@ -1,26 +1,26 @@
 #include "environment_soil_humidity.h"
 #include "math.h"
 
-EnvironmentSoilHumidity::EnvironmentSoilHumidity() : m_refresh_required(true), data_set(false)
+EnvironmentSoilHumidity::EnvironmentSoilHumidity(EnvironmentSpatialHashMap & map) : m_map(map), m_refresh_required(true)
 {
 }
-void EnvironmentSoilHumidity::setSoilHumidityData(const QImage* p_image)
+
+void EnvironmentSoilHumidity::setSoilHumidityData(const QImage & p_image)
 {
-    QImage scaled_image (p_image->scaled(QSize(m_spatial_hashmap.getHorizontalCellCount(), m_spatial_hashmap.getVerticalCellCount()),
+    QImage scaled_image (p_image.scaled(QSize(m_map.getHorizontalCellCount(), m_map.getVerticalCellCount()),
                                         Qt::IgnoreAspectRatio));
 
-    for(int x = 0; x < m_spatial_hashmap.getHorizontalCellCount(); x++)
+    for(int x = 0; x < m_map.getHorizontalCellCount(); x++)
     {
-        for(int y = 0; y < m_spatial_hashmap.getVerticalCellCount(); y++)
+        for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
             int humidity_percentage((qBlue(scaled_image.pixel(x,y)) / 255.f) * 100);
-            m_spatial_hashmap.insert(QPoint(x,y),SoilHumidityCellContent(humidity_percentage));
+            m_map.insertSoilHumidityCell(QPoint(x,y),new SoilHumidityCell(humidity_percentage));
         }
     }
-    data_set = true;
 }
 
-int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_radius, int p_id)
+int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_roots_radius, int p_id)
 {
     if(m_refresh_required) // Check if a resource refresh is necessary
     {
@@ -28,109 +28,95 @@ int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_radi
         m_refresh_required = false;
     }
 
-    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_radius));
 
     int aggregated_humidity_percentage(0);
-    int total_cell_count(0);
-    for(int x = bb.x_min; x < bb.x_max; x++)
+
+    for(auto it (cells.begin()) ; it != cells.end(); it++)
     {
-        for(int y = bb.y_min; y < bb.y_max; y++)
-        {
-            SoilHumidityCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
-
-            aggregated_humidity_percentage += cell_data->grants.find(p_id)->second;
-
-            total_cell_count++;
-        }
+        SoilHumidityCell* cell ((*it)->soil_humidity_cell);
+        if(cell->grants.find(p_id) != cell->grants.end())
+            aggregated_humidity_percentage += cell->grants.find(p_id)->second;
     }
-    return (aggregated_humidity_percentage/total_cell_count);
+    return aggregated_humidity_percentage/cells.size(); // Return percentage
 }
 
 // DO NOT CALL THIS METHOD FOLLOWED BY GETHUMIDITY CONTRINUOUSLY RATHER UPDATE THIS FOR ALL NECESSARY CELLS IN ONE GO
-void EnvironmentSoilHumidity::setData(QPoint p_center, float p_radius, int p_id, int p_minimum_humidity_percentage)
+void EnvironmentSoilHumidity::setData(QPoint p_center, float p_roots_radius, int p_id, int p_minimum_humidity_percentage)
 {
     m_refresh_required = true;
-    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_radius));
 
-    for(int x = bb.x_min; x < bb.x_max; x++)
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_radius));
+
+    for(auto it (cells.begin()) ; it != cells.end(); it++)
     {
-        for(int y = bb.y_min; y < bb.y_max; y++)
-        {
-            SoilHumidityCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
-
-            auto it ( cell_data->requests.find(p_id) );
-            if(it != cell_data->requests.end())
-                it->second.size = p_radius;
-            else
-                cell_data->requests.insert(std::pair<int,ResourceUsageRequest>(p_id, ResourceUsageRequest(p_minimum_humidity_percentage, p_radius, p_id)));
-        }
+        SoilHumidityCell* cell ((*it)->soil_humidity_cell);
+        auto it2 ( cell->requests.find(p_id) );
+        if(it2 != cell->requests.end())
+            it2->second.size = p_roots_radius;
+        else
+            cell->requests.insert(std::pair<int,ResourceUsageRequest>(p_id, ResourceUsageRequest(p_minimum_humidity_percentage, p_roots_radius, p_id)));
     }
 }
 
 void EnvironmentSoilHumidity::remove(QPoint p_center, float p_radius, int p_id)
 {
-    BoundingBox bb(m_spatial_hashmap.getBoundingBox(p_center, p_radius));
+    m_refresh_required = true;
 
-    for(int x = bb.x_min; x < bb.x_max; x++)
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_radius));
+
+    for(auto it (cells.begin()) ; it != cells.end(); it++)
     {
-        for(int y = bb.y_min; y < bb.y_max; y++)
-        {
-            SoilHumidityCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
-            cell_data->requests.erase(p_id);
-            cell_data->grants.erase(p_id);
-        }
-    }
-}
+        SoilHumidityCell* cell ((*it)->soil_humidity_cell);
 
-void EnvironmentSoilHumidity::reset()
-{
-    m_spatial_hashmap.clear();
+        cell->requests.erase(p_id);
+        cell->grants.erase(p_id);
+    }
 }
 
 void EnvironmentSoilHumidity::refresh_resource_distribution()
 {
-    for(int x = 0; x < m_spatial_hashmap.getHorizontalCellCount(); x++)
+    for(int x = 0; x < m_map.getHorizontalCellCount(); x++)
     {
-        for(int y = 0; y < m_spatial_hashmap.getVerticalCellCount(); y++)
+        for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-            SoilHumidityCellContent * cell_data (m_spatial_hashmap.get(QPoint(x,y)));
-            if(cell_data->requests.size() == 0) // No requests
+            SoilHumidityCell * cell (m_map.get(QPoint(x,y))->soil_humidity_cell);
+            if(cell->requests.size() == 0) // No requests
                 continue;
 
             std::vector<ResourceUsageRequest> requests;
             int n_requests(0);
-            int n_aggregate_resource_requests(0);
             float remaining_total_size(.0f);
-            int remaining_resource_available(cell_data->humidity_percentage);
-            for(auto it(cell_data->requests.begin()); it != cell_data->requests.end(); it++)
+            int remaining_resource_available(cell->humidity_percentage);
+
+            /*
+             * The request multiplier increases the amount taken in lower humidity ranges
+             * and lowers the amount in the higher ranges as follows:
+             * For a humidity of
+             *   100% --> 0% will be taken
+             *   0% --> 100% of requested will be taken
+             */
+            float effect_on_environment_multiplier ((100-cell->humidity_percentage)/100.0f);
+            int aggregate_environmental_impact(0); // This is the aggregated impact on the enviornment (i.e the amount requested multiplied by the multiplier above)
+
+            for(auto it(cell->requests.begin()); it != cell->requests.end(); it++)
             {
                 requests.push_back(it->second);
                 remaining_total_size += it->second.size;
-                n_aggregate_resource_requests += it->second.requested_amount;
+                aggregate_environmental_impact += it->second.requested_amount*effect_on_environment_multiplier;
                 n_requests++;
             }
 
             GrantsMap grants;
             /*
-             * More resources than necessary: Give each requestee the amount requested, then split the remaining equally.
+             * More resources than necessary: Give each requestee the amount requested + the overflow amount
              */
-            if(n_aggregate_resource_requests < remaining_resource_available)
+            if(aggregate_environmental_impact < remaining_resource_available)
             {
-                int remaining_resource_overflow (remaining_resource_available - n_aggregate_resource_requests);
-                int overflow_amount_per_requestee (remaining_resource_overflow / n_requests);
-                int request_number(0);
-                for(auto it(requests.rbegin()); it != requests.rend(); it++)
+                int overflow(remaining_resource_available-aggregate_environmental_impact);
+                for(auto it(requests.begin()); it != requests.end(); it++)
                 {
-                    int granted_amount (it->requested_amount);
-
-                    if(++request_number == n_requests)
-                        granted_amount += remaining_resource_overflow;
-                    else
-                    {
-                        granted_amount += overflow_amount_per_requestee;
-                        remaining_resource_overflow -= overflow_amount_per_requestee;
-                    }
-
+                    int granted_amount (it->requested_amount + overflow);
                     grants.insert(std::pair<int,int>(it->requestee_id,granted_amount ));
                 }
             }
@@ -156,11 +142,10 @@ void EnvironmentSoilHumidity::refresh_resource_distribution()
                     grants.insert(std::pair<int,int>(it->requestee_id,granted_amount ));
 
                     remaining_total_size -= it->size;
-                    remaining_resource_available -= granted_amount;
+                    remaining_resource_available -= granted_amount*effect_on_environment_multiplier ;
                 }
             }
-
-            cell_data->grants = grants;
+            cell->grants = grants;
         }
     }
 }

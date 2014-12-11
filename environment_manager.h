@@ -3,34 +3,34 @@
 
 #include "enviromnent_illumination.h"
 #include "environment_soil_humidity.h"
+#include "environment_spatial_hashmap.h"
 
-struct Factors{
+struct ResourceControllers{
     EnvironmentIllumination illumination;
     EnvironmentSoilHumidity soil_humidity;
+
+    ResourceControllers(EnvironmentSpatialHashMap & map) : illumination(map), soil_humidity(map) {}
 };
 
 class EnvironmentManager{
 public:
     EnvironmentManager();
+    ~EnvironmentManager();
 
     int getShadedPercentage(QPoint p_center, float p_canopy_radius, float p_height);
     int getSoilHumidityPercentage(QPoint p_center, float p_roots_radius, int p_id);
-
-    void processResourceRequests();
 
     void remove(QPoint p_center, float p_canopy_radius, float p_roots_radius, int p_id);
     void reset();
 
     void updateEnvironment(QPoint p_center, float p_canopy_radius, float p_height, float p_roots_radius, int p_id, int p_minimum_soil_humidity_request);
 
-    IlluminationSpatialHashMap getIlluminationRenderingData();
-    SoilHumiditySpatialHashMap getSoilHumidityRenderingData();
-
-    void setIllumination(const QImage* p_illumination_data);
-    void setSoilHumidity(const QImage* p_soil_humidity_data);
+    const EnvironmentSpatialHashMap & getRenderingData();
+    void setEnvironmentProperties(const QImage & p_illumination_data, const QImage & p_soil_humidity_data);
 
 private:
-    Factors m_factors;
+    EnvironmentSpatialHashMap m_spatial_hashmap;
+    ResourceControllers m_resource_controllers;
 };
 
 #endif // ENVIRONMENT_MANAGER_H

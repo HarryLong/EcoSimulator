@@ -1,6 +1,7 @@
 #include "input_widgets.h"
 #include "math.h"
 #include <iostream>
+#include <QFileDialog>
 
 /*************************
  * ABSTRACT INPUT WIDGET *
@@ -30,9 +31,9 @@ void InputWidget::init_ui_elements()
 
     // Sensitivity combo box
     m_sensitivity_sb = new QSpinBox(this);
-    m_sensitivity_sb->setMinimum(1);
+    m_sensitivity_sb->setMinimum(0);
     m_sensitivity_sb->setMaximum(100);
-    m_sensitivity_sb->setValue(20);
+    m_sensitivity_sb->setValue(30);
 
     // Reset all button
     m_reset_all_btn = new QPushButton("Reset");
@@ -44,6 +45,10 @@ void InputWidget::init_ui_elements()
     m_cursor_type_cb = new QComboBox();
     m_cursor_type_cb->addItem(cursor_type_painter);
     m_cursor_type_cb->addItem(cursor_type_erasor);
+
+    // Save and Load buttons
+    m_save_btn = new QPushButton("Save");
+    m_load_btn = new QPushButton("Load");
 }
 
 void InputWidget::init_signals()
@@ -61,28 +66,45 @@ void InputWidget::init_signals()
     connect(m_cursor_type_cb, SIGNAL(currentTextChanged(QString)), this, SLOT(refresh_cursor_type(QString)));
     connect(m_reset_all_btn, SIGNAL(clicked()), this, SLOT(reset_all_clicked()));
     connect(m_fill_all_btn, SIGNAL(clicked()), this, SLOT(fill_all()));
+
+    connect(m_save_btn, SIGNAL(clicked()), this, SLOT(save_btn_clicked()));
+    connect(m_load_btn, SIGNAL(clicked()), this, SLOT(load_btn_clicked()));
 }
 
 void InputWidget::init_layout()
 {
-    setFixedSize(m_width, m_height+50);
+    setFixedSize(m_width, m_height+100);
 
-    QHBoxLayout * controllers_h_layout = new QHBoxLayout();
-    controllers_h_layout->addWidget(new QLabel("Cursor size: "), 0, Qt::AlignLeft);
-    controllers_h_layout->addWidget(m_cursor_size_sb, 0, Qt::AlignLeft);
+    QVBoxLayout * main_layout = new QVBoxLayout;
 
-    controllers_h_layout->addWidget(new QLabel("Cursor type: "), 0, Qt::AlignLeft);
-    controllers_h_layout->addWidget(m_cursor_type_cb, 0, Qt::AlignLeft);
+    // The main input widget
+    main_layout->addWidget(&m_container_label);
 
-    controllers_h_layout->addWidget(new QLabel("Sensitivity: "), 0, Qt::AlignLeft);
-    controllers_h_layout->addWidget(m_sensitivity_sb, 0, Qt::AlignLeft);
+    // controller buttons
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Cursor size: "), 0, Qt::AlignLeft);
+        h_layout->addWidget(m_cursor_size_sb, 0, Qt::AlignLeft);
 
-    controllers_h_layout->addWidget(m_reset_all_btn, 0, Qt::AlignLeft);
-    controllers_h_layout->addWidget(m_fill_all_btn, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel("Cursor type: "), 0, Qt::AlignLeft);
+        h_layout->addWidget(m_cursor_type_cb, 0, Qt::AlignLeft);
 
-    QGridLayout * main_layout = new QGridLayout;
-    main_layout->addWidget(&m_container_label,0,0,1,1, Qt::AlignCenter);
-    main_layout->addLayout(controllers_h_layout,1,0,1,1, Qt::AlignCenter);
+        h_layout->addWidget(new QLabel("Sensitivity: "), 0, Qt::AlignLeft);
+        h_layout->addWidget(m_sensitivity_sb, 0, Qt::AlignLeft);
+
+        h_layout->addWidget(m_reset_all_btn, 0, Qt::AlignLeft);
+        h_layout->addWidget(m_fill_all_btn, 0, Qt::AlignLeft);
+
+        main_layout->addLayout(h_layout);
+    }
+
+    // The save and load button
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(m_save_btn, 0, Qt::AlignCenter);
+        h_layout->addWidget(m_load_btn, 0, Qt::AlignCenter);
+        main_layout->addLayout(h_layout);
+    }
 
     setLayout(main_layout);
     refresh();
@@ -92,6 +114,29 @@ void InputWidget::fill_all()
 {
     m_pixel_data->fillAll(m_sensitivity_sb->value());
     refresh();
+}
+
+void InputWidget::save_btn_clicked()
+{
+    QString filename (QFileDialog::getSaveFileName(this, "Save", ".", tr("PNG Images (*.png)")));
+    if(!filename.isNull())
+    {
+        if(!filename.endsWith(".png"))
+            filename.append(".png");
+        getData().save(filename, "png", 100);
+    }
+}
+
+void InputWidget::load_btn_clicked()
+{
+    QString filename (QFileDialog::getOpenFileName(this, "Open", ".", tr("PNG Images (*.png)")));
+    if(!filename.isNull())
+    {
+        QImage image;
+        image.load(filename);
+        m_pixel_data->setData( image );
+        refresh();
+    }
 }
 
 QSize InputWidget::minimumSizeHint() const
@@ -186,12 +231,43 @@ void InputWidget::set_cursor_size(int p_size)
 
 void InputWidget::refresh()
 {
-    m_container_label.setPixmap(QPixmap::fromImage(*(m_pixel_data->toImage())));
+    m_container_label.setPixmap(QPixmap::fromImage(m_pixel_data->toImage()));
 }
 
-const QImage * InputWidget::getData()
+const QImage & InputWidget::getData() const
 {
     return m_pixel_data->toImage();
+}
+
+/*******************
+ * BASE PIXEL DATA *
+ *******************/
+PixelData::PixelData(int width, int height) : m_width(width), m_height(height), m_image(m_width, m_height, QImage::Format::Format_RGB32)
+{
+    resetAll();
+}
+
+void PixelData::resetAll()
+{
+    m_image.fill(Qt::black);
+}
+
+const QImage & PixelData::toImage() const
+{
+    return m_image;
+}
+
+void PixelData::reset(QPoint p_point)
+{
+    m_image.setPixel(p_point, qRgb(0,0,0));
+}
+
+void PixelData::setData(QImage image)
+{
+    if(image.width() != m_image.width() || image.height() != m_image.height())
+        m_image = image.scaled(m_width, m_height, Qt::IgnoreAspectRatio);
+    else
+        m_image = image;
 }
 
 /****************************
@@ -200,8 +276,7 @@ const QImage * InputWidget::getData()
 SoilHumidityPixelData::SoilHumidityPixelData(int width, int height) :
     PixelData(width, height)
 {
-    m_image = new QImage(m_width, m_height, QImage::Format::Format_RGB32);
-    m_image->fill(Qt::black);
+
 }
 
 SoilHumidityPixelData::~SoilHumidityPixelData()
@@ -212,12 +287,7 @@ SoilHumidityPixelData::~SoilHumidityPixelData()
 void SoilHumidityPixelData::set(QPoint p_point, int p_percentage_of_max)
 {
     int value ((p_percentage_of_max/100.0f) * 255);
-    m_image->setPixel(p_point, qRgb(0,0,value));
-}
-
-void SoilHumidityPixelData::reset(QPoint p_point)
-{
-    m_image->setPixel(p_point, qRgb(0,0,0));
+    m_image.setPixel(p_point, qRgb(0,0,value));
 }
 
 int SoilHumidityPixelData::getValue(QPoint p_point)
@@ -227,22 +297,12 @@ int SoilHumidityPixelData::getValue(QPoint p_point)
 
 int SoilHumidityPixelData::get_blue(QPoint p_point)
 {
-    return qBlue(m_image->pixel(p_point.x(), p_point.y()));
-}
-
-QImage * SoilHumidityPixelData::toImage()
-{
-    return m_image;
-}
-
-void SoilHumidityPixelData::resetAll()
-{
-    m_image->fill(Qt::black);
+    return qBlue(m_image.pixel(p_point.x(), p_point.y()));
 }
 
 void SoilHumidityPixelData::fillAll(int p_percentage_of_max)
 {
-    m_image->fill(QColor(0,0,(p_percentage_of_max/100.f) * 255));
+    m_image.fill(QColor(0,0,(p_percentage_of_max/100.f) * 255));
 }
 
 /***************************
@@ -251,46 +311,33 @@ void SoilHumidityPixelData::fillAll(int p_percentage_of_max)
 IlluminationPixelData::IlluminationPixelData(int width, int height) :
     PixelData(width, height)
 {
-    m_image = new QImage(m_width, m_height, QImage::Format::Format_RGB32);
-    m_image->fill(Qt::black);
+
 }
 
 IlluminationPixelData::~IlluminationPixelData()
 {
-
 }
 
 void IlluminationPixelData::set(QPoint p_point, int p_percentage_of_max)
 {
-    m_image->setPixel(p_point, QColor(Qt::yellow).rgb());
-}
-
-void IlluminationPixelData::reset(QPoint p_point)
-{
-    m_image->setPixel(p_point, qRgb(0,0,0));
+    int intensity ((p_percentage_of_max/100.0f) * 255);
+    QColor color( intensity, intensity, 0);
+    m_image.setPixel(p_point, color.rgb());
 }
 
 int IlluminationPixelData::getValue(QPoint p_point)
 {
-    if(qRed(m_image->pixel(p_point.x(), p_point.y())) > 0)
+    if(qRed(m_image.pixel(p_point.x(), p_point.y())) > 0)
         return 100;
     else
         return 0;
 }
 
-QImage * IlluminationPixelData::toImage()
-{
-    return m_image;
-}
-
-void IlluminationPixelData::resetAll()
-{
-    m_image->fill(Qt::black);
-}
-
 void IlluminationPixelData::fillAll(int p_percentage_of_max)
 {
-    m_image->fill(QColor(255,255,0));
+    int intensity ((p_percentage_of_max/100.0f) * 255);
+    QColor color( intensity, intensity, 0);
+    m_image.fill(color);
 }
 
 /*******************
@@ -314,7 +361,6 @@ void MySignaledLabel::leaveEvent(QEvent *e){
 void MySignaledLabel::mousePressEvent(QMouseEvent *e)
 {
     QLabel::mousePressEvent(e);
-    std::cout << "Mouse position: " << "[" << e->pos().x() << ", " << e->pos().y() << "]" << std::endl;
     emit mousePressed(e);
 }
 

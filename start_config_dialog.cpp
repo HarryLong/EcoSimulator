@@ -15,7 +15,7 @@ StartConfigDialog::StartConfigDialog ( QWidget * parent, Qt::WindowFlags f) :
     m_previous_btn = new QPushButton("Previous");
     m_next_start_btn = new QPushButton("Next");
 
-    setWindowTitle(WINDOW_TITLE);
+    setWindowTitle(m_widgets.getTitle());
     init_layout();
     init_signals();
 
@@ -25,11 +25,6 @@ StartConfigDialog::StartConfigDialog ( QWidget * parent, Qt::WindowFlags f) :
 
 StartConfigDialog::~StartConfigDialog()
 {
-}
-
-void StartConfigDialog::reset()
-{
-    m_widgets.resetAll();
 }
 
 void StartConfigDialog::init_layout()
@@ -51,7 +46,7 @@ void StartConfigDialog::display_next()
 {
     if(m_widgets.hasNext())
     {
-        m_widgets.displayNext();
+        setWindowTitle(m_widgets.displayNext());
         update_previous_button(true);
         update_next_button(m_widgets.hasNext());
     }
@@ -63,7 +58,7 @@ void StartConfigDialog::display_previous()
 {
     if(m_widgets.hasPrevious())
     {
-        m_widgets.displayPrevious();
+        setWindowTitle(m_widgets.displayPrevious());
         update_next_button(true);
         update_previous_button(m_widgets.hasPrevious());
     }
@@ -90,19 +85,17 @@ void StartConfigDialog::init_signals()
 
 StartConfiguration StartConfigDialog::getStartConfiguration()
 {
-    StartConfiguration ret;
-
-    // Plant configuration
-    ret.m_plants = static_cast<PlantConfigurationWidget*>(m_widgets.get(WidgetType::PlantConfiguration))->getPlantsToCreate();
-    ret.soil_humidity = static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration))->getData();
-    ret.illumination = static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getData();
+    StartConfiguration ret(
+                static_cast<PlantConfigurationWidget*>(m_widgets.get(WidgetType::PlantConfiguration))->getPlantsToCreate(),
+                static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration))->getData(),
+                static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getData());
 
     return ret;
 }
 
 QSize StartConfigDialog::minimumSizeHint() const
 {
-    return QSize(RENDER_WINDOW_WIDTH_HEIGHT+50, RENDER_WINDOW_WIDTH_HEIGHT+50);
+    return QSize(RENDER_WINDOW_WIDTH_HEIGHT+200, RENDER_WINDOW_WIDTH_HEIGHT+200);
 }
 
 QSize StartConfigDialog::sizeHint() const
@@ -124,6 +117,12 @@ StartConfigDialogWidgets::StartConfigDialogWidgets() : m_widgets(), m_current_wi
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::PlantConfiguration, new PlantConfigurationWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::SoilHumidityConfiguration, new SoilHumidityInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::IlluminationConfiguration, new IlluminationInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
+
+    // Title
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::PlantConfiguration, QString("Plsnt Configuration")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SoilHumidityConfiguration, QString("Soil Humidity")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::IlluminationConfiguration, QString("Illumination")));
+
     hide_all();
     show(m_current_widget);
 }
@@ -151,19 +150,6 @@ void StartConfigDialogWidgets::hide_all()
     }
 }
 
-void StartConfigDialogWidgets::resetAll()
-{
-    // Plant Configuration
-    for(auto it (m_widgets.begin()); it != m_widgets.end(); it++)
-    {
-        switch(it->first){
-        case WidgetType::PlantConfiguration:
-            static_cast<PlantConfigurationWidget*>(it->second)->reset();
-            break;
-        }
-    }
-}
-
 bool StartConfigDialogWidgets::hasPrevious()
 {
     return m_current_widget != 0;
@@ -174,7 +160,7 @@ bool StartConfigDialogWidgets::hasNext()
     return m_current_widget != (WidgetType::WidgetCount-1);
 }
 
-void StartConfigDialogWidgets::displayPrevious()
+QString StartConfigDialogWidgets::displayPrevious()
 {
     if(hasPrevious())
     {
@@ -182,9 +168,10 @@ void StartConfigDialogWidgets::displayPrevious()
         m_current_widget = static_cast<WidgetType>(--m_current_widget_index);
         show(m_current_widget);
     }
+    return m_titles.find(m_current_widget)->second;
 }
 
-void StartConfigDialogWidgets::displayNext()
+QString StartConfigDialogWidgets::displayNext()
 {
     if(hasNext())
     {
@@ -192,6 +179,12 @@ void StartConfigDialogWidgets::displayNext()
         m_current_widget = static_cast<WidgetType>(++m_current_widget_index);
         show(m_current_widget);
     }
+    return m_titles.find(m_current_widget)->second;
+}
+
+QString StartConfigDialogWidgets::getTitle()
+{
+    return m_titles.find(m_current_widget)->second;
 }
 
 std::vector<QWidget*> StartConfigDialogWidgets::getAllWidgets()
@@ -207,3 +200,4 @@ QWidget* StartConfigDialogWidgets::get(WidgetType p_type)
 {
     return m_widgets.find(p_type)->second;
 }
+

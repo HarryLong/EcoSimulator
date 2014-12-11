@@ -31,9 +31,7 @@ public:
 public slots:
     void updateRender();
     void setTimeAcceleration(int acceleration);
-
-protected:
-    virtual void closeEvent ( QCloseEvent * event );
+    void stop_simulation();
 
 private slots:
     void start_stop_btn_clicked();
@@ -53,7 +51,7 @@ private:
     OverViewWidget * m_overview_widget;
 
     // DIALOGS
-    StartConfigDialog m_start_config_dialog;
+    StartConfigDialog * m_start_config_dialog;
 
     // UI ELEMENTS
     QSlider * m_time_control_slider;

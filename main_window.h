@@ -12,6 +12,9 @@ public:
     MainWindow(QWidget * parent = 0, Qt::WindowFlags flags = 0);
     ~MainWindow();
 
+protected:
+    virtual void closeEvent ( QCloseEvent * event );
+
 private slots:
     void launch_plant_db_manager();
 

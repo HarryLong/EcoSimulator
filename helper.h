@@ -34,10 +34,14 @@ public:
     float a;
     float b;
 
+
+    LinearEquation() : a(.0), b(.0) {
+    }
+
     LinearEquation(double p_a, double p_b) : a(p_a), b(p_b) {
     }
 
-    float calculateY(float x)
+    float calculateY(float x) const
     {
         return a * x + b;
     }

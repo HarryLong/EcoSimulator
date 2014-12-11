@@ -14,7 +14,8 @@ TimeManager::TimeManager() : m_unit_time(-1), m_listeners(), m_time_keeper(NULL)
 
 TimeManager::~TimeManager()
 {
-    if(m_time_keeper != NULL)
+    stop();
+    if(m_time_keeper)
     {
         m_time_keeper->join();
         delete m_time_keeper;
@@ -63,7 +64,7 @@ void TimeManager::process_one_unit_time()
     do{
         std::this_thread::sleep_for(sleep_time);
         t_end = t_start + std::chrono::milliseconds(m_unit_time.load());
-    }while(std::chrono::high_resolution_clock::now() < t_end && !m_stop.load());
+    }while(!m_stop.load() && std::chrono::high_resolution_clock::now() < t_end);
 
     if(!m_stop.load())
         unit_time_complete_callback();
@@ -73,7 +74,7 @@ void TimeManager::unit_time_complete_callback()
 {
     BOOST_FOREACH(TimeListener* l, m_listeners)
     {
-        l->newMonth();
+        l->trigger();
     }
     if(!m_stop.load()) // continue to run
         start();

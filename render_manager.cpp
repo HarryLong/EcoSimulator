@@ -1,18 +1,24 @@
 #include "render_manager.h"
 
-RendererManager::RendererManager() : m_active_renderer(s_plant_renderer)
+
+RendererManager::RendererManager(const PlantRenderDataContainer & plant_render_data, const EnvironmentSpatialHashMap & environment_render_data) :
+    m_active_renderer(s_plant_renderer), m_time_manager()
 {
-    m_renderers.insert(std::pair<QString, Renderer*>(s_plant_renderer, new PlantRenderer()));
-    m_renderers.insert(std::pair<QString, Renderer*>(s_roots_renderer, new RootsRenderer()));
-    m_renderers.insert(std::pair<QString, Renderer*>(s_lighting_renderer, new LightingRenderer()));
-    m_renderers.insert(std::pair<QString, Renderer*>(s_soil_humidity_renderer, new SoilHumidityRenderer()));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_plant_renderer, new PlantRenderer(plant_render_data)));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_roots_renderer, new RootsRenderer(plant_render_data)));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_lighting_renderer, new IlluminationRenderer(environment_render_data)));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_soil_humidity_renderer, new SoilHumidityRenderer(environment_render_data)));
 
     setActiveRenderer(s_plant_renderer);
+
+    m_time_manager.addListener(this);
+    m_time_manager.setUnitTime(RENDER_INTERVAL);
+    m_time_manager.start();
 }
 
-void RendererManager::render(RenderData & render_data)
+void RendererManager::trigger()
 {
-    m_renderers.find(m_active_renderer)->second->render(render_data);
+    m_renderers.find(m_active_renderer)->second->render();
 }
 
 void RendererManager::setActiveRenderer(QString p_renderer)
@@ -48,10 +54,12 @@ void RendererManager::inactivate_all()
 
 void RendererManager::filter(QString p_plant_name)
 {
-    static_cast<PlantRenderer*>(m_renderers.find(s_plant_renderer)->second)->filter(p_plant_name);
+    m_renderers.find(s_plant_renderer)->second->filter(p_plant_name);
+    m_renderers.find(s_roots_renderer)->second->filter(p_plant_name);
 }
 
 void RendererManager::unfilter(QString p_plant_name)
 {
-    static_cast<PlantRenderer*>(m_renderers.find(s_plant_renderer)->second)->unfilter(p_plant_name);
+    m_renderers.find(s_plant_renderer)->second->unfilter(p_plant_name);
+    m_renderers.find(s_roots_renderer)->second->unfilter(p_plant_name);
 }

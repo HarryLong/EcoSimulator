@@ -12,19 +12,25 @@
 #include <QPainter>
 #include "boost/foreach.hpp"
 #include <iostream>
+#include <mutex>
 
 /*****************
  * BASE RENDERER *
  *****************/
 Renderer::Renderer(QWidget *parent)
     : QWidget(parent), m_screen_space_multiplier(((float)RENDER_WINDOW_WIDTH_HEIGHT)/AREA_WIDTH_HEIGHT),
-      m_render_ready(false)
+      m_filters()
 {
 }
 
 Renderer::~Renderer()
 {
 
+}
+
+void Renderer::render()
+{
+    update();
 }
 
 QSize Renderer::minimumSizeHint() const
@@ -35,6 +41,16 @@ QSize Renderer::minimumSizeHint() const
 QSize Renderer::sizeHint() const
 {
     return QSize(RENDER_WINDOW_WIDTH_HEIGHT+100, RENDER_WINDOW_WIDTH_HEIGHT+100);
+}
+
+void Renderer::filter(QString p_plant_name)
+{
+    m_filters.insert(p_plant_name);
+}
+
+void Renderer::unfilter(QString p_plant_name)
+{
+    m_filters.erase(p_plant_name);
 }
 
 void Renderer::init_layout()
@@ -54,162 +70,125 @@ int Renderer::to_screen_space(float p_distance_in_cm)
 /**********
  * PLANTS *
  **********/
-PlantRenderer::PlantRenderer(QWidget *parent) :
-    Renderer(parent), m_filters()
+PlantRenderer::PlantRenderer(const PlantRenderDataContainer & render_data, QWidget *parent) :
+    Renderer(parent),
+    m_render_data(render_data)
 {
     init_layout();
-}
-
-void PlantRenderer::render(RenderData p_render_data)
-{
-    m_plant_data = p_render_data.plant_render_data;
-    m_render_ready = true;
-    update();
-}
-
-void PlantRenderer::filter(QString p_plant_name)
-{
-    m_filters.insert(p_plant_name);
-}
-
-void PlantRenderer::unfilter(QString p_plant_name)
-{
-    m_filters.erase(p_plant_name);
 }
 
 void PlantRenderer::paintEvent(QPaintEvent * event)
 {
-    if(! m_render_ready)
-        return;
-
     QPainter painter(this);
-    for(auto it = m_plant_data.begin(); it != m_plant_data.end(); it++)
+    m_render_data.lock();
+    for(auto it = m_render_data.begin(); it != m_render_data.end(); it++)
     {
         if(m_filters.find(it->name) == m_filters.end())
         {
-            int r ( to_screen_space(it->canopy_radius) );
+            int r ( std::max(1,to_screen_space(it->canopy_radius)) );
             QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
-            painter.setPen( it->color );
-            painter.setBrush( it->color );
+            painter.setPen( *(it->color) );
+            painter.setBrush( *(it->color) );
             painter.drawEllipse( center, r, r );
         }
     }
-}
-
-/************
- * LIGHTING *
- ************/
-LightingRenderer::LightingRenderer(QWidget *parent) :
-    Renderer(parent)
-{
-    init_layout();
-}
-
-void LightingRenderer::render(RenderData p_render_data)
-{
-    m_illumination_spatial_hashmap = p_render_data.illumination_render_data;
-    m_render_ready = true;
-    update();
-}
-
-void LightingRenderer::paintEvent(QPaintEvent * event)
-{
-    static const QColor light(Qt::yellow);
-
-    if(! m_render_ready)
-        return;
-
-    QPainter painter(this);
-
-    int cell_width(m_illumination_spatial_hashmap.getCellWidth());
-    int cell_width_screen_space(to_screen_space(cell_width));
-    int cell_height(m_illumination_spatial_hashmap.getCellHeight());
-    int cell_height_screen_space(to_screen_space(cell_height));
-
-    for(int x ( 0 ); x < m_illumination_spatial_hashmap.getHorizontalCellCount(); x++)
-    {
-        int x_screen_space(to_screen_space(cell_width * x));
-
-        for(int y ( 0 ); y < m_illumination_spatial_hashmap.getVerticalCellCount(); y++)
-        {
-            int y_screen_space(to_screen_space(cell_height * y));
-
-            IlluminationCellContent * cell_content(m_illumination_spatial_hashmap.get(QPoint(x,y)));
-            if(cell_content->lit && cell_content->max_height == .0f)
-                painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(light));
-        }
-    }
+    m_render_data.unlock();
 }
 
 /*********
  * ROOTS *
  *********/
-RootsRenderer::RootsRenderer(QWidget *parent) :
-    Renderer(parent)
+RootsRenderer::RootsRenderer(const PlantRenderDataContainer & render_data, QWidget *parent) :
+    Renderer(parent),
+    m_render_data(render_data)
 {
     init_layout();
 }
 
-void RootsRenderer::render(RenderData p_render_data)
-{
-    m_roots_data = p_render_data.plant_render_data;
-    m_render_ready = true;
-    update();
-}
-
 void RootsRenderer::paintEvent(QPaintEvent * event)
 {
-    if(! m_render_ready)
-        return;
-
     QPainter painter(this);
-    for(auto it = m_roots_data.begin(); it != m_roots_data.end(); it++)
+    m_render_data.lock();
+    for(auto it = m_render_data.begin(); it != m_render_data.end(); it++)
     {
-        int r ( to_screen_space(it->roots_radius) );
-        QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
-        painter.setPen( it->color );
-        painter.setBrush( it->color );
-        painter.drawEllipse( center, r, r );
+        if(m_filters.find(it->name) == m_filters.end())
+        {
+            int r ( std::max(1,to_screen_space(it->roots_radius)) );
+            QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
+            painter.setPen( *(it->color) );
+            painter.setBrush( *(it->color) );
+            painter.drawEllipse( center, r, r );
+        }
+    }
+    m_render_data.unlock();
+}
+
+/************
+ * LIGHTING *
+ ************/
+IlluminationRenderer::IlluminationRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent) :
+    Renderer(parent),
+    m_render_data(render_data)
+{
+    init_layout();
+}
+
+void IlluminationRenderer::paintEvent(QPaintEvent * event)
+{
+    QPainter painter(this);
+
+    int cell_width(m_render_data.getCellWidth());
+    int cell_width_screen_space(to_screen_space(cell_width));
+    int cell_height(m_render_data.getCellHeight());
+    int cell_height_screen_space(to_screen_space(cell_height));
+
+    for(int x ( 0 ); x < m_render_data.getHorizontalCellCount(); x++)
+    {
+        int x_screen_space(to_screen_space(cell_width * x));
+
+        for(int y ( 0 ); y < m_render_data.getVerticalCellCount(); y++)
+        {
+            int y_screen_space(to_screen_space(cell_height * y));
+
+            IlluminationCell * cell_content(m_render_data.get_const(QPoint(x,y))->illumination_cell);
+            if(cell_content->max_height == .0f)
+            {
+                int intensity ((cell_content->illumination_percentage/100.0f) * 255);
+                QColor color( intensity, intensity, 0);
+                painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(color));
+            }
+        }
     }
 }
 
 /*****************
  * SOIL HUMIDITY *
  *****************/
-SoilHumidityRenderer::SoilHumidityRenderer(QWidget *parent) :
-    Renderer(parent)
+SoilHumidityRenderer::SoilHumidityRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent) :
+    Renderer(parent),
+    m_render_data(render_data)
 {
     init_layout();
 }
 
-void SoilHumidityRenderer::render(RenderData p_render_data)
-{
-    m_soil_humidity_spatial_hashmap = p_render_data.soil_humidity_render_data;
-    m_render_ready = true;
-    update();
-}
-
 void SoilHumidityRenderer::paintEvent(QPaintEvent * event)
 {
-    if(! m_render_ready)
-        return;
-
     QPainter painter(this);
 
-    int cell_width(m_soil_humidity_spatial_hashmap.getCellWidth());
+    int cell_width(m_render_data.getCellWidth());
     int cell_width_screen_space(to_screen_space(cell_width));
-    int cell_height(m_soil_humidity_spatial_hashmap.getCellHeight());
+    int cell_height(m_render_data.getCellHeight());
     int cell_height_screen_space(to_screen_space(cell_height));
 
-    for(int x ( 0 ); x < m_soil_humidity_spatial_hashmap.getHorizontalCellCount(); x++)
+    for(int x ( 0 ); x < m_render_data.getHorizontalCellCount(); x++)
     {
         int x_screen_space(to_screen_space(cell_width * x));
 
-        for(int y ( 0 ); y < m_soil_humidity_spatial_hashmap.getVerticalCellCount(); y++)
+        for(int y ( 0 ); y < m_render_data.getVerticalCellCount(); y++)
         {
             int y_screen_space(to_screen_space(cell_height * y));
 
-            SoilHumidityCellContent * cell_content(m_soil_humidity_spatial_hashmap.get(QPoint(x,y)));
+            SoilHumidityCell * cell_content(m_render_data.get_const(QPoint(x,y))->soil_humidity_cell);
             if(cell_content->grants.size() == 0) // If there are no grants, there is humidity remaining in the soil
             {
                 int humidity( cell_content->humidity_percentage );

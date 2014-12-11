@@ -6,35 +6,25 @@
  * AGE CONSTRAINER *
  *******************/
 
-AgeConstrainer::AgeConstrainer(std::shared_ptr<AgeingProperties> p_ageing_properties) :
-    m_age(0), m_properties(p_ageing_properties)
+AgeConstrainer::AgeConstrainer(const AgeingProperties * p_ageing_properties) :
+    m_age(0), m_properties(*p_ageing_properties)
 {
     // Build the pre-prime linear equation
     {
-        float a ( ((float)(p_ageing_properties->probability_of_death_at_birth + MAX_STRENGTH)) / p_ageing_properties->prime_age_start);
-        float b ( -p_ageing_properties->probability_of_death_at_birth );
-        m_pre_prime_equation = new LinearEquation(a,b);
+        m_pre_prime_equation.a =  ( ((float)(m_properties.probability_of_death_at_birth + MAX_STRENGTH)) / m_properties.prime_age_start);
+        m_pre_prime_equation.b = ( -m_properties.probability_of_death_at_birth );
     }
 
     // Build the post-prime linear equation
     {
-        float a ( ((float)(p_ageing_properties->probability_of_death_at_upper + MAX_STRENGTH)) / (p_ageing_properties->upper_age - p_ageing_properties->prime_age_end));
-        a *= -1; // Negative slope
-        float b ( (-1.f * a * p_ageing_properties->prime_age_end) + MAX_STRENGTH);
-        m_post_prime_equation = new LinearEquation(a,b);
+        m_post_prime_equation.a = ( ((float)(m_properties.probability_of_death_at_upper + MAX_STRENGTH)) / (m_properties.upper_age - m_properties.prime_age_end));
+        m_post_prime_equation.a *= -1; // Negative slope
+        m_post_prime_equation.b = ( (-1.f * m_post_prime_equation.a * m_properties.prime_age_end) + MAX_STRENGTH);
     }
-
-//    std::cout << "Pre prime equation";
-//    m_pre_prime_equation->print();
-
-//    std::cout << "Post prime equation";
-//    m_post_prime_equation->print();
 }
 
 AgeConstrainer::~AgeConstrainer()
 {
-    delete m_pre_prime_equation;
-    delete m_post_prime_equation;
 }
 
 void AgeConstrainer::setAge(int p_age_in_months)
@@ -42,15 +32,15 @@ void AgeConstrainer::setAge(int p_age_in_months)
     m_age = p_age_in_months;
 }
 
-int AgeConstrainer::getStrength()
+int AgeConstrainer::getStrength() const
 {
-    if(m_age < m_properties->prime_age_start)
+    if(m_age < m_properties.prime_age_start)
     {
-        return m_pre_prime_equation->calculateY(m_age);
+        return m_pre_prime_equation.calculateY(m_age);
     }
-    else if(m_age > m_properties->prime_age_end)// post prime
+    else if(m_age > m_properties.prime_age_end)// post prime
     {
-        return max((float) MIN_STRENGTH, m_post_prime_equation->calculateY(m_age));
+        return max((float) MIN_STRENGTH, m_post_prime_equation.calculateY(m_age));
     }
 
     return MAX_STRENGTH;
@@ -59,22 +49,19 @@ int AgeConstrainer::getStrength()
 /****************************
  * ILLUMINATION CONSTRAINER *
  ****************************/
-IlluminationConstrainer::IlluminationConstrainer(std::shared_ptr<IlluminationProperties> p_illumination_properties) :
-    m_shaded_percentage(.0f), m_properties(p_illumination_properties)
+IlluminationConstrainer::IlluminationConstrainer(const IlluminationProperties * p_illumination_properties) :
+    m_shaded_percentage(.0f), m_properties(*p_illumination_properties)
 {
     // Build the linear equation
-    float a ((MAX_STRENGTH + p_illumination_properties->probability_of_death_in_complete_shade) /
-              (100 - p_illumination_properties->shadowed_percentage_start_of_negative_impact));
-    a *= -1; // Negative slope
+    m_equation.a = (MAX_STRENGTH * 2) /
+              ((100-m_properties.shade_tolerance)/m_properties.sensitivity);
+    m_equation.a *= -1; // Negative slope
 
-    float b ( (-1.0f * a * p_illumination_properties->shadowed_percentage_start_of_negative_impact) + MAX_STRENGTH);
-
-    m_equation = new LinearEquation(a,b);
+    m_equation.b = ( -1 * m_equation.a * m_properties.shade_tolerance + MAX_STRENGTH);
 }
 
 IlluminationConstrainer::~IlluminationConstrainer()
 {
-    delete m_equation;
 }
 
 void IlluminationConstrainer::setShadedPercentage(int p_shaded_percentage)
@@ -87,10 +74,10 @@ void IlluminationConstrainer::setShadedPercentage(int p_shaded_percentage)
  * @param p_ratio --> shadowed / all
  * @return
  */
-int IlluminationConstrainer::getStrength()
+int IlluminationConstrainer::getStrength() const
 {
-    if(m_shaded_percentage > m_properties->shadowed_percentage_start_of_negative_impact )
-        return max((float)MIN_STRENGTH, m_equation->calculateY(m_shaded_percentage));
+    if(m_shaded_percentage > m_properties.shade_tolerance )
+        return max((float)MIN_STRENGTH, m_equation.calculateY(m_shaded_percentage));
 
     return MAX_STRENGTH; // Full strength
 }
@@ -99,44 +86,53 @@ int IlluminationConstrainer::getStrength()
  * SOIL HUMIDITY *
  *****************/
 
-SoilHumidityConstrainer::SoilHumidityConstrainer(std::shared_ptr<SoilHumidityProperties> p_soil_humidity_properties) :
-    m_properties(p_soil_humidity_properties)
+SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * p_soil_humidity_properties) :
+    m_properties(*p_soil_humidity_properties)
 {
     // Build the drought equation
+    if(p_soil_humidity_properties->soil_humidity_percentage_prime_start > 0)
     {
-        float a ((MAX_STRENGTH*2) / p_soil_humidity_properties->soil_humidity_percentage_prime_start);
-        float b (MIN_STRENGTH);
-        m_drought_equation = new LinearEquation(a,b);
+        m_drought_equation.a = ((MAX_STRENGTH*2) / (((float)m_properties.soil_humidity_percentage_prime_start)/m_properties.sensitivity));
+        m_drought_equation.b = -m_drought_equation.a * m_properties.soil_humidity_percentage_prime_start + 100;
+    }
+    else
+    {
+        m_flood_equation.a  = 0;
+        m_flood_equation.b = MAX_STRENGTH;
     }
 
     // Build the flooding equation
+    if(p_soil_humidity_properties->soil_humidity_percentage_prime_end < 100)
     {
-        float a ((-2 * MAX_STRENGTH) / (100-p_soil_humidity_properties->soil_humidity_percentage_prime_end));
-        float b ( -1 * a * p_soil_humidity_properties->soil_humidity_percentage_prime_end + 100 );
-        m_flood_equation = new LinearEquation(a,b);
+        m_flood_equation.a = ((-2 * MAX_STRENGTH) / ((100-m_properties.soil_humidity_percentage_prime_end)/m_properties.sensitivity));
+        m_flood_equation.b = ( -1 * m_flood_equation.a * m_properties.soil_humidity_percentage_prime_end + 100 );
+    }
+    else
+    {
+        m_flood_equation.a  = 0;
+        m_flood_equation.b = MAX_STRENGTH;
     }
 }
 
 SoilHumidityConstrainer::~SoilHumidityConstrainer()
 {
-    delete m_drought_equation;
-    delete m_flood_equation;
+
 }
 
-int SoilHumidityConstrainer::getStrength()
+int SoilHumidityConstrainer::getStrength() const
 {
-    if(m_soil_humidity < m_properties->soil_humidity_percentage_prime_start)
-        return m_drought_equation->calculateY(m_soil_humidity);
-    else if(m_soil_humidity > m_properties->soil_humidity_percentage_prime_end)
-        return m_flood_equation->calculateY(m_soil_humidity);
+    if(m_soil_humidity < m_properties.soil_humidity_percentage_prime_start)
+        return max(MIN_STRENGTH,(int) m_drought_equation.calculateY(m_soil_humidity));
+    else if(m_soil_humidity > m_properties.soil_humidity_percentage_prime_end)
+        return max(MIN_STRENGTH, (int) m_flood_equation.calculateY(m_soil_humidity));
 
     // Else return maximum strength
     return MAX_STRENGTH;
 }
 
-bool SoilHumidityConstrainer::isInDrought()
+bool SoilHumidityConstrainer::isInDrought() const
 {
-    return m_soil_humidity < m_properties->soil_humidity_percentage_prime_start;
+    return m_soil_humidity < m_properties.soil_humidity_percentage_prime_start;
 }
 
 void SoilHumidityConstrainer::setSoilHumidityPercentage(int p_soil_humidity_percentage)
@@ -144,7 +140,38 @@ void SoilHumidityConstrainer::setSoilHumidityPercentage(int p_soil_humidity_perc
     m_soil_humidity = p_soil_humidity_percentage;
 }
 
-int SoilHumidityConstrainer::getMinimumPrimeSoilHumidity()
+int SoilHumidityConstrainer::getMinimumPrimeSoilHumidity() const
 {
-    return m_properties->soil_humidity_percentage_prime_start;
+    return m_properties.soil_humidity_percentage_prime_start;
+}
+
+/***************
+ * TEMPERATURE *
+ ***************/
+#define DEFAULT_DRECREASE_RANGE 15
+TemperatureConstrainer::TemperatureConstrainer(const TemperatureProperties * p_temperature_properties) :
+    m_properties(*p_temperature_properties)
+{
+    // Build coldness equation
+    m_coldness_equation.a = ((MAX_STRENGTH*2) / (DEFAULT_DRECREASE_RANGE/m_properties.sensitivity));
+    m_coldness_equation.b = -m_coldness_equation.a * m_properties.temperature_range_start + MAX_STRENGTH;
+
+    // Build the heat equation
+    m_coldness_equation.a = ((MAX_STRENGTH*2) / (DEFAULT_DRECREASE_RANGE/m_properties.sensitivity));
+    m_coldness_equation.b = -m_coldness_equation.a * m_properties.temperature_range_start + MAX_STRENGTH;
+}
+
+TemperatureConstrainer::~TemperatureConstrainer()
+{
+
+}
+
+int TemperatureConstrainer::getStrength() const
+{
+
+}
+
+void TemperatureConstrainer::setGroundTemperature(int p_ground_temperature)
+{
+
 }
