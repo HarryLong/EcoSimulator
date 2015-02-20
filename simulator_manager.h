@@ -14,10 +14,13 @@
 #include <map>
 #include <unordered_set>
 #include "environment_manager.h"
+#include "plant_factory.h"
 
 #include "debuger.h"
 
 #include "plant.h"
+
+#include "simulation_configuration.h"
 
 enum SimulationState {
     Running,
@@ -39,16 +42,11 @@ public:
 
     SimulationState getState() { return m_state; }
 
-    void addPlants(std::vector<Plant *> p_plants);
-    void addPlant(Plant * p_plant);
-
-    void setEnvironmentData(const QImage & p_illumination_data, const QImage & p_soil_humidity_data);
-
     const PlantRenderDataContainer & getPlantRenderingData();
     const EnvironmentSpatialHashMap & getEnvironmentRenderingData();
 
 public slots:
-    void start();
+    void start(SimulationConfiguration configuration);
     void pause();
     void resume();
     void stop();
@@ -60,6 +58,8 @@ signals:
 
 private:
     void remove_plant(int p_plant_id);
+    void refresh_rendering_data();
+    void add_plant(Plant * p_plant);
 
     EnvironmentManager m_environment_mgr;
 
@@ -74,6 +74,11 @@ private:
     int m_elapsed_months;
     std::atomic<bool> m_stopping;
     SimulationState m_state;
+
+    PlantFactory m_plant_factory;
+
+    // Configuration
+    SimulationOptions * m_simulation_options;
 
     // TEMPORARY
     QPoint generate_random_position();

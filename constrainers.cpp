@@ -97,8 +97,8 @@ SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * 
     }
     else
     {
-        m_flood_equation.a  = 0;
-        m_flood_equation.b = MAX_STRENGTH;
+        m_drought_equation.a  = 0;
+        m_drought_equation.b = MAX_STRENGTH;
     }
 
     // Build the flooding equation
@@ -168,7 +168,7 @@ TemperatureConstrainer::~TemperatureConstrainer()
 
 int TemperatureConstrainer::getStrength() const
 {
-
+    return 0;
 }
 
 void TemperatureConstrainer::setGroundTemperature(int p_ground_temperature)

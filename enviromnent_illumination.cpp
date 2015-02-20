@@ -26,9 +26,9 @@ float EnvironmentIllumination::getMaxHeight(QPoint p_cell_coord)
 }
 
 #define HEIGHT_BUFFER 5 //cm
-int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_canopy_radius, float p_height)
+int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_canopy_width, float p_height)
 {
-    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_width/2));
 
     int aggregated_illumination_percentage(0);
 
@@ -43,9 +43,9 @@ int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_canopy
     return 100 - (aggregated_illumination_percentage/cells.size()); // Return percentage
 }
 
-void EnvironmentIllumination::setData(QPoint p_center, float p_canopy_radius, float p_height, int p_id)
+void EnvironmentIllumination::setData(QPoint p_center, float p_canopy_width, float p_height, int p_id)
 {
-    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_width/2));
 
     for(auto it (cells.begin()) ; it != cells.end(); it++)
     {
@@ -63,9 +63,9 @@ void EnvironmentIllumination::setData(QPoint p_center, float p_canopy_radius, fl
     }
 }
 
-void EnvironmentIllumination::remove(QPoint p_center, float p_canopy_radius, int id)
+void EnvironmentIllumination::remove(QPoint p_center, float p_canopy_width, int id)
 {
-    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_width/2));
 
     for(auto it (cells.begin()) ; it != cells.end(); it++)
     {

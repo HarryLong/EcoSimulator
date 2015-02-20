@@ -6,14 +6,16 @@
 #include "constants.h"
 
 #include "debuger.h"
+#include <math.h>
 
 Plant::Plant(const SpecieProperties * p_specie_properties, std::shared_ptr<const QColor> p_color, QPoint p_center_coord, long p_unique_id, int p_random_id) :
     m_center_position(p_center_coord), m_unique_id(p_unique_id), m_random_id(p_random_id), m_strengths(), m_age(0), m_strength(MAX_STRENGTH),
-    m_color(p_color),m_specie_name(p_specie_properties->specie_name),
+    m_color(p_color),m_specie_name(p_specie_properties->specie_name), m_specie_id(p_specie_properties->specie_id),
     m_constrainers(AgeConstrainer(p_specie_properties->ageing_properties),
                    IlluminationConstrainer(p_specie_properties->illumination_properties),
-                   SoilHumidityConstrainer(p_specie_properties->soil_humidiry_properties)),
-    m_growth_manager(GrowthManager(p_specie_properties->growth_properties)),
+                   SoilHumidityConstrainer(p_specie_properties->soil_humidity_properties)),
+    m_seeding_properties(p_specie_properties->seeding_properties),
+    m_growth_manager(GrowthManager(p_specie_properties->growth_properties, p_specie_properties->ageing_properties)),
     m_pain_enducer(0)
 {
     m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Age, MIN_STRENGTH));
@@ -48,12 +50,6 @@ void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_perce
     int min_strength (age_strength);
     ConstrainerType bottleneck(ConstrainerType::Age);
 
-//    if(m_specie_name == "Oak tree")
-//    {
-//        std::cout << "Afe : " << m_age <<
-//                     " | Calculated stength: " << age_strength << std::endl;
-//    }
-
     /****************
      * ILLUMINATION *
      ****************/
@@ -65,12 +61,6 @@ void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_perce
         min_strength = illumination_strength;
         bottleneck = ConstrainerType::Illumination;
     }
-
-//    if(m_specie_name == "Oak tree")
-//    {
-//        std::cout << "Shade : " << p_shaded_percentage <<
-//                     " | Calculated stength: " << illumination_strength << std::endl;
-//    }
 
     /*****************
      * SOIL HUMIDITY *
@@ -84,12 +74,7 @@ void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_perce
         bottleneck = ConstrainerType::SoilHumidity;
     }
 
-//    if(m_specie_name == "Oak tree")
-//    {
-//        std::cout << "Soil humidity: " << p_soil_humidity_percentage <<
-//                     " | Calculated stength: " << soil_humidity_strength << std::endl;
-//    }
-
+    // Pain enducer is used to prevent a plant from being in negative strength too long
     if(min_strength < 0)
         m_pain_enducer++;
     else
@@ -104,14 +89,14 @@ float Plant::getHeight() const
     return m_growth_manager.getHeight();
 }
 
-float Plant::getCanopyRadius() const
+float Plant::getCanopyWidth() const
 {
-    return m_growth_manager.getCanopyRadius();
+    return m_growth_manager.getCanopyWidth();
 }
 
-float Plant::getRootsRadius() const
+float Plant::getRootSize() const
 {
-    return m_growth_manager.getRootsRadius();
+    return m_growth_manager.getRootSize();
 }
 
 int Plant::getMinimumSoilHumidityRequirement() const
@@ -122,6 +107,33 @@ int Plant::getMinimumSoilHumidityRequirement() const
 int Plant::getVigor() const
 {
     return m_strength;
+}
+
+std::vector<QPoint> Plant::seed()
+{
+    std::vector<QPoint> seeds;
+
+    // Number of seeds proportianal to strength
+    int seed_count((int) ((((float)m_strength)/MAX_STRENGTH) * m_seeding_properties->max_seeds));
+
+    for( int i(0); i < seed_count; i++ )
+    {
+        int distance(rand() % (m_seeding_properties->max_seed_distance * 100)); // To centimeters
+        float angle_in_radians((((float)rand())/RAND_MAX) * 2 * PI);
+
+        QPoint diff(cos(angle_in_radians) * distance, sin(angle_in_radians) * distance);
+        QPoint position(QPoint(m_center_position + diff));
+        if(position.x() >= 0 && position.x() < AREA_WIDTH_HEIGHT &&
+                position.y() >= 0 && position.y() < AREA_WIDTH_HEIGHT)
+            seeds.push_back(position);
+    }
+
+    return seeds;
+}
+
+int Plant::getSeedingInterval()
+{
+    return m_seeding_properties->seeding_interval;
 }
 
 PlantStatus Plant::getStatus()

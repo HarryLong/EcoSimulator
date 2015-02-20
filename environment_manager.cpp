@@ -9,20 +9,20 @@ EnvironmentManager::~EnvironmentManager()
 {
 }
 
-int EnvironmentManager::getShadedPercentage(QPoint p_center, float p_canopy_radius, float p_height)
+int EnvironmentManager::getShadedPercentage(QPoint p_center, float p_canopy_width, float p_height)
 {
-    return m_resource_controllers.illumination.getShadedPercentage(p_center, p_canopy_radius, p_height);
+    return m_resource_controllers.illumination.getShadedPercentage(p_center, p_canopy_width, p_height);
 }
 
-int EnvironmentManager::getSoilHumidityPercentage(QPoint p_center, float p_roots_radius, int p_id)
+int EnvironmentManager::getSoilHumidityPercentage(QPoint p_center, float p_roots_size, int p_id)
 {
-    return m_resource_controllers.soil_humidity.getHumidityPercentage(p_center, p_roots_radius, p_id);
+    return m_resource_controllers.soil_humidity.getHumidityPercentage(p_center, p_roots_size, p_id);
 }
 
-void EnvironmentManager::remove(QPoint p_center, float p_canopy_radius, float p_roots_radius, int p_id)
+void EnvironmentManager::remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id)
 {
-    m_resource_controllers.illumination.remove(p_center, p_canopy_radius, p_id);
-    m_resource_controllers.soil_humidity.remove(p_center, p_roots_radius, p_id);
+    m_resource_controllers.illumination.remove(p_center, p_canopy_width, p_id);
+    m_resource_controllers.soil_humidity.remove(p_center, p_roots_size, p_id);
 }
 
 const EnvironmentSpatialHashMap & EnvironmentManager::getRenderingData()
@@ -35,13 +35,13 @@ void EnvironmentManager::reset()
     m_spatial_hashmap.clear();
 }
 
-void EnvironmentManager::updateEnvironment(QPoint p_center, float p_canopy_radius, float p_height, float p_roots_radius, int p_id, int p_minimum_soil_humidity_request)
+void EnvironmentManager::updateEnvironment(QPoint p_center, float p_canopy_width, float p_height, float p_roots_size, int p_id, int p_minimum_soil_humidity_request)
 {
     // Update illumination manager
-    m_resource_controllers.illumination.setData(p_center, p_canopy_radius, p_height, p_id);
+    m_resource_controllers.illumination.setData(p_center, p_canopy_width, p_height, p_id);
 
     // Update soil humidity
-    m_resource_controllers.soil_humidity.setData(p_center, p_roots_radius, p_id, p_minimum_soil_humidity_request);
+    m_resource_controllers.soil_humidity.setData(p_center, p_roots_size, p_id, p_minimum_soil_humidity_request);
 }
 
 void EnvironmentManager::setEnvironmentProperties(const QImage & p_illumination_data, const QImage & p_soil_humidity_data)

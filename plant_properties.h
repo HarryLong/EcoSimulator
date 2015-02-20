@@ -30,20 +30,21 @@ struct AgeingProperties {
 };
 
 struct GrowthProperties {
-    const float max_annual_vertical_growth; // cm per month
-    const float max_annual_root_growth; // cm per month
-    const float height_to_width_multiplier; // cm per month
+    const float max_height; // cm per month
+    const float max_root_size; // cm per month
+
+    const float max_canopy_width; // cm per month
 
     GrowthProperties(const GrowthProperties& other) :
-        max_annual_vertical_growth(other.max_annual_vertical_growth),
-        max_annual_root_growth(other.max_annual_root_growth),
-        height_to_width_multiplier(other.height_to_width_multiplier) {}
+        max_height(other.max_height),
+        max_root_size(other.max_root_size),
+        max_canopy_width(other.max_canopy_width) {}
 
-    GrowthProperties( float p_max_annual_vertical_growth, float p_max_annual_root_growth,
-                      float p_height_to_width_multiplier) :
-        max_annual_vertical_growth(p_max_annual_vertical_growth),
-        max_annual_root_growth(p_max_annual_root_growth),
-        height_to_width_multiplier(p_height_to_width_multiplier) {}
+    GrowthProperties( float p_max_height, float p_max_root_size,
+                      float p_max_canopy_width) :
+        max_height(p_max_height),
+        max_root_size(p_max_root_size),
+        max_canopy_width(p_max_canopy_width) {}
 };
 
 struct IlluminationProperties {
@@ -95,14 +96,33 @@ struct TemperatureProperties {
         sensitivity(p_sensitivity){}
 };
 
+struct SeedingProperties {
+    const int max_seed_distance;
+    const int seeding_interval;
+    const int max_seeds;
+
+    SeedingProperties(const SeedingProperties & other) :
+        max_seed_distance(other.max_seed_distance),
+        seeding_interval(other.seeding_interval),
+        max_seeds(other.max_seeds){}
+
+    SeedingProperties( int p_max_seed_distance,
+                       int p_seeding_interval,
+                       int p_max_seeds):
+        max_seed_distance(p_max_seed_distance),
+        seeding_interval(p_seeding_interval),
+        max_seeds(p_max_seeds){}
+};
+
 struct SpecieProperties{
     int specie_id;
     const QString specie_name;
     const AgeingProperties* ageing_properties;
     const GrowthProperties* growth_properties;
     const IlluminationProperties* illumination_properties;
-    const SoilHumidityProperties* soil_humidiry_properties;
+    const SoilHumidityProperties* soil_humidity_properties;
 //    const TemperatureProperties* temperature_properties;
+    const SeedingProperties* seeding_properties;
 
     SpecieProperties(const SpecieProperties & other) :
         specie_id(other.specie_id),
@@ -110,8 +130,8 @@ struct SpecieProperties{
         ageing_properties(other.ageing_properties),
         growth_properties(other.growth_properties),
         illumination_properties(other.illumination_properties),
-        soil_humidiry_properties(other.soil_humidiry_properties)
-//        temperature_properties(other.temperature_properties)
+        soil_humidity_properties(other.soil_humidity_properties),
+        seeding_properties(other.seeding_properties)
     {}
 
 
@@ -119,28 +139,28 @@ struct SpecieProperties{
               const AgeingProperties* ageing_properties,
               const GrowthProperties* growth_properties,
               const IlluminationProperties* illumination_properties,
-              const SoilHumidityProperties* soil_humidiry_properties) :
-//              const TemperatureProperties* temperature_properties) :
+              const SoilHumidityProperties* soil_humidity_properties,
+              const SeedingProperties* seeding_properties) :
         specie_id(id), specie_name(name),
         ageing_properties(ageing_properties),
         growth_properties(growth_properties),
         illumination_properties(illumination_properties),
-        soil_humidiry_properties(soil_humidiry_properties)
-//        temperature_properties(temperature_properties)
+        soil_humidity_properties(soil_humidity_properties),
+        seeding_properties(seeding_properties)
     {}
 
     SpecieProperties(QString name,
                     const AgeingProperties* ageing_properties,
                     const GrowthProperties* growth_properties,
                     const IlluminationProperties* illumination_properties,
-                    const SoilHumidityProperties* soil_humidity_properties) :
-//                    const TemperatureProperties* temperature_properties) :
+                    const SoilHumidityProperties* soil_humidity_properties,
+                    const SeedingProperties* seeding_properties) :
         specie_id(-1), specie_name(name),
         ageing_properties(ageing_properties),
         growth_properties(growth_properties),
         illumination_properties(illumination_properties),
-        soil_humidiry_properties(soil_humidity_properties)
-//        temperature_properties(temperature_properties)
+        soil_humidity_properties(soil_humidity_properties),
+        seeding_properties(seeding_properties)
         {}
 
     ~SpecieProperties()
@@ -148,8 +168,8 @@ struct SpecieProperties{
         delete ageing_properties;
         delete growth_properties;
         delete illumination_properties;
-        delete soil_humidiry_properties;
-//        delete temperature_properties;
+        delete soil_humidity_properties;
+        delete seeding_properties;
     }
 };
 

@@ -7,11 +7,39 @@
 #include <QStyledItemDelegate>
 #include <set>
 
-#include "plant_factory.h"
 #include "constants.h"
+#include "simulation_configuration.h"
 
 class QPushButton;
 class QTableWidget;
+class QCheckBox;
+class QButtonGroup;
+
+/***********************************
+ * SIMULATION CONFIGURATION WIDGET *
+ ***********************************/
+class SimulationConfigurationWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    SimulationConfigurationWidget( int width, int height, QWidget * parent = 0);
+    ~SimulationConfigurationWidget();
+    SimulationOptions getSimulationConfiguration();
+
+private:
+    void init_layout();
+
+    QButtonGroup * m_seeding_button_group;
+    QCheckBox * m_per_plant_seeding_cb;
+    QCheckBox * m_simplified_seeding_cb;
+    QCheckBox * m_seeding_disabled_cb;
+
+    int m_width, m_height;
+};
+
+/******************************
+ * PLANT CONFIGURATION WIDGET *
+ ******************************/
 
 enum AddedPlantsTableColumns {
     Specie,
@@ -26,7 +54,7 @@ public:
     PlantConfigurationWidget( int width, int height, QWidget * parent = 0);
     ~PlantConfigurationWidget();
     void reset();
-    std::vector<Plant*> getPlantsToCreate();
+    std::map<int, int> getPlantsToCreate();
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
 
@@ -38,13 +66,12 @@ private:
     void init_available_plants_list();
     void init_added_plants_table();
     QTableWidgetItem * generate_read_only_cell(QString p_cell_content = "");
-    QPoint generate_random_position();
     void init_layout();
     void init_signals();
 
     QListWidget * m_available_plants_list;
     QTableWidget * m_added_plants_table;
-    PlantFactory m_plant_factory;
+    std::map<QString, int> m_specie_name_to_id_mapper;
     std::set<QString> m_species_added;
     int m_width, m_height;
 };

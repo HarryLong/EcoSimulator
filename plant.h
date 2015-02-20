@@ -40,11 +40,13 @@ public:
     void newMonth();
 
     float getHeight() const;
-    float getCanopyRadius() const;
-    float getRootsRadius() const;
+    float getCanopyWidth() const;
+    float getRootSize() const;
     int getMinimumSoilHumidityRequirement() const;
+    std::vector<QPoint> seed();
     int getVigor() const;
     const QColor * getColor() const;
+    int getSeedingInterval();
 
     PlantStatus getStatus();
     void calculateStrength(int p_shaded_percentage, int p_soil_humidity_percentage);
@@ -52,9 +54,12 @@ public:
     const int m_unique_id;
     const QPoint m_center_position;
     const QString m_specie_name;
+    const int m_specie_id;
 private:
     // Managers
     GrowthManager m_growth_manager;
+
+    const SeedingProperties * m_seeding_properties;
 
     // Constrainers
     Constrainers m_constrainers;

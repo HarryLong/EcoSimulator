@@ -7,7 +7,7 @@
 #include <QDialog>
 
 #include "plant_factory.h"
-#include "plant_configuration_widget.h"
+#include "simulation_configuration_widgets.h"
 #include "input_widgets.h"
 #include <map>
 
@@ -17,20 +17,9 @@ enum WidgetType {
     PlantConfiguration = 0,
     SoilHumidityConfiguration,
     IlluminationConfiguration,
+    SimulationOptions,
 
     WidgetCount
-};
-
-struct StartConfiguration {
-    std::vector<Plant*> m_plants;
-    const QImage soil_humidity;
-    const QImage illumination;
-
-    StartConfiguration(std::vector<Plant*> plants, const QImage & soil_humidity, const QImage & illumination):
-        m_plants(plants),
-        soil_humidity(soil_humidity),
-        illumination(illumination)
-    {}
 };
 
 /*****************
@@ -69,7 +58,7 @@ public:
     ~StartConfigDialog();
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
-    StartConfiguration getStartConfiguration();
+    SimulationConfiguration getStartConfiguration();
 
 private slots:
     void display_next();

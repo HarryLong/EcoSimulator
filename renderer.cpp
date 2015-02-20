@@ -138,9 +138,9 @@ void IlluminationRenderer::paintEvent(QPaintEvent * event)
     QPainter painter(this);
 
     int cell_width(m_render_data.getCellWidth());
-    int cell_width_screen_space(to_screen_space(cell_width));
+    int cell_width_screen_space(to_screen_space(cell_width)+1);
     int cell_height(m_render_data.getCellHeight());
-    int cell_height_screen_space(to_screen_space(cell_height));
+    int cell_height_screen_space(to_screen_space(cell_height)+1);
 
     for(int x ( 0 ); x < m_render_data.getHorizontalCellCount(); x++)
     {
@@ -176,9 +176,9 @@ void SoilHumidityRenderer::paintEvent(QPaintEvent * event)
     QPainter painter(this);
 
     int cell_width(m_render_data.getCellWidth());
-    int cell_width_screen_space(to_screen_space(cell_width));
+    int cell_width_screen_space(to_screen_space(cell_width)+1);
     int cell_height(m_render_data.getCellHeight());
-    int cell_height_screen_space(to_screen_space(cell_height));
+    int cell_height_screen_space(to_screen_space(cell_height)+1);
 
     for(int x ( 0 ); x < m_render_data.getHorizontalCellCount(); x++)
     {
@@ -193,6 +193,7 @@ void SoilHumidityRenderer::paintEvent(QPaintEvent * event)
             {
                 int humidity( cell_content->humidity_percentage );
                 QColor color( 0, 0, (humidity / 100.0f) * 255);
+
                 painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space),
                                  QBrush(color));
             }

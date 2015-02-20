@@ -39,10 +39,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/harry/workspaces/qt-workspace/EcoSimulator
+CMAKE_SOURCE_DIR = /home/harry/workspace/qt-workspace/EcoSimulator
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/harry/workspaces/qt-workspace/EcoSimulator
+CMAKE_BINARY_DIR = /home/harry/workspace/qt-workspace/EcoSimulator
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -69,9 +69,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/harry/workspaces/qt-workspace/EcoSimulator/CMakeFiles /home/harry/workspaces/qt-workspace/EcoSimulator/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/harry/workspace/qt-workspace/EcoSimulator/CMakeFiles /home/harry/workspace/qt-workspace/EcoSimulator/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/harry/workspaces/qt-workspace/EcoSimulator/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/harry/workspace/qt-workspace/EcoSimulator/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -147,6 +147,30 @@ EcoSim_automoc.s: EcoSim_automoc.cpp.s
 EcoSim_automoc.cpp.s:
 	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/EcoSim_automoc.cpp.s
 .PHONY : EcoSim_automoc.cpp.s
+
+central_widget.o: central_widget.cpp.o
+.PHONY : central_widget.o
+
+# target to build an object file
+central_widget.cpp.o:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/central_widget.cpp.o
+.PHONY : central_widget.cpp.o
+
+central_widget.i: central_widget.cpp.i
+.PHONY : central_widget.i
+
+# target to preprocess a source file
+central_widget.cpp.i:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/central_widget.cpp.i
+.PHONY : central_widget.cpp.i
+
+central_widget.s: central_widget.cpp.s
+.PHONY : central_widget.s
+
+# target to generate assembly for a file
+central_widget.cpp.s:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/central_widget.cpp.s
+.PHONY : central_widget.cpp.s
 
 constrainers.o: constrainers.cpp.o
 .PHONY : constrainers.o
@@ -268,6 +292,30 @@ environment_soil_humidity.cpp.s:
 	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/environment_soil_humidity.cpp.s
 .PHONY : environment_soil_humidity.cpp.s
 
+environment_spatial_hashmap.o: environment_spatial_hashmap.cpp.o
+.PHONY : environment_spatial_hashmap.o
+
+# target to build an object file
+environment_spatial_hashmap.cpp.o:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/environment_spatial_hashmap.cpp.o
+.PHONY : environment_spatial_hashmap.cpp.o
+
+environment_spatial_hashmap.i: environment_spatial_hashmap.cpp.i
+.PHONY : environment_spatial_hashmap.i
+
+# target to preprocess a source file
+environment_spatial_hashmap.cpp.i:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/environment_spatial_hashmap.cpp.i
+.PHONY : environment_spatial_hashmap.cpp.i
+
+environment_spatial_hashmap.s: environment_spatial_hashmap.cpp.s
+.PHONY : environment_spatial_hashmap.s
+
+# target to generate assembly for a file
+environment_spatial_hashmap.cpp.s:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/environment_spatial_hashmap.cpp.s
+.PHONY : environment_spatial_hashmap.cpp.s
+
 growth_manager.o: growth_manager.cpp.o
 .PHONY : growth_manager.o
 
@@ -339,6 +387,30 @@ input_widgets.s: input_widgets.cpp.s
 input_widgets.cpp.s:
 	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/input_widgets.cpp.s
 .PHONY : input_widgets.cpp.s
+
+main_window.o: main_window.cpp.o
+.PHONY : main_window.o
+
+# target to build an object file
+main_window.cpp.o:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/main_window.cpp.o
+.PHONY : main_window.cpp.o
+
+main_window.i: main_window.cpp.i
+.PHONY : main_window.i
+
+# target to preprocess a source file
+main_window.cpp.i:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/main_window.cpp.i
+.PHONY : main_window.cpp.i
+
+main_window.s: main_window.cpp.s
+.PHONY : main_window.s
+
+# target to generate assembly for a file
+main_window.cpp.s:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/main_window.cpp.s
+.PHONY : main_window.cpp.s
 
 overview_widget.o: overview_widget.cpp.o
 .PHONY : overview_widget.o
@@ -412,6 +484,54 @@ plant_configuration_widget.cpp.s:
 	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_configuration_widget.cpp.s
 .PHONY : plant_configuration_widget.cpp.s
 
+plant_db.o: plant_db.cpp.o
+.PHONY : plant_db.o
+
+# target to build an object file
+plant_db.cpp.o:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_db.cpp.o
+.PHONY : plant_db.cpp.o
+
+plant_db.i: plant_db.cpp.i
+.PHONY : plant_db.i
+
+# target to preprocess a source file
+plant_db.cpp.i:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_db.cpp.i
+.PHONY : plant_db.cpp.i
+
+plant_db.s: plant_db.cpp.s
+.PHONY : plant_db.s
+
+# target to generate assembly for a file
+plant_db.cpp.s:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_db.cpp.s
+.PHONY : plant_db.cpp.s
+
+plant_db_editor.o: plant_db_editor.cpp.o
+.PHONY : plant_db_editor.o
+
+# target to build an object file
+plant_db_editor.cpp.o:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_db_editor.cpp.o
+.PHONY : plant_db_editor.cpp.o
+
+plant_db_editor.i: plant_db_editor.cpp.i
+.PHONY : plant_db_editor.i
+
+# target to preprocess a source file
+plant_db_editor.cpp.i:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_db_editor.cpp.i
+.PHONY : plant_db_editor.cpp.i
+
+plant_db_editor.s: plant_db_editor.cpp.s
+.PHONY : plant_db_editor.s
+
+# target to generate assembly for a file
+plant_db_editor.cpp.s:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plant_db_editor.cpp.s
+.PHONY : plant_db_editor.cpp.s
+
 plant_factory.o: plant_factory.cpp.o
 .PHONY : plant_factory.o
 
@@ -459,6 +579,30 @@ plants_storage.s: plants_storage.cpp.s
 plants_storage.cpp.s:
 	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/plants_storage.cpp.s
 .PHONY : plants_storage.cpp.s
+
+properties_editor_widgets.o: properties_editor_widgets.cpp.o
+.PHONY : properties_editor_widgets.o
+
+# target to build an object file
+properties_editor_widgets.cpp.o:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/properties_editor_widgets.cpp.o
+.PHONY : properties_editor_widgets.cpp.o
+
+properties_editor_widgets.i: properties_editor_widgets.cpp.i
+.PHONY : properties_editor_widgets.i
+
+# target to preprocess a source file
+properties_editor_widgets.cpp.i:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/properties_editor_widgets.cpp.i
+.PHONY : properties_editor_widgets.cpp.i
+
+properties_editor_widgets.s: properties_editor_widgets.cpp.s
+.PHONY : properties_editor_widgets.s
+
+# target to generate assembly for a file
+properties_editor_widgets.cpp.s:
+	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/properties_editor_widgets.cpp.s
+.PHONY : properties_editor_widgets.cpp.s
 
 render_manager.o: render_manager.cpp.o
 .PHONY : render_manager.o
@@ -604,30 +748,6 @@ time_manager.cpp.s:
 	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/time_manager.cpp.s
 .PHONY : time_manager.cpp.s
 
-window.o: window.cpp.o
-.PHONY : window.o
-
-# target to build an object file
-window.cpp.o:
-	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/window.cpp.o
-.PHONY : window.cpp.o
-
-window.i: window.cpp.i
-.PHONY : window.i
-
-# target to preprocess a source file
-window.cpp.i:
-	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/window.cpp.i
-.PHONY : window.cpp.i
-
-window.s: window.cpp.s
-.PHONY : window.s
-
-# target to generate assembly for a file
-window.cpp.s:
-	$(MAKE) -f CMakeFiles/EcoSim.dir/build.make CMakeFiles/EcoSim.dir/window.cpp.s
-.PHONY : window.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -641,6 +761,9 @@ help:
 	@echo "... EcoSim_automoc.o"
 	@echo "... EcoSim_automoc.i"
 	@echo "... EcoSim_automoc.s"
+	@echo "... central_widget.o"
+	@echo "... central_widget.i"
+	@echo "... central_widget.s"
 	@echo "... constrainers.o"
 	@echo "... constrainers.i"
 	@echo "... constrainers.s"
@@ -656,6 +779,9 @@ help:
 	@echo "... environment_soil_humidity.o"
 	@echo "... environment_soil_humidity.i"
 	@echo "... environment_soil_humidity.s"
+	@echo "... environment_spatial_hashmap.o"
+	@echo "... environment_spatial_hashmap.i"
+	@echo "... environment_spatial_hashmap.s"
 	@echo "... growth_manager.o"
 	@echo "... growth_manager.i"
 	@echo "... growth_manager.s"
@@ -665,6 +791,9 @@ help:
 	@echo "... input_widgets.o"
 	@echo "... input_widgets.i"
 	@echo "... input_widgets.s"
+	@echo "... main_window.o"
+	@echo "... main_window.i"
+	@echo "... main_window.s"
 	@echo "... overview_widget.o"
 	@echo "... overview_widget.i"
 	@echo "... overview_widget.s"
@@ -674,12 +803,21 @@ help:
 	@echo "... plant_configuration_widget.o"
 	@echo "... plant_configuration_widget.i"
 	@echo "... plant_configuration_widget.s"
+	@echo "... plant_db.o"
+	@echo "... plant_db.i"
+	@echo "... plant_db.s"
+	@echo "... plant_db_editor.o"
+	@echo "... plant_db_editor.i"
+	@echo "... plant_db_editor.s"
 	@echo "... plant_factory.o"
 	@echo "... plant_factory.i"
 	@echo "... plant_factory.s"
 	@echo "... plants_storage.o"
 	@echo "... plants_storage.i"
 	@echo "... plants_storage.s"
+	@echo "... properties_editor_widgets.o"
+	@echo "... properties_editor_widgets.i"
+	@echo "... properties_editor_widgets.s"
 	@echo "... render_manager.o"
 	@echo "... render_manager.i"
 	@echo "... render_manager.s"
@@ -698,9 +836,6 @@ help:
 	@echo "... time_manager.o"
 	@echo "... time_manager.i"
 	@echo "... time_manager.s"
-	@echo "... window.o"
-	@echo "... window.i"
-	@echo "... window.s"
 .PHONY : help
 
 

@@ -17,11 +17,14 @@ public:
     const Plant * get(int p_plant_id) const;
     bool contains(int p_plant_id) const;
     void clear();
+    int getPlantCount();
 
     std::vector<Plant*> getSortedPlants();
+    const std::map<int,int>& getSpecies();
 
 private:
     std::map<long, Plant*> m_mapped_data;
+    std::map<int,int> m_specie_count;
 
     // For optimization purposes --> A sorted list of plants is required more often than a plant is removed
     std::vector<Plant*> m_raw_data;

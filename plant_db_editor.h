@@ -25,6 +25,7 @@ private:
     AgeingPropertiesWidget * ageing_properties_widget;
     IlluminationPropertiesWidget * illumination_properties_widget;
     SoilHumidityPropertiesWidget * soil_humidity_properties_widget;
+    SeedingPropertiesWidget * seeding_properties_widget;
 };
 
 enum Mode{
@@ -33,6 +34,24 @@ enum Mode{
     ADDING
 };
 
+/*******************************
+ * SPECIE PROPERTIES LIST ITEM *
+ *******************************/
+class SpeciePropertiesListItem : public QListWidgetItem
+{
+public:
+    SpeciePropertiesListItem ( const SpecieProperties * specie_properties);
+    ~SpeciePropertiesListItem ();
+    void setSpecieProperties(const SpecieProperties * specie_properties);
+    const SpecieProperties * getProperties();
+
+private:
+    const SpecieProperties * m_specie_properties;
+};
+
+/*******************
+ * PLANT DB EDITOR *
+ *******************/
 class PlantDBEditor : public QDialog
 {
 Q_OBJECT
@@ -56,13 +75,16 @@ private:
     void init_signals();
     void commit(bool p_update);
     void set_mode(Mode p_mode);
-    QListWidgetItem* get_current_selected_specie();
+
+    SpeciePropertiesListItem* get_current_selected_list_item();
+//    QString get_current_selected_specie_name();
+//    int get_current_selected_specie_id();
 
     QListWidget * m_available_plants_list;
     PlantDB m_plant_db;
 
-    SpeciePropertiesHolder m_plant_data;
     PropertyWidgetsWrapper * m_property_widgets_wrapper;
+    std::map<QString,int> m_specie_name_to_id;
 
     QPushButton * m_edit_save_edits_btn;
     QPushButton * m_cancel_btn;

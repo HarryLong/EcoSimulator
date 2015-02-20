@@ -7,6 +7,8 @@
 #include <QScrollArea>
 #include <QLineEdit>
 
+#include <iostream>
+
 const static char * EDIT_BTN_TEXT = "Edit";
 const static char * SAVE_EDITS_BTN_TEXT = "Save";
 const static char * CANCEL_BTN_TEXT = "Cancel";
@@ -22,7 +24,8 @@ PropertyWidgetsWrapper::PropertyWidgetsWrapper() :
     growth_property_widget(new GrowthPropertiesWidget),
     ageing_properties_widget(new AgeingPropertiesWidget),
     illumination_properties_widget(new IlluminationPropertiesWidget),
-    soil_humidity_properties_widget(new SoilHumidityPropertiesWidget)
+    soil_humidity_properties_widget(new SoilHumidityPropertiesWidget),
+    seeding_properties_widget(new SeedingPropertiesWidget)
 {
     init_layout();
 }
@@ -33,7 +36,8 @@ void PropertyWidgetsWrapper::setProperties(const SpecieProperties * p_plant_data
     ageing_properties_widget->setProperties(p_plant_data->ageing_properties);
     growth_property_widget->setProperties(p_plant_data->growth_properties);
     illumination_properties_widget->setProperties(p_plant_data->illumination_properties);
-    soil_humidity_properties_widget->setProperties(p_plant_data->soil_humidiry_properties);
+    soil_humidity_properties_widget->setProperties(p_plant_data->soil_humidity_properties);
+    seeding_properties_widget->setProperties(p_plant_data->seeding_properties);
 }
 
 void PropertyWidgetsWrapper::setEnabled(bool p_enabled)
@@ -43,6 +47,7 @@ void PropertyWidgetsWrapper::setEnabled(bool p_enabled)
     growth_property_widget->setEnabled(p_enabled);
     illumination_properties_widget->setEnabled(p_enabled);
     soil_humidity_properties_widget->setEnabled(p_enabled);
+    seeding_properties_widget->setEnabled(p_enabled);
 }
 
 void PropertyWidgetsWrapper::clear()
@@ -52,6 +57,7 @@ void PropertyWidgetsWrapper::clear()
     growth_property_widget->clear();
     illumination_properties_widget->clear();
     soil_humidity_properties_widget->clear();
+    seeding_properties_widget->clear();
 }
 
 void PropertyWidgetsWrapper::init_layout()
@@ -89,6 +95,12 @@ void PropertyWidgetsWrapper::init_layout()
     main_layout->addWidget(soil_humidity_title_lbl);
     main_layout->addWidget(soil_humidity_properties_widget);
 
+    // Seeding properties
+    QLabel * seeding_properties_title_lbl = new QLabel("Seeding Properties");
+    seeding_properties_title_lbl->setFont(title_font);
+    main_layout->addWidget(seeding_properties_title_lbl);
+    main_layout->addWidget(seeding_properties_widget);
+
     setLayout(main_layout);
 }
 
@@ -99,9 +111,36 @@ SpecieProperties * PropertyWidgetsWrapper::toProperties()
                            ageing_properties_widget->getProperties(),
                            growth_property_widget->getProperties(),
                            illumination_properties_widget->getProperties(),
-                           soil_humidity_properties_widget->getProperties());
+                           soil_humidity_properties_widget->getProperties(),
+                           seeding_properties_widget->getProperties());
 }
 
+
+/*******************************
+ * SPECIE PROPERTIES LIST ITEM *
+ *******************************/
+SpeciePropertiesListItem::SpeciePropertiesListItem ( const SpecieProperties * specie_properties) : QListWidgetItem(), m_specie_properties(NULL)
+{
+    setSpecieProperties(specie_properties);
+}
+
+SpeciePropertiesListItem::~SpeciePropertiesListItem()
+{
+    delete m_specie_properties;
+}
+
+void SpeciePropertiesListItem::setSpecieProperties( const SpecieProperties * specie_properties)
+{
+//    if(m_specie_properties)
+//        delete m_specie_properties;
+    m_specie_properties = specie_properties;
+    setText(specie_properties->specie_name);
+}
+
+const SpecieProperties * SpeciePropertiesListItem::getProperties()
+{
+    return m_specie_properties;
+}
 
 /*******************
  * PLANT DB EDITOR *
@@ -109,7 +148,6 @@ SpecieProperties * PropertyWidgetsWrapper::toProperties()
 PlantDBEditor::PlantDBEditor(QWidget *parent, Qt::WindowFlags f) :
   m_plant_db(),
   m_available_plants_list ( new QListWidget() ),
-  m_plant_data(m_plant_db.getAllPlantData()),
   m_property_widgets_wrapper(new PropertyWidgetsWrapper),
   m_edit_save_edits_btn( new QPushButton()),
   m_cancel_btn( new QPushButton(CANCEL_BTN_TEXT)),
@@ -117,6 +155,7 @@ PlantDBEditor::PlantDBEditor(QWidget *parent, Qt::WindowFlags f) :
   m_remove_btn(new QPushButton(REMOVE_BTN_TEXT))
 {
     m_available_plants_list->setSelectionMode(QAbstractItemView::SingleSelection);
+
     setWindowTitle("Plant DB");
     init_layout();
     init_content();
@@ -128,8 +167,8 @@ PlantDBEditor::PlantDBEditor(QWidget *parent, Qt::WindowFlags f) :
 
 PlantDBEditor::~PlantDBEditor()
 {
-    for(auto it (m_plant_data.begin()); it != m_plant_data.end(); it++)
-        delete it->second;
+//    for(auto it (m_plant_data.begin()); it != m_plant_data.end(); it++)
+//        delete it->second;
 }
 
 void PlantDBEditor::init_signals()
@@ -168,7 +207,7 @@ void PlantDBEditor::new_btn_clicked()
     }
     else // READ ONLY
     {
-        QListWidgetItem * selected_list_item(get_current_selected_specie());
+        QListWidgetItem * selected_list_item(get_current_selected_list_item());
         if(selected_list_item != NULL) // unselect current item
             m_available_plants_list->setItemSelected(selected_list_item, false);
 
@@ -178,11 +217,13 @@ void PlantDBEditor::new_btn_clicked()
 
 void PlantDBEditor::remove_btn_clicked()
 {
-    auto it (m_plant_data.find(get_current_selected_specie()->text()));
+    SpeciePropertiesListItem * selected_item(get_current_selected_list_item());
 
-    m_plant_db.removePlant(it->second->specie_id); // remove from the db
-    m_plant_data.erase(it); // Remove from current data
-    delete m_available_plants_list->takeItem(m_available_plants_list->currentRow()); // Remove current item from list
+    if(selected_item != NULL)
+    {
+        m_plant_db.removePlant(selected_item->getProperties()->specie_id); // remove from the db
+        delete m_available_plants_list->takeItem(m_available_plants_list->currentRow()); // Remove current item from list
+    }
 }
 
 void PlantDBEditor::set_mode(Mode p_mode)
@@ -232,33 +273,29 @@ void PlantDBEditor::set_mode(Mode p_mode)
 
 void PlantDBEditor::commit(bool update)
 {
-    // TODO: Update the internal data map
+    // TODO: Update the internal data map    
     SpecieProperties * properties(m_property_widgets_wrapper->toProperties());
 
-    if(update)
+    if(update) // i.e item exists
     {
-        // Retrieve the id
-        auto it (m_plant_data.find(get_current_selected_specie()->text()));
-        properties->specie_id = it->second->specie_id;
-        m_plant_data.erase(it); // Remove from current data (it will be re-inserted later)
-        delete m_available_plants_list->takeItem(m_available_plants_list->currentRow()); // Remove current item from list
-
+        // Get the id
+        properties->specie_id = get_current_selected_list_item()->getProperties()->specie_id;
         m_plant_db.updatePlantData(properties);
+
+        get_current_selected_list_item()->setSpecieProperties(const_cast<const SpecieProperties*>(properties));
     }
     else
     {
-        m_plant_db.insertNewPlantData(properties);
+        m_plant_db.insertNewPlantData(properties); // Specie ID is set upon addition to the database
+        m_available_plants_list->addItem(new SpeciePropertiesListItem(properties));
     }
-
-    m_plant_data.insert(std::pair<QString, const SpecieProperties *>(properties->specie_name, const_cast<const SpecieProperties*>(properties)));
-    m_available_plants_list->addItem(new QListWidgetItem(properties->specie_name));
 }
 
 void PlantDBEditor::refresh_property_widgets()
 {
-    QListWidgetItem* selected_list_item(get_current_selected_specie());
+    SpeciePropertiesListItem* selected_item(get_current_selected_list_item());
 
-    if(selected_list_item == NULL)
+    if(selected_item == NULL)
     {
         m_edit_save_edits_btn->setEnabled(false);
         m_remove_btn->setEnabled(false);
@@ -266,8 +303,7 @@ void PlantDBEditor::refresh_property_widgets()
     }
     else
     {
-        const SpecieProperties* plant_data(m_plant_data.find(get_current_selected_specie()->text())->second);
-        m_property_widgets_wrapper->setProperties(plant_data);
+        m_property_widgets_wrapper->setProperties(selected_item->getProperties());
         m_edit_save_edits_btn->setEnabled(true);
         m_remove_btn->setEnabled(true);
     }
@@ -285,17 +321,19 @@ QSize PlantDBEditor::sizeHint() const
 
 void PlantDBEditor::init_content()
 {
+    SpeciePropertiesHolder all_plant_data(m_plant_db.getAllPlantData());
+
     // The list of available species
-    for(auto it (m_plant_data.begin()); it != m_plant_data.end(); it++)
+    for(auto it (all_plant_data.begin()); it != all_plant_data.end(); it++)
     {
-        m_available_plants_list->addItem(new QListWidgetItem(it->first));
+        m_available_plants_list->addItem(new SpeciePropertiesListItem(it->second));
     }
 }
 
-QListWidgetItem* PlantDBEditor::get_current_selected_specie()
+SpeciePropertiesListItem* PlantDBEditor::get_current_selected_list_item()
 {
     if(m_available_plants_list->selectedItems().size() > 0)
-        return m_available_plants_list->currentItem();
+        return dynamic_cast<SpeciePropertiesListItem*>(m_available_plants_list->currentItem());
 
     return NULL;
 }

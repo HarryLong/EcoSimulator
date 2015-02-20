@@ -28,7 +28,7 @@ void PlantDB::init()
     std::cout << "Database created succesfully" << std::endl;
 
     // Specie Table
-    int rc (sqlite3_exec(db, plant_table_creation_code.c_str(), NULL, 0, &error_msg));
+    int rc (sqlite3_exec(db, specie_table_creation_code.c_str(), NULL, 0, &error_msg));
     exit_on_error ( rc, __LINE__, error_msg );
 
     // growth properties table
@@ -47,6 +47,10 @@ void PlantDB::init()
     rc = sqlite3_exec(db, soil_humidity_properties_table_creation_code.c_str(), NULL, 0, &error_msg);
     exit_on_error ( rc, __LINE__, error_msg );
 
+    // Seeding properties table
+    rc = sqlite3_exec(db, seeding_properties_table_creation_code.c_str(), NULL, 0, &error_msg);
+    exit_on_error ( rc, __LINE__, error_msg );
+
     sqlite3_close(db);
 
     std::cout << "All database tables created successfully!" << std::endl;
@@ -59,28 +63,31 @@ SpeciePropertiesHolder PlantDB::getAllPlantData()
 {
     SpeciePropertiesHolder ret;
 
-    std::map<QString,int> specie_names(get_all_species());
+    std::map<int, QString> specie_ids(get_all_species());
     std::map<int, const AgeingProperties*> ageing_properties(get_all_ageing_properties());
     std::map<int, const GrowthProperties*> growth_properties(get_all_growth_properties());
     std::map<int, const IlluminationProperties*> illumination_properties(get_all_illumination_properties());
     std::map<int, const SoilHumidityProperties*> soil_humidity_properties(get_all_soil_humidity_properties());
+    std::map<int, const SeedingProperties*> seeding_properties(get_all_seeding_properties());
 
-    for(auto it (specie_names.begin()); it != specie_names.end(); it++)
+    for(auto it (specie_ids.begin()); it != specie_ids.end(); it++)
     {
-        int id(it->second);
-        QString name(it->first);
+        int id(it->first);
+        QString name(it->second);
         const AgeingProperties* ageing_property(ageing_properties.find(id)->second);
         const GrowthProperties* growth_property(growth_properties.find(id)->second);
         const IlluminationProperties* illumination_property(illumination_properties.find(id)->second);
         const SoilHumidityProperties* soil_humidity_property(soil_humidity_properties.find(id)->second);
+        const SeedingProperties* seeding_property(seeding_properties.find(id)->second);
 
-        ret.insert(std::pair<QString, SpecieProperties*>(name,
+        ret.insert(std::pair<int, SpecieProperties*>(id,
                                                       new SpecieProperties(name,
                                                                       id,
                                                                       ageing_property,
                                                                       growth_property,
                                                                       illumination_property,
-                                                                      soil_humidity_property)));
+                                                                      soil_humidity_property,
+                                                                      seeding_property)));
     }
 
     return ret;
@@ -92,16 +99,18 @@ void PlantDB::insertNewPlantData(SpecieProperties * data)
     insert_ageing_properties(data->specie_id, *(data->ageing_properties));
     insert_growth_properties(data->specie_id, *(data->growth_properties));
     insert_illumination_properties(data->specie_id, *(data->illumination_properties));
-    insert_soil_humidity_properties(data->specie_id, *(data->soil_humidiry_properties));
+    insert_soil_humidity_properties(data->specie_id, *(data->soil_humidity_properties));
+    insert_seeding_properties(data->specie_id, *(data->seeding_properties));
 }
 
 void PlantDB::updatePlantData(const SpecieProperties * data)
 {
-    update_plant(data->specie_id, data->specie_name);
+    update_specie_name(data->specie_id, data->specie_name);
     update_ageing_properties(data->specie_id, *(data->ageing_properties));
     update_growth_properties(data->specie_id, *(data->growth_properties));
     update_illumination_properties(data->specie_id, *(data->illumination_properties));
-    update_soil_humidity_properties(data->specie_id, *(data->soil_humidiry_properties));
+    update_soil_humidity_properties(data->specie_id, *(data->soil_humidity_properties));
+    update_seeding_properties(data->specie_id, *(data->seeding_properties));
 }
 
 void PlantDB::removePlant(int p_id)
@@ -112,15 +121,15 @@ void PlantDB::removePlant(int p_id)
 /*********************
  * SELECT STATEMENTS *
  *********************/
-std::map<QString,int> PlantDB::get_all_species()
+std::map<int,QString> PlantDB::get_all_species()
 {
     sqlite3 * db (open_db());
     char * error_msg = 0;
     sqlite3_stmt * statement;
 
-    static const std::string sql = "SELECT * FROM " + plant_table_name + ";";
+    static const std::string sql = "SELECT * FROM " + specie_table_name + ";";
 
-    std::map<QString,int> specie_name_to_id_pairs;
+    std::map<int, QString> specie_id_to_name;
 
     // Prepare the statement
     int rc (sqlite3_prepare_v2(db, sql.c_str(),-1/*null-terminated*/,&statement,NULL));
@@ -135,7 +144,7 @@ std::map<QString,int> PlantDB::get_all_species()
         {
             if(c == column_id.index)
                 id = sqlite3_column_int(statement,c);
-            else if(c == plant_table_column_specie_name.index)
+            else if(c == specie_table_column_specie_name.index)
                 plant_name = reinterpret_cast<const char*>(sqlite3_column_text(statement,c));
             else
             {
@@ -144,10 +153,10 @@ std::map<QString,int> PlantDB::get_all_species()
                 exit(1);
             }
         }
-        specie_name_to_id_pairs.insert(std::pair<QString,int>(QString(plant_name), id));
+        specie_id_to_name.insert(std::pair<int,QString>(id, QString(plant_name)));
     }
 
-    return specie_name_to_id_pairs;
+    return specie_id_to_name;
 }
 
 std::map<int, const AgeingProperties*> PlantDB::get_all_ageing_properties()
@@ -221,20 +230,20 @@ std::map<int, const GrowthProperties*> PlantDB::get_all_growth_properties()
     while(sqlite3_step(statement) == SQLITE_ROW)
     {
         int id;
-        float max_monthly_vertical_growth; // cm per month
-        float max_monthly_root_growth; // cm per month
-        float height_to_width_multiplier; // cm per month
+        float max_height; // cm per month
+        float max_root_size; // cm per month
+        float max_canopy_width; // cm per month
 
         for(int c (0); c < sqlite3_column_count(statement); c++)
         {
             if(c == column_id.index)
                 id = sqlite3_column_int(statement,c);
-            else if(c == growth_properties_table_column_max_annual_vertical_growth.index)
-                max_monthly_vertical_growth = sqlite3_column_double(statement,c);
-            else if(c == growth_properties_table_height_to_width_multiplier.index)
-                height_to_width_multiplier = sqlite3_column_double(statement,c);
-            else if(c == growth_properties_table_column_max_annual_root_growth.index)
-                max_monthly_root_growth = sqlite3_column_double(statement,c);
+            else if(c == growth_properties_table_column_max_height.index)
+                max_height = sqlite3_column_double(statement,c);
+            else if(c == growth_properties_table_column_max_canopy_width.index)
+                max_canopy_width = sqlite3_column_double(statement,c);
+            else if(c == growth_properties_table_column_max_root_size.index)
+                max_root_size = sqlite3_column_double(statement,c);
             else
             {
                 std::cerr << "Unknown column: " << sqlite3_column_name(statement,c) <<
@@ -242,9 +251,9 @@ std::map<int, const GrowthProperties*> PlantDB::get_all_growth_properties()
                 exit(1);
             }
         }
-        ret.insert(std::pair<int,const GrowthProperties*>(id, new GrowthProperties(max_monthly_vertical_growth,
-                                                                        max_monthly_root_growth,
-                                                                        height_to_width_multiplier)));
+        ret.insert(std::pair<int,const GrowthProperties*>(id, new GrowthProperties(max_height,
+                                                                        max_root_size,
+                                                                        max_canopy_width)));
     }
 
     return ret;
@@ -340,6 +349,54 @@ std::map<int, const SoilHumidityProperties*> PlantDB::get_all_soil_humidity_prop
     return ret;
 }
 
+std::map<int, const SeedingProperties*> PlantDB::get_all_seeding_properties()
+{
+    sqlite3 * db (open_db());
+    char * error_msg = 0;
+    sqlite3_stmt * statement;
+
+    static const std::string sql = "SELECT * FROM " + seeding_properties_table_name + ";";
+
+    std::map<int,const SeedingProperties*> ret;
+
+    // Prepare the statement
+    int rc (sqlite3_prepare_v2(db, sql.c_str(),-1/*null-terminated*/,&statement,NULL));
+    exit_on_error(rc, __LINE__, error_msg);
+
+    while(sqlite3_step(statement) == SQLITE_ROW)
+    {
+        int id;
+        int max_seeding_distance;
+        int seeding_interval;
+        int max_seed_count;
+
+        for(int c (0); c < sqlite3_column_count(statement); c++)
+        {
+            if(c == column_id.index)
+                id = sqlite3_column_int(statement,c);
+            else if(c == seeding_properties_table_column_max_seeding_distance.index)
+                max_seeding_distance = sqlite3_column_int(statement,c);
+            else if(c == seeding_properties_table_column_seeding_interval.index)
+                seeding_interval = sqlite3_column_int(statement,c);
+            else if(c == seeding_properties_table_column_max_seed_count.index)
+                max_seed_count = sqlite3_column_int(statement,c);
+            else
+            {
+                std::cerr << "Unknown column: " << sqlite3_column_name(statement,c) <<
+                             " in file " << __FILE__ << " and line " << __LINE__ << std::endl;
+                exit(1);
+            }
+        }
+        ret.insert(std::pair<int,const SeedingProperties*>(id, new SeedingProperties(max_seeding_distance,
+                                                                                          seeding_interval,
+                                                                                          max_seed_count)));
+    }
+    // finalise the statement
+    sqlite3_finalize(statement);
+
+    return ret;
+}
+
 /*********************
  * INSERT STATEMENTS *
  *********************/
@@ -349,8 +406,8 @@ int PlantDB::insert_plant(QString name)
     char *error_msg = 0;
     sqlite3_stmt * statement;
 
-    static const std::string sql = "INSERT INTO " + plant_table_name + " ( " +
-            plant_table_column_specie_name.name + " )" +
+    static const std::string sql = "INSERT INTO " + specie_table_name + " ( " +
+            specie_table_column_specie_name.name + " )" +
             " VALUES ( ? );";
 
 
@@ -360,7 +417,7 @@ int PlantDB::insert_plant(QString name)
     // Perform binding
     QByteArray name_byte_array ( name.toUtf8());
     const char* name_c_string ( name_byte_array.constData());
-    exit_on_error(sqlite3_bind_text(statement, plant_table_column_specie_name.index, name_c_string, -1/*null-terminated*/,NULL), __LINE__);
+    exit_on_error(sqlite3_bind_text(statement, specie_table_column_specie_name.index, name_c_string, -1/*null-terminated*/,NULL), __LINE__);
 
     // Commit
     exit_on_error(sqlite3_step(statement), __LINE__);
@@ -415,9 +472,9 @@ void PlantDB::insert_growth_properties(int id, const GrowthProperties & growth_p
 
     static const std::string sql = "INSERT INTO " + growth_properties_table_name + " (" +
             column_id.name + "," +
-            growth_properties_table_column_max_annual_vertical_growth.name + "," +
-            growth_properties_table_height_to_width_multiplier.name + "," +
-            growth_properties_table_column_max_annual_root_growth.name +  ")" +
+            growth_properties_table_column_max_height.name + "," +
+            growth_properties_table_column_max_canopy_width.name + "," +
+            growth_properties_table_column_max_root_size.name +  ")" +
             " VALUES ( ?, ?, ?, ?);";
 
     // Prepare the statement
@@ -425,9 +482,9 @@ void PlantDB::insert_growth_properties(int id, const GrowthProperties & growth_p
 
     // Perform binding
     exit_on_error(sqlite3_bind_int(statement, column_id.index+1, id), __LINE__);
-    exit_on_error(sqlite3_bind_double(statement, growth_properties_table_column_max_annual_vertical_growth.index+1, growth_properties.max_annual_vertical_growth), __LINE__);
-    exit_on_error(sqlite3_bind_double(statement, growth_properties_table_height_to_width_multiplier.index+1, growth_properties.height_to_width_multiplier), __LINE__);
-    exit_on_error(sqlite3_bind_double(statement, growth_properties_table_column_max_annual_root_growth.index+1, growth_properties.max_annual_root_growth), __LINE__);
+    exit_on_error(sqlite3_bind_double(statement, growth_properties_table_column_max_height.index+1, growth_properties.max_height), __LINE__);
+    exit_on_error(sqlite3_bind_double(statement, growth_properties_table_column_max_canopy_width.index+1, growth_properties.max_canopy_width), __LINE__);
+    exit_on_error(sqlite3_bind_double(statement, growth_properties_table_column_max_root_size.index+1, growth_properties.max_root_size), __LINE__);
 
     // Commit
     exit_on_error(sqlite3_step(statement), __LINE__);
@@ -494,17 +551,46 @@ void PlantDB::insert_soil_humidity_properties(int id, const SoilHumidityProperti
     exit_on_error(sqlite3_finalize(statement), __LINE__);
 }
 
-/*********************
- * UPDATE STATEMENTS *
- *********************/
-int PlantDB::update_plant(int id, QString name)
+void PlantDB::insert_seeding_properties(int id, const SeedingProperties & seeding_properties)
 {
     sqlite3 * db (open_db());
     char *error_msg = 0;
     sqlite3_stmt * statement;
 
-    const static  std::string sql = "UPDATE " + plant_table_name + " SET " +
-                            plant_table_column_specie_name.name + " = ? " +
+    static const std::string sql = "INSERT INTO " + seeding_properties_table_name + " (" +
+            column_id.name + "," +
+            seeding_properties_table_column_max_seeding_distance.name + "," +
+            seeding_properties_table_column_seeding_interval.name+  "," +
+            seeding_properties_table_column_max_seed_count.name+  ")" +
+            " VALUES ( ?, ?, ?, ?);";
+
+    // Prepare the statement
+    exit_on_error(sqlite3_prepare_v2(db, sql.c_str(),-1/*null-terminated*/,&statement,NULL), __LINE__);
+
+    // Perform binding
+    exit_on_error(sqlite3_bind_int(statement, column_id.index+1, id), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_max_seeding_distance.index+1, seeding_properties.max_seed_distance), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_seeding_interval.index+1, seeding_properties.seeding_interval), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_max_seed_count.index+1, seeding_properties.max_seeds), __LINE__);
+
+    // Commit
+    exit_on_error(sqlite3_step(statement), __LINE__);
+
+    // finalise the statement
+    exit_on_error(sqlite3_finalize(statement), __LINE__);
+}
+
+/*********************
+ * UPDATE STATEMENTS *
+ *********************/
+void PlantDB::update_specie_name(int id, QString name)
+{
+    sqlite3 * db (open_db());
+    char *error_msg = 0;
+    sqlite3_stmt * statement;
+
+    const static  std::string sql = "UPDATE " + specie_table_name + " SET " +
+                            specie_table_column_specie_name.name + " = ? " +
                       " WHERE " + column_id.name + " = ? ;";
 
     // Prepare the statement
@@ -514,7 +600,7 @@ int PlantDB::update_plant(int id, QString name)
     QByteArray name_byte_array ( name.toUtf8());
     const char* name_c_string ( name_byte_array.constData());
 
-    int bind_index (plant_table_column_specie_name.index);
+    int bind_index (specie_table_column_specie_name.index);
     exit_on_error(sqlite3_bind_text(statement, bind_index++, name_c_string,-1/*null-terminated*/, NULL), __LINE__);
     exit_on_error(sqlite3_bind_int(statement, bind_index++, id), __LINE__);
 
@@ -565,19 +651,19 @@ void PlantDB::update_growth_properties(int id, const GrowthProperties & growth_p
     sqlite3_stmt * statement;
 
     const std::string sql = "UPDATE " + growth_properties_table_name + " SET " +
-                growth_properties_table_column_max_annual_vertical_growth.name + " = ?," +
-                growth_properties_table_height_to_width_multiplier.name + " = ?," +
-                growth_properties_table_column_max_annual_root_growth.name +  " = ?" +
+                growth_properties_table_column_max_height.name + " = ?," +
+                growth_properties_table_column_max_canopy_width.name + " = ?," +
+                growth_properties_table_column_max_root_size.name +  " = ?" +
             " WHERE " + column_id.name + " = ?;";
 
     // Prepare the statement
     exit_on_error(sqlite3_prepare_v2(db, sql.c_str(),-1/*null-terminated*/,&statement,NULL), __LINE__);
 
     // Perform binding
-    int bind_index (growth_properties_table_column_max_annual_vertical_growth.index);
-    exit_on_error(sqlite3_bind_double(statement, bind_index++, growth_properties.max_annual_vertical_growth), __LINE__);
-    exit_on_error(sqlite3_bind_double(statement, bind_index++, growth_properties.height_to_width_multiplier), __LINE__);
-    exit_on_error(sqlite3_bind_double(statement, bind_index++, growth_properties.max_annual_root_growth), __LINE__);
+    int bind_index (growth_properties_table_column_max_height.index);
+    exit_on_error(sqlite3_bind_double(statement, bind_index++, growth_properties.max_height), __LINE__);
+    exit_on_error(sqlite3_bind_double(statement, bind_index++, growth_properties.max_canopy_width), __LINE__);
+    exit_on_error(sqlite3_bind_double(statement, bind_index++, growth_properties.max_root_size), __LINE__);
     exit_on_error(sqlite3_bind_int(statement, bind_index++, id), __LINE__);
 
     // Commit
@@ -643,6 +729,36 @@ void PlantDB::update_soil_humidity_properties(int id, const SoilHumidityProperti
     exit_on_error(sqlite3_finalize(statement), __LINE__);
 }
 
+void PlantDB::update_seeding_properties(int id, const SeedingProperties & seeding_properties)
+{
+    sqlite3 * db (open_db());
+    char *error_msg = 0;
+    sqlite3_stmt * statement;
+
+    static const std::string sql = "UPDATE " + seeding_properties_table_name + " SET " +
+            seeding_properties_table_column_max_seeding_distance.name + " = ?," +
+            seeding_properties_table_column_seeding_interval.name +  " = ?," +
+            seeding_properties_table_column_max_seed_count.name +  " = ?" +
+            " WHERE " + column_id.name + " = ?;";
+
+    // Prepare the statement
+    exit_on_error(sqlite3_prepare_v2(db, sql.c_str(),-1/*null-terminated*/,&statement,NULL), __LINE__);
+
+    // Perform binding
+    int bind_index (seeding_properties_table_column_max_seeding_distance.index);
+    exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.max_seed_distance), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.seeding_interval), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.max_seeds), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, bind_index++, id), __LINE__);
+
+    // Commit
+    exit_on_error(sqlite3_step(statement), __LINE__);
+
+    // finalise the statement
+    exit_on_error(sqlite3_finalize(statement), __LINE__);
+}
+
+
 /*********************
  * DELETE STATEMENTS *
  *********************/
@@ -652,7 +768,7 @@ void PlantDB::delete_plant(int id)
     char *error_msg = 0;
     sqlite3_stmt * statement;
 
-    static const std::string sql = "DELETE FROM " + plant_table_name + " WHERE " +
+    static const std::string sql = "DELETE FROM " + specie_table_name + " WHERE " +
             column_id.name + " = ?;";
 
     // Prepare the statement

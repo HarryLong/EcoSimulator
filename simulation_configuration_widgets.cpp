@@ -1,22 +1,102 @@
-#include "plant_configuration_widget.h"
+#include "simulation_configuration_widgets.h"
 #include <QStringListModel>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QCheckBox>
 #include "constants.h"
 #include <algorithm>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QButtonGroup>
+#include "plant_db.h"
 
+/***********************************
+ * SIMULATION CONFIGURATION WIDGET *
+ ***********************************/
+SimulationConfigurationWidget::SimulationConfigurationWidget(int width, int height, QWidget * parent) :
+    QWidget(parent), m_per_plant_seeding_cb(new QCheckBox), m_simplified_seeding_cb(new QCheckBox),
+    m_seeding_disabled_cb(new QCheckBox), m_seeding_button_group(new QButtonGroup)
+{
+    setFixedSize(width,height);
+
+    // Defaults
+    m_seeding_button_group->addButton(m_per_plant_seeding_cb);
+    m_seeding_button_group->addButton(m_simplified_seeding_cb);
+    m_seeding_button_group->addButton(m_seeding_disabled_cb);
+    m_simplified_seeding_cb->setChecked(true);
+
+    init_layout();
+}
+
+SimulationConfigurationWidget::~SimulationConfigurationWidget()
+{
+
+}
+
+SimulationOptions SimulationConfigurationWidget::getSimulationConfiguration()
+{
+    return SimulationOptions(m_simplified_seeding_cb->isChecked(), m_per_plant_seeding_cb->isChecked());
+}
+
+void SimulationConfigurationWidget::init_layout()
+{
+    QVBoxLayout * main_layout = new QVBoxLayout();
+
+    // SEEDING
+    {
+        // Title
+        QFont title_font( "Arial", 16, QFont::Bold );
+        QLabel * seeding_title = new QLabel("Seeding:");
+        seeding_title->setFont(title_font);
+        main_layout->addWidget(seeding_title, 0, Qt::AlignLeft|Qt::AlignTop);
+
+        // Simplified seeding
+        QHBoxLayout * simplified_seeding_layout = new QHBoxLayout();
+        QLabel * simplified_seeding_label  = new QLabel("Simplified seeding: ");
+        simplified_seeding_layout->addWidget(simplified_seeding_label, 1, Qt::AlignLeft|Qt::AlignTop);
+        simplified_seeding_layout->addWidget(m_simplified_seeding_cb,0, Qt::AlignRight|Qt::AlignTop);
+        main_layout->addLayout(simplified_seeding_layout, 0);
+
+        // Per plant seeding
+        QHBoxLayout * per_plant_seeding_layout = new QHBoxLayout();
+        QLabel * per_plant_seeding_label  = new QLabel("Per plant seeding: ");
+        per_plant_seeding_layout->addWidget(per_plant_seeding_label, 1, Qt::AlignLeft|Qt::AlignTop);
+        per_plant_seeding_layout->addWidget(m_per_plant_seeding_cb,0, Qt::AlignRight|Qt::AlignTop);
+        main_layout->addLayout(per_plant_seeding_layout, 0);
+
+        // Seeding disabled
+        QHBoxLayout * seeding_disabled_layout = new QHBoxLayout();
+        QLabel * seeding_disabled_label  = new QLabel("Seeding disabled: ");
+        seeding_disabled_layout->addWidget(seeding_disabled_label, 1, Qt::AlignLeft|Qt::AlignTop);
+        seeding_disabled_layout->addWidget(m_seeding_disabled_cb,0, Qt::AlignRight|Qt::AlignTop);
+        main_layout->addLayout(seeding_disabled_layout, 0);
+    }
+
+    main_layout->addLayout(new QHBoxLayout,1); // Padding
+
+    setLayout(main_layout);
+}
+
+/******************************
+ * PLANT CONFIGURATION WIDGET *
+ ******************************/
 PlantConfigurationWidget::PlantConfigurationWidget ( int width, int height, QWidget * parent) :
     QWidget(parent),
     m_width(width),
     m_height(height),
-    m_plant_factory(),
+    m_specie_name_to_id_mapper(),
     m_species_added()
 {
     m_available_plants_list = new QListWidget(this);
     m_added_plants_table = new QTableWidget(this);
+
+    PlantDB plant_db;
+    std::map<int,QString> all_species(plant_db.get_all_species());
+    for(auto it(all_species.begin()); it != all_species.end(); it++)
+    {
+        m_specie_name_to_id_mapper.insert(std::pair<QString,int>(it->second, it->first));
+    }
 
     m_added_plants_table->setItemDelegateForColumn(AddedPlantsTableColumns::Count, new NumberDelegate);
 
@@ -96,29 +176,26 @@ void PlantConfigurationWidget::add_specie(QListWidgetItem * item)
     }
 }
 
-std::vector<Plant*> PlantConfigurationWidget::getPlantsToCreate()
+std::map<int, int> PlantConfigurationWidget::getPlantsToCreate()
 {
-    std::vector<Plant*> ret;
+    std::map<int, int> plants_to_create;
 
     for(int row ( 0 ); row < m_added_plants_table->rowCount(); row++)
     {
-        QString specie ( m_added_plants_table->item(row,AddedPlantsTableColumns::Specie)->text() );
+        QString specie_name ( m_added_plants_table->item(row,AddedPlantsTableColumns::Specie)->text() );
         int count ( m_added_plants_table->item(row,AddedPlantsTableColumns::Count)->text().toInt() );
+        int specie_id ( m_specie_name_to_id_mapper.find(specie_name)->second );
 
-        for(int plant_count ( 0 ); plant_count < count; plant_count++)
-            ret.push_back(m_plant_factory.generate(specie, generate_random_position()));
+        plants_to_create.insert(std::pair<int,int>(specie_id, count));
     }
 
-    return ret;
+    return plants_to_create;
 }
 
 void PlantConfigurationWidget::init_available_plants_list()
 {
-    std::vector<QString> sorted_plant_species ( m_plant_factory.getAllSpecieNames() );
-    std::sort(sorted_plant_species.begin(), sorted_plant_species.end());
-
-    for(QString specie_name : sorted_plant_species)
-        m_available_plants_list->addItem(new QListWidgetItem(specie_name));
+    for(auto specie : m_specie_name_to_id_mapper)
+        m_available_plants_list->addItem(new QListWidgetItem(specie.first));
 }
 
 void PlantConfigurationWidget::init_added_plants_table()
@@ -138,15 +215,12 @@ QSize PlantConfigurationWidget::sizeHint() const
     return QSize(m_width, m_height);
 }
 
-QPoint PlantConfigurationWidget::generate_random_position()
-{
-    return QPoint(rand()%AREA_WIDTH_HEIGHT, rand()%AREA_WIDTH_HEIGHT);
-}
-
 QTableWidgetItem * PlantConfigurationWidget::generate_read_only_cell(QString p_cell_content)
 {
     QTableWidgetItem * cell = new QTableWidgetItem(p_cell_content);
     cell->setFlags(cell->flags() ^ Qt::ItemIsEditable);
+
+    return cell;
 }
 
 void PlantConfigurationWidget::cell_changed(int p_row, int p_columm)

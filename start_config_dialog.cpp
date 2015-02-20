@@ -83,12 +83,14 @@ void StartConfigDialog::init_signals()
     connect(m_next_start_btn, SIGNAL(clicked()), this, SLOT(display_next()));
 }
 
-StartConfiguration StartConfigDialog::getStartConfiguration()
+SimulationConfiguration StartConfigDialog::getStartConfiguration()
 {
-    StartConfiguration ret(
+    SimulationConfiguration ret(
                 static_cast<PlantConfigurationWidget*>(m_widgets.get(WidgetType::PlantConfiguration))->getPlantsToCreate(),
                 static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration))->getData(),
-                static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getData());
+                static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getData(),
+                static_cast<SimulationConfigurationWidget*>(m_widgets.get(WidgetType::SimulationOptions))->getSimulationConfiguration()
+                );
 
     return ret;
 }
@@ -117,11 +119,13 @@ StartConfigDialogWidgets::StartConfigDialogWidgets() : m_widgets(), m_current_wi
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::PlantConfiguration, new PlantConfigurationWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::SoilHumidityConfiguration, new SoilHumidityInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::IlluminationConfiguration, new IlluminationInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
+    m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::SimulationOptions, new SimulationConfigurationWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
 
     // Title
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::PlantConfiguration, QString("Plsnt Configuration")));
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SoilHumidityConfiguration, QString("Soil Humidity")));
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::IlluminationConfiguration, QString("Illumination")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SimulationOptions, QString("Simulation Options")));
 
     hide_all();
     show(m_current_widget);

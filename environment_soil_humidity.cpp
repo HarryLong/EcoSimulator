@@ -20,7 +20,7 @@ void EnvironmentSoilHumidity::setSoilHumidityData(const QImage & p_image)
     }
 }
 
-int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_roots_radius, int p_id)
+int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_roots_size, int p_id)
 {
     if(m_refresh_required) // Check if a resource refresh is necessary
     {
@@ -28,7 +28,7 @@ int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_root
         m_refresh_required = false;
     }
 
-    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_size));
 
     int aggregated_humidity_percentage(0);
 
@@ -42,28 +42,28 @@ int EnvironmentSoilHumidity::getHumidityPercentage(QPoint p_center, float p_root
 }
 
 // DO NOT CALL THIS METHOD FOLLOWED BY GETHUMIDITY CONTRINUOUSLY RATHER UPDATE THIS FOR ALL NECESSARY CELLS IN ONE GO
-void EnvironmentSoilHumidity::setData(QPoint p_center, float p_roots_radius, int p_id, int p_minimum_humidity_percentage)
+void EnvironmentSoilHumidity::setData(QPoint p_center, float p_roots_size, int p_id, int p_minimum_humidity_percentage)
 {
     m_refresh_required = true;
 
-    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_size));
 
     for(auto it (cells.begin()) ; it != cells.end(); it++)
     {
         SoilHumidityCell* cell ((*it)->soil_humidity_cell);
         auto it2 ( cell->requests.find(p_id) );
         if(it2 != cell->requests.end())
-            it2->second.size = p_roots_radius;
+            it2->second.size = p_roots_size;
         else
-            cell->requests.insert(std::pair<int,ResourceUsageRequest>(p_id, ResourceUsageRequest(p_minimum_humidity_percentage, p_roots_radius, p_id)));
+            cell->requests.insert(std::pair<int,ResourceUsageRequest>(p_id, ResourceUsageRequest(p_minimum_humidity_percentage, p_roots_size, p_id)));
     }
 }
 
-void EnvironmentSoilHumidity::remove(QPoint p_center, float p_radius, int p_id)
+void EnvironmentSoilHumidity::remove(QPoint p_center, float p_roots_size, int p_id)
 {
     m_refresh_required = true;
 
-    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_radius));
+    std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_roots_size));
 
     for(auto it (cells.begin()) ; it != cells.end(); it++)
     {

@@ -165,16 +165,10 @@ void CentralWidget::pause_resume_btn_clicked()
 
 void CentralWidget::start_simulation()
 {
-    StartConfiguration start_config(m_start_config_dialog->getStartConfiguration());
-
-    // Add the plants to create
-    m_simulator_manager.setEnvironmentData(start_config.illumination, start_config.soil_humidity);
-    m_simulator_manager.addPlants(start_config.m_plants);
-
     m_stop_start_button->setText("Stop");
     // Enable pause/resume button
     m_pause_resume_button->setEnabled(true);
-    m_simulator_manager.start();
+    m_simulator_manager.start(m_start_config_dialog->getStartConfiguration());
 }
 
 void CentralWidget::stop_simulation()

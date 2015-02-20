@@ -15,7 +15,7 @@ class MyCustomFloatingPointSizeSpinBox : public QDoubleSpinBox
 public:
     MyCustomFloatingPointSizeSpinBox() : QDoubleSpinBox()
     {
-        setRange(.0,1000.0);
+        setRange(.0,10000.0);
         setDecimals(2);
     }
 
@@ -110,9 +110,9 @@ private:
     void init_layout();
 
     // UI Elements
-    MyCustomFloatingPointSizeSpinBox* m_max_vertical_growth_dsb;
-    MyCustomMultiplierSpinBox* m_canopy_width_multiplier_dsb;
-    MyCustomFloatingPointSizeSpinBox* m_max_roots_growth_dsb;
+    MyCustomFloatingPointSizeSpinBox* m_max_height_dsb;
+    MyCustomFloatingPointSizeSpinBox* m_max_canopy_width_dsb;
+    MyCustomFloatingPointSizeSpinBox* m_max_root_size_dsb;
     QCheckBox * m_canopy_cb;
 };
 
@@ -186,5 +186,29 @@ private:
     MyPercentageSpinBox* m_prime_soil_humidity_percentage_end_sb;
     MySensitivitySpinBox * m_sensitivity_sb;
 };
+
+/*****************************
+ * SEEDING PROPERTIES WIDGET *
+ *****************************/
+class SeedingPropertiesWidget : public QWidget
+{
+public:
+    SeedingPropertiesWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    ~SeedingPropertiesWidget();
+
+    SeedingProperties* getProperties();
+
+    void setProperties(const SeedingProperties * p_properties);
+    void clear();
+
+private:
+    void init_layout();
+
+    // UI Elements
+    QSpinBox* m_max_seeding_distance_sb;
+    QSpinBox* m_seeding_interval_sb;
+    QSpinBox* m_max_seed_count_sb;
+};
+
 
 #endif //PROPERTIES_EDITOR_WIDGETS_H
