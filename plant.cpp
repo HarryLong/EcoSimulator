@@ -39,7 +39,7 @@ void Plant::newMonth()
         m_growth_manager.grow(m_strength); // TODO: Replace with calculated strength
 }
 
-void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_percentage) // Must be called before newMonth is triggered
+void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage) // Must be called before newMonth is triggered
 {
     /*******
      * AGE *
@@ -53,7 +53,7 @@ void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_perce
     /****************
      * ILLUMINATION *
      ****************/
-    m_constrainers.illumination_constrainer.setShadedPercentage(p_shaded_percentage);
+    m_constrainers.illumination_constrainer.setDailyIllumination(p_daily_illumination);
     int illumination_strength (m_constrainers.illumination_constrainer.getStrength());
     m_strengths.find(ConstrainerType::Illumination)->second = illumination_strength;
     if(illumination_strength < min_strength)
@@ -67,6 +67,7 @@ void Plant::calculateStrength(int p_shaded_percentage, int p_soil_humidity_perce
      *****************/
     m_constrainers.soil_humidity_constrainer.setSoilHumidityPercentage(p_soil_humidity_percentage);
     int soil_humidity_strength (m_constrainers.soil_humidity_constrainer.getStrength());
+    std::cout << "Soil humidity strength: " << soil_humidity_strength << std::endl;
     m_strengths.find(ConstrainerType::SoilHumidity)->second = soil_humidity_strength;
     if(soil_humidity_strength < min_strength)
     {
@@ -142,7 +143,10 @@ PlantStatus Plant::getStatus()
     {
         switch(m_strength_bottleneck){
         case Illumination:
-            return DeathByIllumination;
+            if(m_constrainers.illumination_constrainer.isUnderExposed())
+                return DeathByUnderIllumination;
+            else
+                return DeathByOverIllumination;
         case Age:
             return DeathByAge;
         case SoilHumidity:

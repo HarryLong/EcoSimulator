@@ -48,34 +48,45 @@ struct GrowthProperties {
 };
 
 struct IlluminationProperties {
-    const int shade_tolerance;
-    const int sensitivity;
+    const int daily_illumination_hours_prime_start;
+    const int daily_illumination_hours_prime_end;
+    const int underexposure_sensitivity;
+    const int overexposure_sensitivity;
 
     IlluminationProperties(const IlluminationProperties & other) :
-        shade_tolerance(other.shade_tolerance),
-        sensitivity(other.sensitivity){}
+        daily_illumination_hours_prime_start(other.daily_illumination_hours_prime_start),
+        daily_illumination_hours_prime_end(other.daily_illumination_hours_prime_end),
+        underexposure_sensitivity(other.underexposure_sensitivity),
+        overexposure_sensitivity(other.overexposure_sensitivity){}
 
-    IlluminationProperties( int p_shade_tolerance, int p_sensitivity ) :
-        shade_tolerance(p_shade_tolerance),
-        sensitivity(p_sensitivity){}
+    IlluminationProperties( int p_daily_illumination_hours_prime_start, int p_daily_illumination_hours_prime_end,
+                            int p_underexposure_sensitivity, int p_overexposure_sensitivity ) :
+        daily_illumination_hours_prime_start(p_daily_illumination_hours_prime_start),
+        daily_illumination_hours_prime_end(p_daily_illumination_hours_prime_end),
+        underexposure_sensitivity(p_underexposure_sensitivity),
+        overexposure_sensitivity(p_overexposure_sensitivity){}
 };
 
 struct SoilHumidityProperties {
     const int soil_humidity_percentage_prime_start;
     const int soil_humidity_percentage_prime_end;
-    const int sensitivity;
+    const int drought_sensitivity;
+    const int flooding_sensitivity;
 
     SoilHumidityProperties(const SoilHumidityProperties & other) :
         soil_humidity_percentage_prime_start(other.soil_humidity_percentage_prime_start),
         soil_humidity_percentage_prime_end(other.soil_humidity_percentage_prime_end),
-        sensitivity(other.sensitivity){}
+        drought_sensitivity(other.drought_sensitivity),
+        flooding_sensitivity(other.flooding_sensitivity){}
 
     SoilHumidityProperties( int p_soil_humidity_percentage_prime_start,
                             int p_soil_humidity_percentage_prime_end,
-                            int p_sensitivity):
+                            int p_drought_sensitivity,
+                            int p_flooding_sensitivity):
         soil_humidity_percentage_prime_start(p_soil_humidity_percentage_prime_start),
         soil_humidity_percentage_prime_end(p_soil_humidity_percentage_prime_end),
-        sensitivity(p_sensitivity){}
+        drought_sensitivity(p_drought_sensitivity),
+        flooding_sensitivity(p_flooding_sensitivity){}
 };
 
 struct TemperatureProperties {

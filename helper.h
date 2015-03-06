@@ -14,7 +14,8 @@ using namespace std;
 enum PlantStatus{
     Alive,
     DeathByAge,
-    DeathByIllumination,
+    DeathByUnderIllumination,
+    DeathByOverIllumination,
     DeathByDrought,
     DeathByFlood
 };

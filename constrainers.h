@@ -45,12 +45,15 @@ public:
 
     virtual int getStrength() const;
 
-    void setShadedPercentage(int p_shaded_percentage);
+    void setDailyIllumination(int p_daily_illumination);
+
+    bool isUnderExposed();
 
 private:
     IlluminationProperties m_properties;
-    LinearEquation m_equation;
-    int m_shaded_percentage;
+    LinearEquation m_underexposure_equation;
+    LinearEquation m_overexposure_equation;
+    int m_daily_illumination; // in hours
 };
 
 /*****************

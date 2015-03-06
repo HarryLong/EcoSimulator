@@ -13,7 +13,7 @@ public:
     EnvironmentIllumination(EnvironmentSpatialHashMap & map);
 
     void setIlluminationData(const QImage & p_image);
-    int getShadedPercentage(QPoint p_center, float p_canopy_width, float p_height);
+    int getDailyIllumination(QPoint p_center, float p_canopy_width, float p_height);
     void setData(QPoint p_center, float p_canopy_width, float height, int p_id);
     void remove(QPoint p_center, float p_canopy_width, int p_id);
     float getMaxHeight(QPoint p_cell_coord);

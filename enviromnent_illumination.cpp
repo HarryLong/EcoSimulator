@@ -1,5 +1,6 @@
 #include "enviromnent_illumination.h"
 #include <QImage>
+#include <math.h>
 
 EnvironmentIllumination::EnvironmentIllumination(EnvironmentSpatialHashMap & map) : m_map(map)
 {
@@ -14,8 +15,8 @@ void EnvironmentIllumination::setIlluminationData(const QImage & p_image)
     {
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-            int illumination_percentage((qRed(scaled_image.pixel(x,y)) / 255.f) * 100);
-            m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(illumination_percentage));
+            int daily_illumination(std::round((qRed(scaled_image.pixel(x,y)) / 255.f) * 24.0f));
+            m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(daily_illumination));
         }
     }
 }
@@ -26,21 +27,21 @@ float EnvironmentIllumination::getMaxHeight(QPoint p_cell_coord)
 }
 
 #define HEIGHT_BUFFER 5 //cm
-int EnvironmentIllumination::getShadedPercentage(QPoint p_center, float p_canopy_width, float p_height)
+int EnvironmentIllumination::getDailyIllumination(QPoint p_center, float p_canopy_width, float p_height)
 {
     std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_width/2));
 
-    int aggregated_illumination_percentage(0);
+    int aggregated_daily_illumination(0);
 
     for(auto it (cells.begin()) ; it != cells.end(); it++)
     {
         IlluminationCell* cell((*it)->illumination_cell);
 
         if(cell->max_height-HEIGHT_BUFFER <= p_height)
-            aggregated_illumination_percentage += cell->illumination_percentage;
+            aggregated_daily_illumination += cell->daily_illumination;
     }
 
-    return 100 - (aggregated_illumination_percentage/cells.size()); // Return percentage
+    return aggregated_daily_illumination/cells.size(); // Return percentage
 }
 
 void EnvironmentIllumination::setData(QPoint p_center, float p_canopy_width, float p_height, int p_id)

@@ -23,7 +23,7 @@ public:
     virtual const QImage & toImage() const;
     virtual void setData(QImage image);
     virtual void reset(QPoint p_point);
-    virtual void set(QPoint p_point, int p_percentage_of_max) = 0;
+    virtual void set(QPoint p_point, int value) = 0;
     virtual void fillAll(int p_percentage_of_max) = 0;
     virtual int getValue(QPoint point) = 0;
 
@@ -72,7 +72,7 @@ class InputWidget : public QWidget
 {
 Q_OBJECT
 public:
-    InputWidget(PixelData * pixel_data, int width, int height, bool enable_sensitivity_percentage, QWidget *parent);
+    InputWidget(PixelData * pixel_data, int width, int height, int min, int max, QString label, QWidget *parent = 0);
 
     ~InputWidget();
 
@@ -95,6 +95,7 @@ private slots:
     void fill_all();
     void load_btn_clicked();
     void save_btn_clicked();
+    void generate_gradual_clicked();
 
 private:
     void refresh();
@@ -115,8 +116,17 @@ private:
     QPushButton * m_save_btn;
     QPushButton * m_load_btn;
 
+    QSpinBox * m_gradual_min_sb;
+    QSpinBox * m_gradual_max_sb;
+    QPushButton * m_generate_gradual_btn;
+
     QCursor m_custom_cursor;
     QCursor m_default_cursor;
+
+    QString m_label;
+
+    int m_min;
+    int m_max;
 
     bool painting;
 };
@@ -143,7 +153,8 @@ private:
 class SoilHumidityInputWidget : public InputWidget
 {
 public:
-    SoilHumidityInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new SoilHumidityPixelData(width, height), width, height, true, parent) {}
+    SoilHumidityInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new SoilHumidityPixelData(width, height), width, height,
+                                                                                         0,100, "Humidity (%):", parent) {}
 };
 
 /****************
@@ -161,6 +172,7 @@ public:
 class IlluminationInputWidget : public InputWidget
 {
 public:
-    IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new IlluminationPixelData(width, height), width, height, true, parent) {}
+    IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new IlluminationPixelData(width, height), width, height,
+                                                                                         0,24, "Illumination (hours):", parent) {}
 };
 #endif // INPUT_WIDGETS_H

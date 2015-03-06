@@ -9,9 +9,9 @@ EnvironmentManager::~EnvironmentManager()
 {
 }
 
-int EnvironmentManager::getShadedPercentage(QPoint p_center, float p_canopy_width, float p_height)
+int EnvironmentManager::getDailyIllumination(QPoint p_center, float p_canopy_width, float p_height)
 {
-    return m_resource_controllers.illumination.getShadedPercentage(p_center, p_canopy_width, p_height);
+    return m_resource_controllers.illumination.getDailyIllumination(p_center, p_canopy_width, p_height);
 }
 
 int EnvironmentManager::getSoilHumidityPercentage(QPoint p_center, float p_roots_size, int p_id)

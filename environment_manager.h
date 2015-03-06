@@ -17,7 +17,7 @@ public:
     EnvironmentManager();
     ~EnvironmentManager();
 
-    int getShadedPercentage(QPoint p_center, float p_canopy_width, float p_height);
+    int getDailyIllumination(QPoint p_center, float p_canopy_width, float p_height);
     int getSoilHumidityPercentage(QPoint p_center, float p_roots_size, int p_id);
 
     void remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id);

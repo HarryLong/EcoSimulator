@@ -205,8 +205,11 @@ void AgeingPropertiesWidget::init_layout()
  **********************************/
 IlluminationPropertiesWidget::IlluminationPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
 {
-    m_shade_tolerance_sb = new MyPercentageSpinBox();
-    m_sensitivity_sb = new MySensitivitySpinBox;
+    m_min_illumination_sb = new My24HourSpinBox;
+    m_max_illumination_sb = new My24HourSpinBox;
+
+    m_underexposure_sensitivity_sb = new MySensitivitySpinBox;
+    m_overexposure_sensitivity_sb = new MySensitivitySpinBox;
 
     init_layout();
 }
@@ -217,20 +220,27 @@ IlluminationPropertiesWidget::~IlluminationPropertiesWidget()
 
 IlluminationProperties * IlluminationPropertiesWidget::getProperties()
 {
-    return new IlluminationProperties(m_shade_tolerance_sb->value(),
-                                  m_sensitivity_sb->value());
+    return new IlluminationProperties(m_min_illumination_sb->value(),
+                                      m_max_illumination_sb->value(),
+                                      m_underexposure_sensitivity_sb->value(),
+                                      m_overexposure_sensitivity_sb->value());
 }
 
 void IlluminationPropertiesWidget::setProperties(const IlluminationProperties * p_properties)
 {
-    m_shade_tolerance_sb->setValue(p_properties->shade_tolerance);
-    m_sensitivity_sb->setValue(p_properties->sensitivity);
+    m_min_illumination_sb->setValue(p_properties->daily_illumination_hours_prime_start);
+    m_max_illumination_sb->setValue(p_properties->daily_illumination_hours_prime_end);
+
+    m_underexposure_sensitivity_sb->setValue(p_properties->underexposure_sensitivity);
+    m_overexposure_sensitivity_sb->setValue(p_properties->overexposure_sensitivity);
 }
 
 void IlluminationPropertiesWidget::clear()
 {
-    m_shade_tolerance_sb->clear();
-    m_sensitivity_sb->clear();
+    m_min_illumination_sb->clear();
+    m_max_illumination_sb->clear();
+    m_underexposure_sensitivity_sb->clear();
+    m_overexposure_sensitivity_sb->clear();
 }
 
 void IlluminationPropertiesWidget::init_layout()
@@ -239,19 +249,33 @@ void IlluminationPropertiesWidget::init_layout()
 
     int row(0);
 
-    // Start of negative impact
+    // Illumination configuration
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Shade tolerance: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_shade_tolerance_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Start of prime illumination: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_min_illumination_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel(" hours"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
-    // Sensitivity
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Sensitivity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_sensitivity_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("End of prime illumination: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_max_illumination_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel(" hours"),0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+
+    // Sensitivity configuration
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Underexposure sensitivity: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_underexposure_sensitivity_sb,0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Overexposure sensitivity: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_overexposure_sensitivity_sb,0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
 
@@ -265,7 +289,8 @@ SoilHumidityPropertiesWidget::SoilHumidityPropertiesWidget(QWidget* parent, Qt::
 {
     m_prime_soil_humidity_percentage_start_sb = new MyPercentageSpinBox();
     m_prime_soil_humidity_percentage_end_sb = new MyPercentageSpinBox();
-    m_sensitivity_sb = new MySensitivitySpinBox;
+    m_drought_sensitivity = new MySensitivitySpinBox;
+    m_flooding_sensitivity = new MySensitivitySpinBox;
 
     init_layout();
 }
@@ -279,21 +304,24 @@ SoilHumidityProperties * SoilHumidityPropertiesWidget::getProperties()
 {
     return new SoilHumidityProperties(m_prime_soil_humidity_percentage_start_sb->value(),
                                   m_prime_soil_humidity_percentage_end_sb->value(),
-                                  m_sensitivity_sb->value());
+                                  m_drought_sensitivity->value(),
+                                  m_flooding_sensitivity->value());
 }
 
 void SoilHumidityPropertiesWidget::setProperties(const SoilHumidityProperties * p_properties)
 {
     m_prime_soil_humidity_percentage_start_sb->setValue(p_properties->soil_humidity_percentage_prime_start);
     m_prime_soil_humidity_percentage_end_sb->setValue(p_properties->soil_humidity_percentage_prime_end);
-    m_sensitivity_sb->setValue(p_properties->sensitivity);
+    m_drought_sensitivity->setValue(p_properties->drought_sensitivity);
+    m_flooding_sensitivity->setValue(p_properties->flooding_sensitivity);
 }
 
 void SoilHumidityPropertiesWidget::clear()
 {
     m_prime_soil_humidity_percentage_start_sb->clear();
     m_prime_soil_humidity_percentage_end_sb->clear();
-    m_sensitivity_sb->clear();
+    m_drought_sensitivity->clear();
+    m_flooding_sensitivity->clear();
 }
 
 void SoilHumidityPropertiesWidget::init_layout()
@@ -318,11 +346,18 @@ void SoilHumidityPropertiesWidget::init_layout()
         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
-    // Sensitivity
+    // Drought Sensitivity
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Sensitivity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_sensitivity_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Drought sensitivity: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_drought_sensitivity,0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+    // Flood Sensitivity
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Flooding sensitivity: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_flooding_sensitivity,0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     setLayout(main_layout);
@@ -331,7 +366,7 @@ void SoilHumidityPropertiesWidget::init_layout()
 /*****************************
  * SEEDING PROPERTIES WIDGET *
  *****************************/
-#define MIN_SEEDING_DISTANCE 0
+#define MIN_SEEDING_DISTANCE 1
 #define MAX_SEEDING_DISTANCE 100
 
 #define MIN_SEEDING_INTERVAL 6

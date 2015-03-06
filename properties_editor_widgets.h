@@ -56,6 +56,21 @@ public:
     }
 };
 
+class My24HourSpinBox : public QSpinBox
+{
+public:
+    My24HourSpinBox() : QSpinBox()
+    {
+        setRange(0,24);
+    }
+
+    virtual void clear()
+    {
+        setValue(0);
+        QSpinBox::clear();
+    }
+};
+
 class MyAgeSpinBox : public QSpinBox
 {
 public:
@@ -160,8 +175,11 @@ private:
     void init_layout();
 
     // UI Elements
-    MyPercentageSpinBox * m_shade_tolerance_sb;
-    MySensitivitySpinBox * m_sensitivity_sb;
+    My24HourSpinBox * m_min_illumination_sb;
+    My24HourSpinBox * m_max_illumination_sb;
+
+    MySensitivitySpinBox * m_underexposure_sensitivity_sb;
+    MySensitivitySpinBox * m_overexposure_sensitivity_sb;
 };
 
 /***********************************
@@ -184,7 +202,8 @@ private:
     // UI Elements
     MyPercentageSpinBox* m_prime_soil_humidity_percentage_start_sb;
     MyPercentageSpinBox* m_prime_soil_humidity_percentage_end_sb;
-    MySensitivitySpinBox * m_sensitivity_sb;
+    MySensitivitySpinBox * m_drought_sensitivity;
+    MySensitivitySpinBox * m_flooding_sensitivity;
 };
 
 /*****************************

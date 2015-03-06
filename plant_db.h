@@ -48,13 +48,17 @@ static const std::string growth_properties_table_creation_code =
  * ILLUMINATION PROPERTIES TABLE *
  *********************************/
 static const std::string illumination_properties_table_name = "illumination_properties";
-static const Column illumination_properties_table_column_shade_tolerance = Column(1,"shade_tolerance");
-static const Column illumination_properties_table_column_sensitivity = Column(2,"sensitivity");
+static const Column illumination_properties_table_column_min_illumination = Column(1,"prime_illumination_start");
+static const Column illumination_properties_table_column_max_illumination = Column(2,"prime_illumination_end");
+static const Column illumination_properties_table_column_underexposure_sensitivity = Column(3,"underexposure_sensitivity");
+static const Column illumination_properties_table_column_overexposure_sensitivity = Column(4,"overexposure_sensitivity");
 static const std::string illumination_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + illumination_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
-                                                       illumination_properties_table_column_shade_tolerance.name + " INT NOT NULL, " +
-                                                       illumination_properties_table_column_sensitivity.name + " INT NOT NULL);";
+                                                       illumination_properties_table_column_min_illumination.name + " INT NOT NULL, " +
+                                                       illumination_properties_table_column_max_illumination.name + " INT NOT NULL, " +
+                                                       illumination_properties_table_column_underexposure_sensitivity.name + " INT NOT NULL, " +
+                                                       illumination_properties_table_column_overexposure_sensitivity.name + " INT NOT NULL);";
 
 /**********************************
  * SOIL HUMIDITY PROPERTIES TABLE *
@@ -62,13 +66,15 @@ static const std::string illumination_properties_table_creation_code =
 static const std::string soil_humidity_properties_table_name = "soil_humidity_properties";
 static const Column soil_humidity_properties_table_column_prime_humidity_start = Column(1,"prime_humidity_start");
 static const Column soil_humidity_properties_table_column_prime_humidity_end = Column(2,"prime_humidity_end");
-static const Column soil_humidity_properties_table_column_sensitivity = Column(3,"sensitivity");
+static const Column soil_humidity_properties_table_column_drought_sensitivity = Column(3,"drought_sensitivity");
+static const Column soil_humidity_properties_table_column_flooding_sensitivity = Column(4,"flooding_sensitivity");
 static const std::string soil_humidity_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + soil_humidity_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
                                                        soil_humidity_properties_table_column_prime_humidity_start.name + " INT NOT NULL," +
                                                        soil_humidity_properties_table_column_prime_humidity_end.name + " INT NOT NULL, " +
-                                                       soil_humidity_properties_table_column_sensitivity.name + " INT NOT NULL);";
+                                                       soil_humidity_properties_table_column_drought_sensitivity.name + " INT NOT NULL, " +
+                                                       soil_humidity_properties_table_column_flooding_sensitivity.name + " INT NOT NULL);";
 
 /**********************************
  * SEEDING PROPERTIES TABLE *

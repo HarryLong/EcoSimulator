@@ -49,7 +49,7 @@ public:
     int getSeedingInterval();
 
     PlantStatus getStatus();
-    void calculateStrength(int p_shaded_percentage, int p_soil_humidity_percentage);
+    void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage);
 
     const int m_unique_id;
     const QPoint m_center_position;

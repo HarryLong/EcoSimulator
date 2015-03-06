@@ -7,12 +7,12 @@
  * ILLUMINATION CELL *
  *********************/
 struct IlluminationCell {
-    int illumination_percentage;
+    int daily_illumination;
     float max_height;
     std::unordered_map<int, float> id_to_height;
 
-    IlluminationCell(int illumination_percentage) : max_height(.0f), id_to_height(),
-        illumination_percentage(illumination_percentage) {}
+    IlluminationCell(int p_daily_illumination) : max_height(.0f), id_to_height(),
+        daily_illumination(p_daily_illumination) {}
 };
 
 /**********************

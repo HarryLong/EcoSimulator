@@ -6,15 +6,14 @@
 /*************************
  * ABSTRACT INPUT WIDGET *
  *************************/
-InputWidget::InputWidget(PixelData * pixel_data, int width, int height, bool enable_sensitivity_percentage, QWidget *parent = 0)
-    : QWidget(parent), m_width(width), m_height(height), m_drawing(false), m_pixel_data(pixel_data), m_container_label(width, height),
+InputWidget::InputWidget(PixelData * pixel_data, int width, int height, int min, int max, QString label, QWidget *parent)
+    : QWidget(parent), m_width(width), m_height(height), m_min(min), m_max(max), m_label(label),
+      m_drawing(false), m_pixel_data(pixel_data), m_container_label(width, height),
       m_default_cursor(), m_custom_cursor(), painting(true)
 {
     init_ui_elements();
     init_layout();
     init_signals();
-
-    m_sensitivity_sb->setEnabled(enable_sensitivity_percentage);
 }
 
 InputWidget::~InputWidget()
@@ -31,9 +30,8 @@ void InputWidget::init_ui_elements()
 
     // Sensitivity combo box
     m_sensitivity_sb = new QSpinBox(this);
-    m_sensitivity_sb->setMinimum(0);
-    m_sensitivity_sb->setMaximum(100);
-    m_sensitivity_sb->setValue(30);
+    m_sensitivity_sb->setRange(m_min, m_max);
+    m_sensitivity_sb->setValue(m_min + ((m_max-m_min)/2));
 
     // Reset all button
     m_reset_all_btn = new QPushButton("Reset");
@@ -49,6 +47,15 @@ void InputWidget::init_ui_elements()
     // Save and Load buttons
     m_save_btn = new QPushButton("Save");
     m_load_btn = new QPushButton("Load");
+
+    m_gradual_min_sb = new QSpinBox;
+    m_gradual_min_sb->setRange(m_min, m_max);
+    m_gradual_min_sb->setValue(m_min);
+
+    m_gradual_max_sb = new QSpinBox;
+    m_gradual_max_sb->setRange(m_min, m_max);
+    m_gradual_max_sb->setValue(m_min);
+    m_generate_gradual_btn = new QPushButton("Generate");
 }
 
 void InputWidget::init_signals()
@@ -66,6 +73,7 @@ void InputWidget::init_signals()
     connect(m_cursor_type_cb, SIGNAL(currentTextChanged(QString)), this, SLOT(refresh_cursor_type(QString)));
     connect(m_reset_all_btn, SIGNAL(clicked()), this, SLOT(reset_all_clicked()));
     connect(m_fill_all_btn, SIGNAL(clicked()), this, SLOT(fill_all()));
+    connect(m_generate_gradual_btn, SIGNAL(clicked()), this, SLOT(generate_gradual_clicked()));
 
     connect(m_save_btn, SIGNAL(clicked()), this, SLOT(save_btn_clicked()));
     connect(m_load_btn, SIGNAL(clicked()), this, SLOT(load_btn_clicked()));
@@ -73,7 +81,7 @@ void InputWidget::init_signals()
 
 void InputWidget::init_layout()
 {
-    setFixedSize(m_width, m_height+100);
+    setFixedSize(m_width, m_height+200);
 
     QVBoxLayout * main_layout = new QVBoxLayout;
 
@@ -89,12 +97,19 @@ void InputWidget::init_layout()
         h_layout->addWidget(new QLabel("Cursor type: "), 0, Qt::AlignLeft);
         h_layout->addWidget(m_cursor_type_cb, 0, Qt::AlignLeft);
 
-        h_layout->addWidget(new QLabel("Sensitivity: "), 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(m_label), 0, Qt::AlignLeft);
         h_layout->addWidget(m_sensitivity_sb, 0, Qt::AlignLeft);
-
-        h_layout->addWidget(m_reset_all_btn, 0, Qt::AlignLeft);
         h_layout->addWidget(m_fill_all_btn, 0, Qt::AlignLeft);
-
+        main_layout->addLayout(h_layout);
+    }
+    // controller buttons
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Gradual increase from "), 0, Qt::AlignLeft);
+        h_layout->addWidget(m_gradual_min_sb, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(" to "), 0, Qt::AlignLeft);
+        h_layout->addWidget(m_gradual_max_sb, 0, Qt::AlignLeft);
+        h_layout->addWidget(m_generate_gradual_btn, 0, Qt::AlignLeft);
         main_layout->addLayout(h_layout);
     }
 
@@ -102,6 +117,7 @@ void InputWidget::init_layout()
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
         h_layout->addWidget(m_save_btn, 0, Qt::AlignCenter);
+        h_layout->addWidget(m_reset_all_btn, 0, Qt::AlignCenter);
         h_layout->addWidget(m_load_btn, 0, Qt::AlignCenter);
         main_layout->addLayout(h_layout);
     }
@@ -137,6 +153,25 @@ void InputWidget::load_btn_clicked()
         m_pixel_data->setData( image );
         refresh();
     }
+}
+
+void InputWidget::generate_gradual_clicked()
+{
+    int from (m_gradual_min_sb->value());
+    int to (m_gradual_max_sb->value());
+
+    int pixels_per_value(m_width/(to-from));
+
+    int pixel_value(from);
+    for(int x = 0; x < m_width; x++)
+    {
+        if(x > 0 && (x % pixels_per_value == 0))
+            pixel_value++;
+
+        for(int y (0); y < m_height; y++)
+            m_pixel_data->set(QPoint(x,y),pixel_value);
+    }
+    refresh();
 }
 
 QSize InputWidget::minimumSizeHint() const
@@ -318,24 +353,21 @@ IlluminationPixelData::~IlluminationPixelData()
 {
 }
 
-void IlluminationPixelData::set(QPoint p_point, int p_percentage_of_max)
+void IlluminationPixelData::set(QPoint p_point, int p_daily_illumination)
 {
-    int intensity ((p_percentage_of_max/100.0f) * 255);
+    int intensity ((p_daily_illumination/24.0f) * 255);
     QColor color( intensity, intensity, 0);
     m_image.setPixel(p_point, color.rgb());
 }
 
 int IlluminationPixelData::getValue(QPoint p_point)
 {
-    if(qRed(m_image.pixel(p_point.x(), p_point.y())) > 0)
-        return 100;
-    else
-        return 0;
+    return (qRed(m_image.pixel(p_point.x(), p_point.y()))/255.0f) * 24.0f;
 }
 
-void IlluminationPixelData::fillAll(int p_percentage_of_max)
+void IlluminationPixelData::fillAll(int p_daily_illumination)
 {
-    int intensity ((p_percentage_of_max/100.0f) * 255);
+    int intensity ((p_daily_illumination/24.0f) * 255);
     QColor color( intensity, intensity, 0);
     m_image.fill(color);
 }

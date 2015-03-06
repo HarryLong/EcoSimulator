@@ -50,23 +50,45 @@ int AgeConstrainer::getStrength() const
  * ILLUMINATION CONSTRAINER *
  ****************************/
 IlluminationConstrainer::IlluminationConstrainer(const IlluminationProperties * p_illumination_properties) :
-    m_shaded_percentage(.0f), m_properties(*p_illumination_properties)
+    m_daily_illumination(0), m_properties(*p_illumination_properties)
 {
-    // Build the linear equation
-    m_equation.a = (MAX_STRENGTH * 2) /
-              ((100-m_properties.shade_tolerance)/m_properties.sensitivity);
-    m_equation.a *= -1; // Negative slope
+    // Underexposure equation
+    if(p_illumination_properties->daily_illumination_hours_prime_start > 0)
+    {
+        m_underexposure_equation.a = ((MAX_STRENGTH*2) / (((float)m_properties.daily_illumination_hours_prime_start)/m_properties.underexposure_sensitivity));
+        m_underexposure_equation.b = -m_underexposure_equation.a * m_properties.daily_illumination_hours_prime_start + 100;
+    }
+    else
+    {
+        m_underexposure_equation.a  = 0;
+        m_underexposure_equation.b = MAX_STRENGTH;
+    }
 
-    m_equation.b = ( -1 * m_equation.a * m_properties.shade_tolerance + MAX_STRENGTH);
+    // Overexposure equation
+    if(p_illumination_properties->daily_illumination_hours_prime_end < 24)
+    {
+        m_overexposure_equation.a = ((-2 * MAX_STRENGTH) / ((24-m_properties.daily_illumination_hours_prime_end)/m_properties.overexposure_sensitivity));
+        m_overexposure_equation.b = ( -m_overexposure_equation.a * m_properties.daily_illumination_hours_prime_end + 100 );
+    }
+    else
+    {
+        m_overexposure_equation.a  = 0;
+        m_overexposure_equation.b = MAX_STRENGTH;
+    }
 }
 
 IlluminationConstrainer::~IlluminationConstrainer()
 {
 }
 
-void IlluminationConstrainer::setShadedPercentage(int p_shaded_percentage)
+void IlluminationConstrainer::setDailyIllumination(int p_daily_illumination)
 {
-    m_shaded_percentage = p_shaded_percentage;
+    m_daily_illumination = p_daily_illumination;
+}
+
+bool IlluminationConstrainer::isUnderExposed()
+{
+    return m_daily_illumination < m_properties.daily_illumination_hours_prime_start;
 }
 
 /**
@@ -76,8 +98,10 @@ void IlluminationConstrainer::setShadedPercentage(int p_shaded_percentage)
  */
 int IlluminationConstrainer::getStrength() const
 {
-    if(m_shaded_percentage > m_properties.shade_tolerance )
-        return max((float)MIN_STRENGTH, m_equation.calculateY(m_shaded_percentage));
+    if(m_daily_illumination < m_properties.daily_illumination_hours_prime_start )
+        return max((float)MIN_STRENGTH, m_underexposure_equation.calculateY(m_daily_illumination));
+    else if(m_daily_illumination > m_properties.daily_illumination_hours_prime_end )
+        return max((float)MIN_STRENGTH, m_overexposure_equation.calculateY(m_daily_illumination));
 
     return MAX_STRENGTH; // Full strength
 }
@@ -92,7 +116,7 @@ SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * 
     // Build the drought equation
     if(p_soil_humidity_properties->soil_humidity_percentage_prime_start > 0)
     {
-        m_drought_equation.a = ((MAX_STRENGTH*2) / (((float)m_properties.soil_humidity_percentage_prime_start)/m_properties.sensitivity));
+        m_drought_equation.a = ((MAX_STRENGTH*2) / (((float)m_properties.soil_humidity_percentage_prime_start)/m_properties.drought_sensitivity));
         m_drought_equation.b = -m_drought_equation.a * m_properties.soil_humidity_percentage_prime_start + 100;
     }
     else
@@ -104,7 +128,7 @@ SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * 
     // Build the flooding equation
     if(p_soil_humidity_properties->soil_humidity_percentage_prime_end < 100)
     {
-        m_flood_equation.a = ((-2 * MAX_STRENGTH) / ((100-m_properties.soil_humidity_percentage_prime_end)/m_properties.sensitivity));
+        m_flood_equation.a = ((-2 * MAX_STRENGTH) / ((100-m_properties.soil_humidity_percentage_prime_end)/m_properties.flooding_sensitivity));
         m_flood_equation.b = ( -1 * m_flood_equation.a * m_properties.soil_humidity_percentage_prime_end + 100 );
     }
     else

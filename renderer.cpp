@@ -153,7 +153,7 @@ void IlluminationRenderer::paintEvent(QPaintEvent * event)
             IlluminationCell * cell_content(m_render_data.get_const(QPoint(x,y))->illumination_cell);
             if(cell_content->max_height == .0f)
             {
-                int intensity ((cell_content->illumination_percentage/100.0f) * 255);
+                int intensity ((cell_content->daily_illumination/24.0f) * 255);
                 QColor color( intensity, intensity, 0);
                 painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(color));
             }

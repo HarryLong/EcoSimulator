@@ -14,7 +14,7 @@ void EnvironmentSoilHumidity::setSoilHumidityData(const QImage & p_image)
     {
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-            int humidity_percentage((qBlue(scaled_image.pixel(x,y)) / 255.f) * 100);
+            int humidity_percentage(std::round((qBlue(scaled_image.pixel(x,y)) / 255.f) * 100.0f));
             m_map.insertSoilHumidityCell(QPoint(x,y),new SoilHumidityCell(humidity_percentage));
         }
     }

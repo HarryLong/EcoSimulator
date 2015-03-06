@@ -11,14 +11,15 @@
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 
 SimulatorManager::SimulatorManager() : m_time_keeper(), m_plant_storage(), m_elapsed_months(0), m_state(Stopped),
-    m_environment_mgr(), m_plant_rendering_data(), m_plant_factory()
+    m_environment_mgr(), m_plant_rendering_data(), m_plant_factory(), m_simulation_options(NULL)
 {
     m_time_keeper.addListener(this);
 }
 
 SimulatorManager::~SimulatorManager()
 {
-    delete m_simulation_options;
+    if(m_simulation_options)
+        delete m_simulation_options;
 }
 
 void SimulatorManager::add_plant(Plant * p_plant)
@@ -98,12 +99,12 @@ void SimulatorManager::trigger()
     BOOST_FOREACH(Plant * p, m_plant_storage.getSortedPlants())
     {
         // Shade
-        int shaded_percentage (m_environment_mgr.getShadedPercentage(p->m_center_position, p->getCanopyWidth(), p->getHeight()));
+        int daily_illumination(m_environment_mgr.getDailyIllumination(p->m_center_position, p->getCanopyWidth(), p->getHeight()));
 
         // Humidity
         int soil_humidity_percentage(m_environment_mgr.getSoilHumidityPercentage(p->m_center_position, p->getRootSize(), p->m_unique_id));
 
-        p->calculateStrength(shaded_percentage, soil_humidity_percentage);
+        p->calculateStrength(daily_illumination, soil_humidity_percentage);
     }
 
     // Check plant status
@@ -186,8 +187,10 @@ QString SimulatorManager::plant_status_to_string(PlantStatus status)
     switch (status){
         case DeathByAge:
             return QString("Age");
-        case DeathByIllumination:
-            return  QString("Light");
+        case DeathByUnderIllumination:
+            return  QString("LightUnderExposure");
+        case DeathByOverIllumination:
+            return  QString("LightOverExposure");
         case DeathByFlood:
             return  QString("Flooded");
         case DeathByDrought:
