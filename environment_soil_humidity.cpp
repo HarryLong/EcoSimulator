@@ -81,71 +81,69 @@ void EnvironmentSoilHumidity::refresh_resource_distribution()
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
             SoilHumidityCell * cell (m_map.get(QPoint(x,y))->soil_humidity_cell);
-            if(cell->requests.size() == 0) // No requests
-                continue;
-
-            std::vector<ResourceUsageRequest> requests;
-            int n_requests(0);
-            float remaining_total_size(.0f);
-            int remaining_resource_available(cell->humidity_percentage);
-
-            /*
-             * The request multiplier increases the amount taken in lower humidity ranges
-             * and lowers the amount in the higher ranges as follows:
-             * For a humidity of
-             *   100% --> 0% will be taken
-             *   0% --> 100% of requested will be taken
-             */
-            float effect_on_environment_multiplier ((100-cell->humidity_percentage)/100.0f);
-            int aggregate_environmental_impact(0); // This is the aggregated impact on the enviornment (i.e the amount requested multiplied by the multiplier above)
-
-            for(auto it(cell->requests.begin()); it != cell->requests.end(); it++)
+            if(cell->requests.size() > 0)
             {
-                requests.push_back(it->second);
-                remaining_total_size += it->second.size;
-                aggregate_environmental_impact += it->second.requested_amount*effect_on_environment_multiplier;
-                n_requests++;
-            }
+                GrantsMap grants;
 
-            GrantsMap grants;
-            /*
-             * More resources than necessary: Give each requestee the amount requested + the overflow amount
-             */
-            if(aggregate_environmental_impact < remaining_resource_available)
-            {
-                int overflow(remaining_resource_available-aggregate_environmental_impact);
-                for(auto it(requests.begin()); it != requests.end(); it++)
+                if(cell->humidity_percentage == 100) // standing water. All plants get 100% humidity
                 {
-                    int granted_amount (it->requested_amount + overflow);
-                    grants.insert(std::pair<int,int>(it->requestee_id,granted_amount ));
+                    for(auto it(cell->requests.begin()); it != cell->requests.end(); it++)
+                    {
+                        grants.insert(std::pair<int,int>(it->second.requestee_id, 100));
+                    }
                 }
-            }
-            /*
-             * Less resources than necessary: Split based on vigor as follows:
-             *  1. Iterate trough requests by vigor (most vigorous first)
-             *  2. For each request, grant the minimum of the requested amount and (vigor/total_vigor) * remaining available ResourceUsageRequest
-             */
-            else
-            {
-                // First sort the requests based on vigor
-                std::sort(requests.begin(), requests.end(), [](const ResourceUsageRequest & lhs, const ResourceUsageRequest & rhs) {return lhs.size < rhs.size;});
-                // Iterate in reverse order
-                for(auto it(requests.rbegin()); it != requests.rend(); it++)
+                else
                 {
-                    float vigor(.0f);
-                    if(remaining_total_size == .0f) // Can only happen if plants are still seeds
-                        vigor = 1.f/n_requests;
+                    std::vector<ResourceUsageRequest> requests;
+                    int n_requests(0);
+                    float remaining_total_vigor(.0f);
+                    int humidity_available(cell->humidity_percentage);
+                    int total_requested_humidity(0);
+
+                    for(auto it(cell->requests.begin()); it != cell->requests.end(); it++)
+                    {
+                        requests.push_back(it->second);
+                        remaining_total_vigor += it->second.size;
+                        total_requested_humidity += it->second.requested_amount;
+                        n_requests++;
+                    }
+
+                    /*
+                     * More resources than necessary: Give each requestee the amount requested + the overflow amount
+                     */
+                    if(total_requested_humidity < humidity_available)
+                    {
+                        int overflow(humidity_available-total_requested_humidity);
+                        for(auto it(requests.begin()); it != requests.end(); it++)
+                        {
+                            int granted_amount (it->requested_amount + overflow);
+                            grants.insert(std::pair<int,int>(it->requestee_id,granted_amount ));
+                        }
+                    }
+                    /*
+                     * Less resources than necessary: Split based on vigor as follows:
+                     *  1. Iterate trough requests by vigor (most vigorous first)
+                     *  2. For each request, grant the minimum of the requested amount and (vigor/total_vigor) * remaining available ResourceUsageRequest
+                     */
                     else
-                        vigor = ( it->size / remaining_total_size );
-                    int granted_amount ( std::min(it->requested_amount, (int)(vigor * remaining_resource_available) ) );
+                    {
+                        // First sort the requests based on vigor
+                        std::sort(requests.begin(), requests.end(), [](const ResourceUsageRequest & lhs, const ResourceUsageRequest & rhs) {return lhs.size < rhs.size;});
+                        // Iterate in reverse order
+                        for(auto it(requests.rbegin()); it != requests.rend(); it++)
+                        {
+                            float vigor( it->size / remaining_total_vigor );
+                            int granted_amount ( std::min(it->requested_amount, (int)(vigor * humidity_available) ) );
 
-                    grants.insert(std::pair<int,int>(it->requestee_id,granted_amount ));
+                            grants.insert(std::pair<int,int>(it->requestee_id,granted_amount ));
 
-                    remaining_total_size -= it->size;
-                    remaining_resource_available -= granted_amount*effect_on_environment_multiplier ;
+                            remaining_total_vigor -= it->size;
+                            humidity_available -= granted_amount ;
+                        }
+                    }
                 }
+                cell->grants = grants;
             }
-            cell->grants = grants;
         }
     }
 }

@@ -6,7 +6,7 @@ GrowthManager::GrowthManager(const GrowthProperties * p_growth_properties, const
     m_max_monthly_canopy_growth(p_growth_properties->max_canopy_width/(12 * p_ageing_properties->prime_age_end)),
     m_max_monthly_height_growth(p_growth_properties->max_height/ (12 * p_ageing_properties->prime_age_end)),
     m_max_monthly_root_growth(p_growth_properties->max_root_size/(12 * p_ageing_properties->prime_age_end)),
-    m_height(.0f), m_root_size(.0f), m_canopy_width(.0f), m_dice_roller(-5,5)
+    m_height(1.0f), m_root_size(1.0f), m_canopy_width(.0f), m_dice_roller(-5,5)
 {
 }
 

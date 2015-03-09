@@ -67,7 +67,6 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
      *****************/
     m_constrainers.soil_humidity_constrainer.setSoilHumidityPercentage(p_soil_humidity_percentage);
     int soil_humidity_strength (m_constrainers.soil_humidity_constrainer.getStrength());
-    std::cout << "Soil humidity strength: " << soil_humidity_strength << std::endl;
     m_strengths.find(ConstrainerType::SoilHumidity)->second = soil_humidity_strength;
     if(soil_humidity_strength < min_strength)
     {

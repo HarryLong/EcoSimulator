@@ -2,6 +2,7 @@
 #include "math.h"
 #include <iostream>
 #include <QFileDialog>
+#include <math.h>)
 
 /*************************
  * ABSTRACT INPUT WIDGET *
@@ -160,7 +161,7 @@ void InputWidget::generate_gradual_clicked()
     int from (m_gradual_min_sb->value());
     int to (m_gradual_max_sb->value());
 
-    int pixels_per_value(m_width/(to-from));
+    int pixels_per_value(m_width/std::max(1,to-from));
 
     int pixel_value(from);
     for(int x = 0; x < m_width; x++)
