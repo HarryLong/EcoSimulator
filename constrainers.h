@@ -25,13 +25,12 @@ public:
 
     virtual int getStrength() const ;
 
-    void setAge(int p_age_in_months);
+    void setAge(int p_age);
 
 private:
     int m_age;
     AgeingProperties m_properties;
-    LinearEquation m_pre_prime_equation;
-    LinearEquation m_post_prime_equation;
+    LinearEquation m_ageing_equation;
 };
 
 /*********************
@@ -68,7 +67,7 @@ public:
     virtual int getStrength() const;
     bool isInDrought() const;
 
-    void setSoilHumidityPercentage(int p_soil_humidity_percentage);
+    void setSoilHumidity(int p_soil_humidity);
     int getMinimumPrimeSoilHumidity() const;
 
 private:
@@ -88,14 +87,15 @@ public:
     ~TemperatureConstrainer();
 
     virtual int getStrength() const;
+    bool isTooCold() const;
 
-    void setGroundTemperature(int p_ground_temperature);
+    void setTemperature(int p_temp);
 
 private:
-    LinearEquation m_coldness_equation;
-    LinearEquation m_heat_equation;
+    LinearEquation m_chill_equation;
+    LinearEquation m_warmth_equation;
     TemperatureProperties m_properties;
-    int m_ground_temperature;
+    int m_temperature;
 };
 
 #endif //CONSTRAINERS_H

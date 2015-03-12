@@ -8,6 +8,7 @@ RendererManager::RendererManager(const PlantRenderDataContainer & plant_render_d
     m_renderers.insert(std::pair<QString, Renderer*>(s_roots_renderer, new RootsRenderer(plant_render_data)));
     m_renderers.insert(std::pair<QString, Renderer*>(s_lighting_renderer, new IlluminationRenderer(environment_render_data)));
     m_renderers.insert(std::pair<QString, Renderer*>(s_soil_humidity_renderer, new SoilHumidityRenderer(environment_render_data)));
+    m_renderers.insert(std::pair<QString, Renderer*>(s_temperature_renderer, new TemperatureRenderer(environment_render_data)));
 
     setActiveRenderer(s_plant_renderer);
 

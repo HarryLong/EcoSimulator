@@ -17,7 +17,9 @@ enum PlantStatus{
     DeathByUnderIllumination,
     DeathByOverIllumination,
     DeathByDrought,
-    DeathByFlood
+    DeathByFlood,
+    DeathByCold,
+    DeathByHeat
 };
 
 //struct Coordinate{

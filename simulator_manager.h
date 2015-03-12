@@ -57,7 +57,7 @@ signals:
     void removedPlant(QString name, QString cause_of_death);
 
 private:
-    void remove_plant(int p_plant_id);
+    void remove_plant(Plant * p);
     void refresh_rendering_data();
     void add_plant(Plant * p_plant);
 

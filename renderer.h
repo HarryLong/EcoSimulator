@@ -12,6 +12,7 @@
 #include <unordered_set>
 #include "environment_manager.h"
 #include <mutex>
+#include "pixel_data_translator.h"
 
 class Plant;
 
@@ -104,35 +105,53 @@ private:
     const PlantRenderDataContainer & m_render_data;
 };
 
+/**************************
+ * BASE RESOURCE RENDERER *
+ **************************/
+class ResourceRenderer : public Renderer
+{
+public:
+    ResourceRenderer(const EnvironmentSpatialHashMap & render_data, const PixelDataTranslator * translator, QWidget *parent = 0);
+    virtual ~ResourceRenderer();
+
+    virtual void paintEvent(QPaintEvent * event);
+
+    virtual QRgb getPixel(QPoint pos) = 0;
+protected:
+    const PixelDataTranslator * m_translator;
+    const EnvironmentSpatialHashMap & m_render_data;
+};
+
 /************
  * LIGHTING *
  ************/
-class IlluminationRenderer : public Renderer
+class IlluminationRenderer : public ResourceRenderer
 {
     Q_OBJECT
 public:
     IlluminationRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent = 0);
-
-protected:
-
-private:
-    virtual void paintEvent(QPaintEvent * event);
-    const EnvironmentSpatialHashMap & m_render_data;
+    QRgb getPixel(QPoint pos);
 };
 
 /*****************
  * SOIL HUMIDITY *
  *****************/
-class SoilHumidityRenderer : public Renderer
+class SoilHumidityRenderer : public ResourceRenderer
 {
     Q_OBJECT
 public:
     SoilHumidityRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent = 0);
+    QRgb getPixel(QPoint pos);
+};
 
-protected:
-
-private:
-    virtual void paintEvent(QPaintEvent * event);
-    const EnvironmentSpatialHashMap & m_render_data;
+/************************
+ * TEMPERATURE RENDERER *
+ ***********************/
+class TemperatureRenderer : public ResourceRenderer
+{
+    Q_OBJECT
+public:
+    TemperatureRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent = 0);
+    QRgb getPixel(QPoint pos);
 };
 #endif //RENDERER_H

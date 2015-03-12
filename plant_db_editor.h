@@ -25,6 +25,7 @@ private:
     AgeingPropertiesWidget * ageing_properties_widget;
     IlluminationPropertiesWidget * illumination_properties_widget;
     SoilHumidityPropertiesWidget * soil_humidity_properties_widget;
+    TemperaturePropertiesWidget * temp_properties_widget;
     SeedingPropertiesWidget * seeding_properties_widget;
 };
 

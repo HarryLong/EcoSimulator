@@ -19,6 +19,11 @@ int EnvironmentManager::getSoilHumidityPercentage(QPoint p_center, float p_roots
     return m_resource_controllers.soil_humidity.getHumidityPercentage(p_center, p_roots_size, p_id);
 }
 
+int EnvironmentManager::getTemperature(QPoint p_center)
+{
+    return m_resource_controllers.temperature.getTemperature(p_center);
+}
+
 void EnvironmentManager::remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id)
 {
     m_resource_controllers.illumination.remove(p_center, p_canopy_width, p_id);
@@ -44,8 +49,10 @@ void EnvironmentManager::updateEnvironment(QPoint p_center, float p_canopy_width
     m_resource_controllers.soil_humidity.setData(p_center, p_roots_size, p_id, p_minimum_soil_humidity_request);
 }
 
-void EnvironmentManager::setEnvironmentProperties(const QImage & p_illumination_data, const QImage & p_soil_humidity_data)
+void EnvironmentManager::setEnvironmentProperties(PixelData * p_illumination_data, PixelData * p_soil_humidity_data,
+                                                  PixelData * p_temperature_data)
 {
     m_resource_controllers.illumination.setIlluminationData(p_illumination_data);
     m_resource_controllers.soil_humidity.setSoilHumidityData(p_soil_humidity_data);
+    m_resource_controllers.temperature.setTemperatureData(p_temperature_data);
 }

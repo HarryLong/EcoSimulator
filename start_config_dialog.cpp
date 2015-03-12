@@ -87,8 +87,9 @@ SimulationConfiguration StartConfigDialog::getStartConfiguration()
 {
     SimulationConfiguration ret(
                 static_cast<PlantConfigurationWidget*>(m_widgets.get(WidgetType::PlantConfiguration))->getPlantsToCreate(),
-                static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration))->getData(),
-                static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getData(),
+                static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration))->getPixelData(),
+                static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getPixelData(),
+                static_cast<InputWidget*>(m_widgets.get(WidgetType::TemperatureConfiguration))->getPixelData(),
                 static_cast<SimulationConfigurationWidget*>(m_widgets.get(WidgetType::SimulationOptions))->getSimulationConfiguration()
                 );
 
@@ -119,12 +120,14 @@ StartConfigDialogWidgets::StartConfigDialogWidgets() : m_widgets(), m_current_wi
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::PlantConfiguration, new PlantConfigurationWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::SoilHumidityConfiguration, new SoilHumidityInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::IlluminationConfiguration, new IlluminationInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
+    m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::TemperatureConfiguration, new TemperatureInputWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
     m_widgets.insert(std::pair<WidgetType, QWidget*>(WidgetType::SimulationOptions, new SimulationConfigurationWidget(RENDER_WINDOW_WIDTH_HEIGHT, RENDER_WINDOW_WIDTH_HEIGHT)));
 
     // Title
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::PlantConfiguration, QString("Plsnt Configuration")));
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SoilHumidityConfiguration, QString("Soil Humidity")));
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::IlluminationConfiguration, QString("Illumination")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::TemperatureConfiguration, QString("Temperature")));
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SimulationOptions, QString("Simulation Options")));
 
     hide_all();

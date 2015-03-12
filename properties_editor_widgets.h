@@ -101,6 +101,21 @@ public:
     }
 };
 
+class MyTemperatureSpinBox : public QSpinBox
+{
+public:
+    MyTemperatureSpinBox() : QSpinBox()
+    {
+        setRange(-50,50);
+    }
+
+    virtual void clear()
+    {
+        setValue(15);
+        QSpinBox::clear();
+    }
+};
+
 
 /****************************
  * GROWTH PROPERTIES WIDGET *
@@ -149,12 +164,8 @@ private:
     void init_layout();
 
     // UI Elements
-    MyPercentageSpinBox * m_prob_of_death_at_birth;
-    MyPercentageSpinBox * m_prob_of_death_at_upper;
-
-    MyAgeSpinBox* m_prime_age_start_sb;
-    MyAgeSpinBox* m_prime_age_end_sb;
-    MyAgeSpinBox* m_upper_age_sb;
+    MyAgeSpinBox * m_start_of_decline_sb;
+    MyAgeSpinBox * m_max_age_sb;
 };
 
 /**********************************
@@ -175,11 +186,11 @@ private:
     void init_layout();
 
     // UI Elements
+    My24HourSpinBox * m_prime_illumination_start_sb;
+    My24HourSpinBox * m_prime_illumination_end_sb;
+
     My24HourSpinBox * m_min_illumination_sb;
     My24HourSpinBox * m_max_illumination_sb;
-
-    MySensitivitySpinBox * m_underexposure_sensitivity_sb;
-    MySensitivitySpinBox * m_overexposure_sensitivity_sb;
 };
 
 /***********************************
@@ -200,10 +211,34 @@ private:
     void init_layout();
 
     // UI Elements
-    MyPercentageSpinBox* m_prime_soil_humidity_percentage_start_sb;
-    MyPercentageSpinBox* m_prime_soil_humidity_percentage_end_sb;
-    MySensitivitySpinBox * m_drought_sensitivity;
-    MySensitivitySpinBox * m_flooding_sensitivity;
+    MyPercentageSpinBox* m_prime_humidity_start_sb;
+    MyPercentageSpinBox* m_prime_humidity_end_sb;
+    MyPercentageSpinBox * m_min_humidity_sb;
+    MyPercentageSpinBox * m_max_humidity_sb;
+};
+
+/*********************************
+ * TEMPERATURE PROPERTIES WIDGET *
+ *********************************/
+class TemperaturePropertiesWidget : public QWidget
+{
+public:
+    TemperaturePropertiesWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    ~TemperaturePropertiesWidget();
+
+    TemperatureProperties* getProperties();
+
+    void setProperties(const TemperatureProperties * p_properties);
+    void clear();
+
+private:
+    void init_layout();
+
+    // UI Elements
+    MyTemperatureSpinBox* m_prime_temp_start_sb;
+    MyTemperatureSpinBox* m_prime_temp_end_sb;
+    MyTemperatureSpinBox * m_min_temp_sb;
+    MyTemperatureSpinBox * m_max_temp_sb;
 };
 
 /*****************************

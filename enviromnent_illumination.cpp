@@ -6,17 +6,20 @@ EnvironmentIllumination::EnvironmentIllumination(EnvironmentSpatialHashMap & map
 {
 }
 
-void EnvironmentIllumination::setIlluminationData(const QImage & p_image)
+void EnvironmentIllumination::setIlluminationData(PixelData * p_data)
 {
-    QImage scaled_image (p_image.scaled(QSize(m_map.getHorizontalCellCount(), m_map.getVerticalCellCount()),
-                                        Qt::IgnoreAspectRatio));
+    if(p_data->m_width != m_map.getHorizontalCellCount() ||
+            p_data->m_height != m_map.getVerticalCellCount())
+    {
+        p_data->scale(m_map.getHorizontalCellCount(), m_map.getVerticalCellCount());
+    }
 
     for(int x = 0; x < m_map.getHorizontalCellCount(); x++)
     {
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-            int daily_illumination(std::round((qRed(scaled_image.pixel(x,y)) / 255.f) * 24.0f));
-            m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(daily_illumination));
+//            std::cout << "Illumination: " << p_data->getValue(QPoint(x,y)) << std::endl;
+            m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(p_data->getValue(QPoint(x,y))));
         }
     }
 }

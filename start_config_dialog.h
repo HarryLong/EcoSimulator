@@ -17,6 +17,7 @@ enum WidgetType {
     PlantConfiguration = 0,
     SoilHumidityConfiguration,
     IlluminationConfiguration,
+    TemperatureConfiguration,
     SimulationOptions,
 
     WidgetCount

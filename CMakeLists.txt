@@ -19,6 +19,6 @@ SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO} "-O2 -g")
 SET(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} "-O2")
 SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG} "-O0 -g")
 
-add_executable(EcoSim simulation_configuration time_manager main_window constants simulator_manager helper plant_factory plant growth_manager dice_roller plants_storage renderer overview_widget debuger render_manager environment_manager enviromnent_illumination constrainers plant_properties environment_soil_humidity start_config_dialog simulation_configuration_widgets input_widgets plant_db plant_db_editor central_widget properties_editor_widgets environment_spatial_hashmap spatial_hashmap)
+add_executable(EcoSim environment_temp simulation_configuration time_manager main_window constants simulator_manager helper plant_factory plant growth_manager dice_roller plants_storage renderer overview_widget debuger render_manager environment_manager enviromnent_illumination constrainers plant_properties environment_soil_humidity start_config_dialog simulation_configuration_widgets input_widgets plant_db plant_db_editor central_widget properties_editor_widgets environment_spatial_hashmap pixel_data_translator spatial_hashmap)
 target_link_libraries(EcoSim Qt5::Widgets Qt5::Core Qt5::Gui sqlite3) 
 # Use the Widgets module from Qt 5.

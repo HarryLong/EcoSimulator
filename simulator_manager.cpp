@@ -3,7 +3,6 @@
 #include <iostream>
 #include "plant.h"
 #include <algorithm>
-#include "boost/foreach.hpp"
 
 #include "debuger.h"
 #include <mutex>
@@ -31,14 +30,14 @@ void SimulatorManager::add_plant(Plant * p_plant)
     emit newPlant(p_plant->m_specie_name, p_plant->getColor());
 }
 
-void SimulatorManager::remove_plant(int p_plant_id)
+void SimulatorManager::remove_plant(Plant * p)
 {
-    m_plant_storage.remove(p_plant_id);
+    m_plant_storage.remove(p);
 }
 
 void SimulatorManager::start( SimulationConfiguration configuration)
 {
-    m_environment_mgr.setEnvironmentProperties(configuration.illumination, configuration.soil_humidity);
+    m_environment_mgr.setEnvironmentProperties(configuration.illumination, configuration.humidity, configuration.temperature);
     m_simulation_options = new SimulationOptions(configuration.simulation_options);
 
     for(auto specie_it(configuration.m_plants_to_generate.begin()); specie_it != configuration.m_plants_to_generate.end(); specie_it++)
@@ -91,24 +90,29 @@ void SimulatorManager::trigger()
 
     m_elapsed_months++;
 
+
+    std::vector<Plant*> plants(m_plant_storage.getPlants());
     /*
      * ITERATION # 1:
      * - Based on environmental factors calculates the strength of each plant
      * - Checks the status of the plant and acts accordingly (dies or grows)
      */
-    BOOST_FOREACH(Plant * p, m_plant_storage.getSortedPlants())
+    for(Plant * p : plants)
     {
         // Shade
         int daily_illumination(m_environment_mgr.getDailyIllumination(p->m_center_position, p->getCanopyWidth(), p->getHeight()));
 
         // Humidity
-        int soil_humidity_percentage(m_environment_mgr.getSoilHumidityPercentage(p->m_center_position, p->getRootSize(), p->m_unique_id));
+        int soil_humidity(m_environment_mgr.getSoilHumidityPercentage(p->m_center_position, p->getRootSize(), p->m_unique_id));
 
-        p->calculateStrength(daily_illumination, soil_humidity_percentage);
+        // Temperature [This is static but refetched each time in case it gets dynamic]
+        int temp(m_environment_mgr.getTemperature(p->m_center_position));
+
+        p->calculateStrength(daily_illumination, soil_humidity, temp);
     }
 
     // Check plant status
-    std::vector<int> plant_ids_to_remove;
+    std::vector<Plant *> plants_to_remove;
 
     /*
      * ITERATION # 1:
@@ -116,7 +120,7 @@ void SimulatorManager::trigger()
      * - Checks the status of the plant and acts accordingly (dies or grows)
      * - Updates the environment with the effect of the plant growth
      */
-    BOOST_FOREACH(Plant * p, m_plant_storage.getSortedPlants())
+    for(Plant * p : plants)
     {
         PlantStatus status (p->getStatus());
         if(status == Alive)
@@ -136,29 +140,60 @@ void SimulatorManager::trigger()
         }
         else
         {
-            plant_ids_to_remove.push_back(p->m_unique_id);
+            plants_to_remove.push_back(p);
             m_environment_mgr.remove(p->m_center_position, p->getCanopyWidth(), p->getRootSize(), p->m_unique_id);
             emit removedPlant(p->m_specie_name, plant_status_to_string(status));
         }
     }
 
     // Remove the plants
-    BOOST_FOREACH(int id, plant_ids_to_remove)
+    for(Plant * p : plants_to_remove)
     {
-        remove_plant(id);
+        remove_plant(p);
     }
 
-    if(m_simulation_options->simplified_seeding_enabled && m_elapsed_months > 1 && m_elapsed_months % 12 == 0)
+    if((m_simulation_options->simplified_seeding_v1_enabled || m_simulation_options->simplified_seeding_v2_enabled)
+            && m_elapsed_months > 1 && m_elapsed_months % 12 == 0)
     {
-        std::map<int,int> species (m_plant_storage.getSpecies());
-
+        PlantStorageStructure species(m_plant_storage.getSpecies());
         int total_plant_count(m_plant_storage.getPlantCount());
 
-        for(auto it(species.begin()); it != species.end(); it++)
+        for(auto specie(species.begin()); specie != species.end(); specie++)
         {
-            int specie_seeds((((float)it->second)/total_plant_count) * SIMPLIFIED_SEEDING_SEED_COUNT);
-            for(int plant_count(0); plant_count < specie_seeds; plant_count++)
-                add_plant(m_plant_factory.generate(it->first));
+            if(specie->second.size() > 0) // Ignore if there are no species
+            {
+                int specie_id(specie->first);
+
+                if(m_simulation_options->simplified_seeding_v1_enabled)
+                {
+                    int specie_seeds((((float)specie->second.size())/total_plant_count) * SIMPLIFIED_SEEDING_V1_SEED_COUNT);
+                    for(int plant_count(0); plant_count < specie_seeds; plant_count++)
+                        add_plant(m_plant_factory.generate(specie_id));
+                }
+                else
+                {
+                    std::vector<int> all_plant_ids;
+                    for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
+                        all_plant_ids.push_back(plant->first);
+
+                    const std::vector<int> all_plants_ids_backup(all_plant_ids);
+
+                    for(int i = 0; i < SIMPLIFIED_SEEDING_V2_SEED_COUNT; i++)
+                    {
+                        if(all_plant_ids.size() == 0)
+                            all_plant_ids = std::vector<int>(all_plants_ids_backup);
+
+                        int random_index ( rand() % all_plant_ids.size() );
+                        Plant * plant_to_seed(specie->second[all_plant_ids[random_index]]);
+                        QPoint position (plant_to_seed->seed(1).at(0));
+                        if(position.x() >= 0 && position.x() < AREA_WIDTH_HEIGHT &&
+                                position.y() >= 0 && position.y() < AREA_WIDTH_HEIGHT)
+                            add_plant(m_plant_factory.generate(specie_id, position));
+
+                        all_plant_ids.erase(all_plant_ids.begin()+random_index);
+                    }
+                }
+            }
         }
     }
 
@@ -188,13 +223,17 @@ QString SimulatorManager::plant_status_to_string(PlantStatus status)
         case DeathByAge:
             return QString("Age");
         case DeathByUnderIllumination:
-            return  QString("LightUnderExposure");
+            return  QString("Insufficient sunlight");
         case DeathByOverIllumination:
-            return  QString("LightOverExposure");
+            return  QString("Too much sunlight");
         case DeathByFlood:
             return  QString("Flooded");
         case DeathByDrought:
             return  QString("Drought");
+        case DeathByCold:
+            return QString("Cold");
+        case DeathByHeat:
+            return QString("Heat");
     default:
         return QString("This is a bug!");
     }
@@ -205,13 +244,11 @@ void SimulatorManager::refresh_rendering_data()
     m_plant_rendering_data.lock();
     m_plant_rendering_data.clear();
 
-    BOOST_FOREACH(Plant * p, m_plant_storage.getSortedPlants())
+    for(Plant * p : m_plant_storage.getSortedPlants(SortingCriteria::Height))
     {
         m_plant_rendering_data.push_back(
                     PlantRenderingData(p->m_specie_name, p->getColor(), p->m_center_position, p->getHeight(), p->getCanopyWidth(), p->getRootSize()));
     }
-    std::sort(m_plant_rendering_data.begin(), m_plant_rendering_data.end(),
-              [](const PlantRenderingData & lhs, const PlantRenderingData & rhs) {return lhs.height < rhs.height;});
 
     m_plant_rendering_data.unlock();
 }

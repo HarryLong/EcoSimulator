@@ -13,7 +13,8 @@ Plant::Plant(const SpecieProperties * p_specie_properties, std::shared_ptr<const
     m_color(p_color),m_specie_name(p_specie_properties->specie_name), m_specie_id(p_specie_properties->specie_id),
     m_constrainers(AgeConstrainer(p_specie_properties->ageing_properties),
                    IlluminationConstrainer(p_specie_properties->illumination_properties),
-                   SoilHumidityConstrainer(p_specie_properties->soil_humidity_properties)),
+                   SoilHumidityConstrainer(p_specie_properties->soil_humidity_properties),
+                   TemperatureConstrainer(p_specie_properties->temperature_properties)),
     m_seeding_properties(p_specie_properties->seeding_properties),
     m_growth_manager(GrowthManager(p_specie_properties->growth_properties, p_specie_properties->ageing_properties)),
     m_pain_enducer(0)
@@ -21,6 +22,7 @@ Plant::Plant(const SpecieProperties * p_specie_properties, std::shared_ptr<const
     m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Age, MIN_STRENGTH));
     m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Illumination, MIN_STRENGTH));
     m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::SoilHumidity, MIN_STRENGTH));
+    m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Temperature, MIN_STRENGTH));
 }
 
 Plant::~Plant()
@@ -39,7 +41,7 @@ void Plant::newMonth()
         m_growth_manager.grow(m_strength); // TODO: Replace with calculated strength
 }
 
-void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage) // Must be called before newMonth is triggered
+void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp) // Must be called before newMonth is triggered
 {
     /*******
      * AGE *
@@ -65,13 +67,30 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
     /*****************
      * SOIL HUMIDITY *
      *****************/
-    m_constrainers.soil_humidity_constrainer.setSoilHumidityPercentage(p_soil_humidity_percentage);
+    m_constrainers.soil_humidity_constrainer.setSoilHumidity(p_soil_humidity_percentage);
     int soil_humidity_strength (m_constrainers.soil_humidity_constrainer.getStrength());
     m_strengths.find(ConstrainerType::SoilHumidity)->second = soil_humidity_strength;
     if(soil_humidity_strength < min_strength)
     {
         min_strength = soil_humidity_strength;
         bottleneck = ConstrainerType::SoilHumidity;
+    }
+
+    /***************
+     * TEMPERATURE *
+     ***************/
+    int temp_strength(m_strengths.find(ConstrainerType::Temperature)->second);
+    if(temp_strength == MIN_STRENGTH) // need to calculate the strength
+    {
+        m_constrainers.temp_constrainer.setTemperature(p_temp);
+        temp_strength = m_constrainers.temp_constrainer.getStrength();
+        m_strengths.find(ConstrainerType::Temperature)->second = temp_strength;
+    }
+
+    if(temp_strength < min_strength)
+    {
+        min_strength = temp_strength;
+        bottleneck = ConstrainerType::Temperature;
     }
 
     // Pain enducer is used to prevent a plant from being in negative strength too long
@@ -111,10 +130,15 @@ int Plant::getVigor() const
 
 std::vector<QPoint> Plant::seed()
 {
-    std::vector<QPoint> seeds;
-
     // Number of seeds proportianal to strength
     int seed_count((int) ((((float)m_strength)/MAX_STRENGTH) * m_seeding_properties->max_seeds));
+
+    return seed(seed_count);
+}
+
+std::vector<QPoint> Plant::seed(int seed_count)
+{
+    std::vector<QPoint> seeds;
 
     for( int i(0); i < seed_count; i++ )
     {
@@ -123,9 +147,7 @@ std::vector<QPoint> Plant::seed()
 
         QPoint diff(cos(angle_in_radians) * distance, sin(angle_in_radians) * distance);
         QPoint position(QPoint(m_center_position + diff));
-        if(position.x() >= 0 && position.x() < AREA_WIDTH_HEIGHT &&
-                position.y() >= 0 && position.y() < AREA_WIDTH_HEIGHT)
-            seeds.push_back(position);
+        seeds.push_back(position);
     }
 
     return seeds;
@@ -153,6 +175,11 @@ PlantStatus Plant::getStatus()
                 return DeathByDrought;
             else
                 return DeathByFlood;
+        case Temperature:
+            if(m_constrainers.temp_constrainer.isTooCold())
+                return DeathByCold;
+            else
+                return DeathByHeat;
         }
     }
     return Alive;

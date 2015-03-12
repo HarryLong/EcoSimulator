@@ -7,27 +7,36 @@
 
 class Plant;
 
+typedef std::map<int, std::map<long, Plant*>> PlantStorageStructure;
+
+enum SortingCriteria{
+    Strength,
+    Height
+};
+
 class PlantStorage{
 
 public:
     PlantStorage();
     ~PlantStorage();
     void add(Plant * p_plant);
-    void remove(int p_plant_id);
-    const Plant * get(int p_plant_id) const;
-    bool contains(int p_plant_id) const;
+    void remove(Plant * p_plant);
+    bool contains(Plant * p_plant) const;
     void clear();
     int getPlantCount();
-
-    std::vector<Plant*> getSortedPlants();
-    const std::map<int,int>& getSpecies();
+    std::vector<Plant*> getPlants();
+    std::vector<Plant*> getSortedPlants(SortingCriteria p_sorting_criteria);
+    const PlantStorageStructure& getSpecies();
 
 private:
-    std::map<long, Plant*> m_mapped_data;
-    std::map<int,int> m_specie_count;
+    PlantStorageStructure m_plants;
+    int m_plant_count;
+
+//    std::map<long, Plant*> m_plant_id_mapper;
+//    std::map<int,std::vector<long> > m_specie_id_mapper;
 
     // For optimization purposes --> A sorted list of plants is required more often than a plant is removed
-    std::vector<Plant*> m_raw_data;
+//    std::vector<Plant*> m_raw_data;
 };
 
 #endif //PLANT_STORAGE_H

@@ -4,13 +4,14 @@
 #include <QPoint>
 #include <QImage>
 #include <memory>
+#include "input_widgets.h"
 #include "environment_spatial_hashmap.h"
 
 class EnvironmentSoilHumidity
 {
 public:
     EnvironmentSoilHumidity(EnvironmentSpatialHashMap & map);
-    void setSoilHumidityData(const QImage & p_image);
+    void setSoilHumidityData(PixelData * p_data);
     int getHumidityPercentage(QPoint p_center, float p_roots_size, int p_id);
     void setData(QPoint p_center, float p_roots_size, int p_id, int p_minimum_humidity_percentage);
     void remove(QPoint p_center, float p_roots_size, int p_id);

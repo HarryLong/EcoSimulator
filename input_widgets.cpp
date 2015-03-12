@@ -55,7 +55,7 @@ void InputWidget::init_ui_elements()
 
     m_gradual_max_sb = new QSpinBox;
     m_gradual_max_sb->setRange(m_min, m_max);
-    m_gradual_max_sb->setValue(m_min);
+    m_gradual_max_sb->setValue(m_max);
     m_generate_gradual_btn = new QPushButton("Generate");
 }
 
@@ -140,8 +140,18 @@ void InputWidget::save_btn_clicked()
     {
         if(!filename.endsWith(".png"))
             filename.append(".png");
-        getData().save(filename, "png", 100);
+        toImage().save(filename, "png", 100);
     }
+}
+
+const QImage & InputWidget::toImage() const
+{
+    return m_pixel_data->toImage();
+}
+
+PixelData * InputWidget::getPixelData()
+{
+    return m_pixel_data;
 }
 
 void InputWidget::load_btn_clicked()
@@ -160,15 +170,24 @@ void InputWidget::generate_gradual_clicked()
 {
     int from (m_gradual_min_sb->value());
     int to (m_gradual_max_sb->value());
+    int diff(to-from);
 
-    int pixels_per_value(m_width/std::max(1,to-from));
+    bool incremental(diff > 0);
+
+    int pixels_per_value(m_width);
+    if(diff != 0)
+        pixels_per_value = std::abs(m_width/diff);
 
     int pixel_value(from);
     for(int x = 0; x < m_width; x++)
     {
         if(x > 0 && (x % pixels_per_value == 0))
-            pixel_value++;
-
+        {
+            if(incremental)
+                pixel_value++;
+            else
+                pixel_value--;
+        }
         for(int y (0); y < m_height; y++)
             m_pixel_data->set(QPoint(x,y),pixel_value);
     }
@@ -270,17 +289,27 @@ void InputWidget::refresh()
     m_container_label.setPixmap(QPixmap::fromImage(m_pixel_data->toImage()));
 }
 
-const QImage & InputWidget::getData() const
-{
-    return m_pixel_data->toImage();
-}
-
 /*******************
  * BASE PIXEL DATA *
  *******************/
-PixelData::PixelData(int width, int height) : m_width(width), m_height(height), m_image(m_width, m_height, QImage::Format::Format_RGB32)
+PixelData::PixelData(const PixelDataTranslator * translator, int width, int height) : m_translator(translator), m_width(width), m_height(height), m_image(m_width, m_height, QImage::Format::Format_RGB32)
 {
     resetAll();
+}
+
+PixelData::~PixelData()
+{
+    delete m_translator;
+}
+
+QRgb PixelData::toRGB(int p_value)
+{
+    return m_translator->toRGB(p_value);
+}
+
+int PixelData::toValue(QRgb p_pixel)
+{
+    return m_translator->toValue(p_pixel);
 }
 
 void PixelData::resetAll()
@@ -298,84 +327,46 @@ void PixelData::reset(QPoint p_point)
     m_image.setPixel(p_point, qRgb(0,0,0));
 }
 
-void PixelData::setData(QImage image)
+void PixelData::scale(int p_width, int p_height)
 {
-    if(image.width() != m_image.width() || image.height() != m_image.height())
-        m_image = image.scaled(m_width, m_height, Qt::IgnoreAspectRatio);
-    else
-        m_image = image;
+    setData(m_image.scaled(p_width, p_height, Qt::IgnoreAspectRatio));
+    m_width = p_width;
+    m_height = p_height;
 }
 
-/****************************
- * SOIL HUMIDITY PIXEL DATA *
- ****************************/
-SoilHumidityPixelData::SoilHumidityPixelData(int width, int height) :
-    PixelData(width, height)
+int PixelData::getValue(QPoint p_point)
 {
-
+    return toValue(m_image.pixel(p_point));
 }
 
-SoilHumidityPixelData::~SoilHumidityPixelData()
+void PixelData::fillAll(int p_value)
 {
-
+    m_image.fill(QColor(toRGB(p_value)));
 }
 
-void SoilHumidityPixelData::set(QPoint p_point, int p_percentage_of_max)
+void PixelData::setData(QImage p_image)
 {
-    int value ((p_percentage_of_max/100.0f) * 255);
-    m_image.setPixel(p_point, qRgb(0,0,value));
+    // First scale the image if necessary
+    if(p_image.width() != m_image.width() || p_image.height() != m_image.height())
+        m_image = m_image.scaled(m_width, m_height, Qt::IgnoreAspectRatio);
+
+    for(int x(0); x < p_image.width(); x++)
+    {
+        for(int y(0); y < p_image.height(); y++)
+        {
+            m_image.setPixel(x, y, toRGB(toValue(p_image.pixel(x,y))));
+        }
+    }
 }
 
-int SoilHumidityPixelData::getValue(QPoint p_point)
+void PixelData::set(QPoint p_point,int p_value)
 {
-    return (int) ((get_blue(p_point) / 255.f) * MAX_HUMIDITY);
+    m_image.setPixel(p_point, toRGB(p_value));
 }
 
-int SoilHumidityPixelData::get_blue(QPoint p_point)
-{
-    return qBlue(m_image.pixel(p_point.x(), p_point.y()));
-}
-
-void SoilHumidityPixelData::fillAll(int p_percentage_of_max)
-{
-    m_image.fill(QColor(0,0,(p_percentage_of_max/100.f) * 255));
-}
-
-/***************************
- * ILLUMINATION PIXEL DATA *
- ***************************/
-IlluminationPixelData::IlluminationPixelData(int width, int height) :
-    PixelData(width, height)
-{
-
-}
-
-IlluminationPixelData::~IlluminationPixelData()
-{
-}
-
-void IlluminationPixelData::set(QPoint p_point, int p_daily_illumination)
-{
-    int intensity ((p_daily_illumination/24.0f) * 255);
-    QColor color( intensity, intensity, 0);
-    m_image.setPixel(p_point, color.rgb());
-}
-
-int IlluminationPixelData::getValue(QPoint p_point)
-{
-    return (qRed(m_image.pixel(p_point.x(), p_point.y()))/255.0f) * 24.0f;
-}
-
-void IlluminationPixelData::fillAll(int p_daily_illumination)
-{
-    int intensity ((p_daily_illumination/24.0f) * 255);
-    QColor color( intensity, intensity, 0);
-    m_image.fill(color);
-}
-
-/*******************
- * SIAGNALED LABEL *
- *******************/
+/******************
+ * SIGNALED LABEL *
+ ******************/
 MySignaledLabel::MySignaledLabel(int width, int height)
 {
     setFixedSize(width, height);

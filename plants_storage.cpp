@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "boost/foreach.hpp"
 
-PlantStorage::PlantStorage() : m_mapped_data(), m_specie_count()
+PlantStorage::PlantStorage() : m_plants(), m_plant_count(0)
 {
 
 }
@@ -15,70 +15,80 @@ PlantStorage::~PlantStorage()
 
 void PlantStorage::add(Plant * p_plant)
 {
-    m_mapped_data.insert(std::pair<long, Plant*>(p_plant->m_unique_id, p_plant));
-    m_raw_data.push_back(p_plant);
+    // Ensure specie exists in data collection
+    auto it(m_plants.find(p_plant->m_specie_id));
+    if(it == m_plants.end()) // Specie not yet inserted
+    {
+        m_plants.insert(std::pair<int, std::map<long, Plant*>>(p_plant->m_specie_id, std::map<long, Plant*>()));
+    }
 
-    auto it(m_specie_count.find(p_plant->m_specie_id));
-    if(it == m_specie_count.end())
-        m_specie_count.insert(std::pair<int,int>(p_plant->m_specie_id,1));
-    else
-        it->second++;
+    // Insert the specie
+    m_plants[p_plant->m_specie_id].insert(std::pair<long, Plant*>(p_plant->m_unique_id, p_plant));
+
+    m_plant_count++;
 }
 
-void PlantStorage::remove(int p_plant_id)
+void PlantStorage::remove(Plant * p_plant)
 {
-    if(contains(p_plant_id))
+    if(contains(p_plant))
     {
-        Plant * p  = m_mapped_data[p_plant_id];
-        m_raw_data.erase(std::find(m_raw_data.begin(), m_raw_data.end(), p)); // It will always be in here
-        m_mapped_data.erase(p->m_unique_id);
-
-        auto it(m_specie_count.find(p->m_specie_id));
-        if(--it->second == 0)
-            m_specie_count.erase(it);
-
-        delete p;
+        m_plants[p_plant->m_specie_id].erase(p_plant->m_unique_id);
+        delete p_plant;
+        m_plant_count--;
     }
 }
 
-const Plant * PlantStorage::get(int p_plant_id) const
+bool PlantStorage::contains(Plant * p_plant) const
 {
-    auto it ( m_mapped_data.find(p_plant_id) );
-    if( it  != m_mapped_data.end())
-        return it->second;
-
-    return NULL;
+    auto it(m_plants.find(p_plant->m_specie_id));
+    return (it != m_plants.end() && it->second.find(p_plant->m_unique_id) != it->second.end());
 }
 
-bool PlantStorage::contains(int p_plant_id) const
+std::vector<Plant*> PlantStorage::getPlants()
 {
-    return (m_mapped_data.find(p_plant_id) != m_mapped_data.end());
+    std::vector<Plant*> all_plants;
+
+    for(auto specie(m_plants.begin()); specie!= m_plants.end(); specie++)
+    {
+        auto specie_plants(specie->second);
+        for(auto plant(specie_plants.begin()); plant != specie_plants.end(); plant++)
+        {
+            all_plants.push_back(plant->second);
+        }
+    }
+    return all_plants;
 }
 
-std::vector<Plant*> PlantStorage::getSortedPlants()
+std::vector<Plant*> PlantStorage::getSortedPlants(SortingCriteria p_sorting_criteria)
 {
-    std::sort(m_raw_data.begin(), m_raw_data.end(), [](Plant * lhs, Plant* rhs) {return lhs->getHeight() < rhs->getHeight();});
+    std::vector<Plant*> plants(getPlants());
 
-    return m_raw_data;
+    switch(p_sorting_criteria)
+    {
+    case SortingCriteria::Strength:
+        std::sort(plants.begin(), plants.end(), [](Plant * lhs, Plant* rhs) {return lhs->getHeight() < rhs->getHeight();});
+        break;
+    case SortingCriteria::Height:
+        std::sort(plants.begin(), plants.end(), [](Plant * lhs, Plant* rhs) {return lhs->getVigor() < rhs->getVigor();});
+        break;
+    }
+    return plants;
 }
 
 void PlantStorage::clear()
 {
-    for(auto it (m_mapped_data.begin()); it != m_mapped_data.end(); it++)
-        delete it->second;
+    for(Plant * p : getPlants())
+        delete p;
 
-    m_mapped_data.clear();
-    m_raw_data.clear();
-    m_specie_count.clear();
+    m_plants.clear();
 }
 
-const std::map<int,int>& PlantStorage::getSpecies()
+const PlantStorageStructure& PlantStorage::getSpecies()
 {
-    return m_specie_count;
+    return m_plants;
 }
 
 int PlantStorage::getPlantCount()
 {
-    return m_raw_data.size();
+    return m_plant_count;
 }
-

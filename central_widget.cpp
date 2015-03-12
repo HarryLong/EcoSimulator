@@ -20,6 +20,8 @@ CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
 
 CentralWidget::~CentralWidget()
 {
+    if(m_start_config_dialog)
+        delete m_start_config_dialog;
 }
 
 void CentralWidget::init_layout()
@@ -180,6 +182,9 @@ void CentralWidget::stop_simulation()
 void CentralWidget::display_start_configuration_dialog()
 {
     // The start config dialog upon accepted should forward data to the simulator
+    if(m_start_config_dialog)
+        delete m_start_config_dialog;
+
     m_start_config_dialog = new StartConfigDialog(this);
     connect(m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
     m_start_config_dialog->exec();

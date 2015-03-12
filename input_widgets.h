@@ -11,25 +11,33 @@
 #include <QHBoxLayout>
 #include <QComboBox>
 #include <QPushButton>
+#include "pixel_data_translator.h"
 
 /*******************
  * BASE PIXEL DATA *
  *******************/
 class PixelData {
 public:
-    PixelData(int width, int height);
-    virtual ~PixelData() {}
+    PixelData(const PixelDataTranslator * translator, int width, int height);
+    virtual ~PixelData();
     virtual void resetAll();
     virtual const QImage & toImage() const;
-    virtual void setData(QImage image);
     virtual void reset(QPoint p_point);
-    virtual void set(QPoint p_point, int value) = 0;
-    virtual void fillAll(int p_percentage_of_max) = 0;
-    virtual int getValue(QPoint point) = 0;
+
+    virtual void scale(int p_width, int p_height);
+    virtual void setData(QImage p_image);
+    virtual void set(QPoint p_point, int p_value);
+    virtual void fillAll(int p_value);
+    virtual int getValue(QPoint point);
+
+    virtual QRgb toRGB(int p_value);
+    virtual int toValue(QRgb p_pixel);
+
+    int m_width, m_height;
 
 protected:
-    int m_width, m_height;
     QImage m_image;
+    const PixelDataTranslator * m_translator;
 };
 
 /******************
@@ -80,7 +88,9 @@ public:
 
     QSize sizeHint() const;
 
-    const QImage & getData() const;
+    const QImage & toImage() const;
+
+    PixelData * getPixelData();
 
 private slots:
     void set_cursor_size(int p_size);
@@ -135,44 +145,33 @@ private:
 /*****************
  * SOIL HUMIDITY *
  *****************/
-#define MIN_HUMIDITY 0
-#define MAX_HUMIDITY 100
-#define INCREMENT 10
-class SoilHumidityPixelData : public PixelData
-{
-public:
-    SoilHumidityPixelData(int width, int height);
-    ~SoilHumidityPixelData();
-    virtual void set(QPoint p_point,int p_percentage_of_max);
-    virtual void fillAll(int p_percentage_of_max);
-    int getValue(QPoint point);
-
-private:
-    int get_blue(QPoint p_point);
-};
 class SoilHumidityInputWidget : public InputWidget
 {
 public:
-    SoilHumidityInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new SoilHumidityPixelData(width, height), width, height,
+    SoilHumidityInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new PixelData(new SoilHumidityTranslator, width, height),
+                                                                                         width, height,
                                                                                          0,100, "Humidity (%):", parent) {}
 };
 
 /****************
  * ILLUMINATION *
  ****************/
-class IlluminationPixelData : public PixelData
-{
-public:
-    IlluminationPixelData(int width, int height);
-    ~IlluminationPixelData();
-    virtual void set(QPoint p_point,int p_percentage_of_max);
-    virtual void fillAll(int p_percentage_of_max);
-    int getValue(QPoint point);        
-};
 class IlluminationInputWidget : public InputWidget
 {
 public:
-    IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new IlluminationPixelData(width, height), width, height,
+    IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new PixelData(new IlluminationTranslator, width, height),
+                                                                                         width, height,
                                                                                          0,24, "Illumination (hours):", parent) {}
+};
+
+/***************
+ * TEMPERATURE *
+ ***************/
+class TemperatureInputWidget : public InputWidget
+{
+public:
+    TemperatureInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new PixelData(new TemperatureTranslator, width, height),
+                                                                                        width, height,
+                                                                                         -50,50, "Temperature (celcius):", parent) {}
 };
 #endif // INPUT_WIDGETS_H

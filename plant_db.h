@@ -48,33 +48,33 @@ static const std::string growth_properties_table_creation_code =
  * ILLUMINATION PROPERTIES TABLE *
  *********************************/
 static const std::string illumination_properties_table_name = "illumination_properties";
-static const Column illumination_properties_table_column_min_illumination = Column(1,"prime_illumination_start");
-static const Column illumination_properties_table_column_max_illumination = Column(2,"prime_illumination_end");
-static const Column illumination_properties_table_column_underexposure_sensitivity = Column(3,"underexposure_sensitivity");
-static const Column illumination_properties_table_column_overexposure_sensitivity = Column(4,"overexposure_sensitivity");
+static const Column illumination_properties_table_column_prime_start = Column(1,"prime_start");
+static const Column illumination_properties_table_column_prime_end = Column(2,"prime_end");
+static const Column illumination_properties_table_column_min = Column(3,"min");
+static const Column illumination_properties_table_column_max = Column(4,"max");
 static const std::string illumination_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + illumination_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
-                                                       illumination_properties_table_column_min_illumination.name + " INT NOT NULL, " +
-                                                       illumination_properties_table_column_max_illumination.name + " INT NOT NULL, " +
-                                                       illumination_properties_table_column_underexposure_sensitivity.name + " INT NOT NULL, " +
-                                                       illumination_properties_table_column_overexposure_sensitivity.name + " INT NOT NULL);";
+                                                       illumination_properties_table_column_prime_start.name + " INT NOT NULL, " +
+                                                       illumination_properties_table_column_prime_end.name + " INT NOT NULL, " +
+                                                       illumination_properties_table_column_min.name + " INT NOT NULL, " +
+                                                       illumination_properties_table_column_max.name + " INT NOT NULL);";
 
 /**********************************
  * SOIL HUMIDITY PROPERTIES TABLE *
  **********************************/
 static const std::string soil_humidity_properties_table_name = "soil_humidity_properties";
-static const Column soil_humidity_properties_table_column_prime_humidity_start = Column(1,"prime_humidity_start");
-static const Column soil_humidity_properties_table_column_prime_humidity_end = Column(2,"prime_humidity_end");
-static const Column soil_humidity_properties_table_column_drought_sensitivity = Column(3,"drought_sensitivity");
-static const Column soil_humidity_properties_table_column_flooding_sensitivity = Column(4,"flooding_sensitivity");
+static const Column soil_humidity_properties_table_column_prime_start = Column(1,"prime_start");
+static const Column soil_humidity_properties_table_column_prime_end = Column(2,"prime_end");
+static const Column soil_humidity_properties_table_column_min = Column(3,"min");
+static const Column soil_humidity_properties_table_column_max = Column(4,"max");
 static const std::string soil_humidity_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + soil_humidity_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
-                                                       soil_humidity_properties_table_column_prime_humidity_start.name + " INT NOT NULL," +
-                                                       soil_humidity_properties_table_column_prime_humidity_end.name + " INT NOT NULL, " +
-                                                       soil_humidity_properties_table_column_drought_sensitivity.name + " INT NOT NULL, " +
-                                                       soil_humidity_properties_table_column_flooding_sensitivity.name + " INT NOT NULL);";
+                                                       soil_humidity_properties_table_column_prime_start.name + " INT NOT NULL," +
+                                                       soil_humidity_properties_table_column_prime_end.name + " INT NOT NULL, " +
+                                                       soil_humidity_properties_table_column_min.name + " INT NOT NULL, " +
+                                                       soil_humidity_properties_table_column_max.name + " INT NOT NULL);";
 
 /**********************************
  * SEEDING PROPERTIES TABLE *
@@ -94,33 +94,29 @@ static const std::string seeding_properties_table_creation_code =
  * AGEING PROPERTIES TABLE *
  ***************************/
 static const std::string ageing_properties_table_name = "ageing_properties";
-static const Column ageing_properties_table_column_prob_death_at_birth = Column(1,"prob_death_at_birth");
-static const Column ageing_properties_table_column_prob_death_at_upper = Column(2,"prob_death_at_upper");
-static const Column ageing_properties_table_column_start_of_prime_age = Column(3,"prime_age_start");
-static const Column ageing_properties_table_column_end_of_prime_age = Column(4,"prime_age_end");
-static const Column ageing_properties_table_column_upper_age = Column(5,"upper_end_age");
+static const Column ageing_properties_table_column_start_of_decline = Column(1,"start_of_decline");
+static const Column ageing_properties_table_column_max_age = Column(2,"max_age");
 static const std::string ageing_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + ageing_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
-                                                       ageing_properties_table_column_prob_death_at_birth.name + " INT NOT NULL," +
-                                                       ageing_properties_table_column_prob_death_at_upper.name + " INT NOT NULL," +
-                                                       ageing_properties_table_column_start_of_prime_age.name + " INT NOT NULL," +
-                                                       ageing_properties_table_column_end_of_prime_age.name + " INT NOT NULL," +
-                                                       ageing_properties_table_column_upper_age.name + " INT NOT NULL);";
+                                                       ageing_properties_table_column_start_of_decline.name + " INT NOT NULL," +
+                                                       ageing_properties_table_column_max_age.name + " INT NOT NULL);";
 
 /********************************
  * TEMPERATURE PROPERTIES TABLE *
  ********************************/
 static const std::string temperature_properties_table_name = "temperature_properties";
-static const Column temperature_properties_table_column_range_start = Column(1,"start_range");
-static const Column temperature_properties_table_column_range_end = Column(2,"end_range");
-static const Column temperature_properties_table_column_sensitivity = Column(3,"sensitivity");
+static const Column temperature_properties_table_column_prime_start = Column(1,"prime_start");
+static const Column temperature_properties_table_column_prime_end = Column(2,"prime_end");
+static const Column temperature_properties_table_column_min = Column(3,"min");
+static const Column temperature_properties_table_column_max = Column(4,"max");
 static const std::string temperature_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + temperature_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
-                                                       temperature_properties_table_column_range_start.name + " INT NOT NULL," +
-                                                       temperature_properties_table_column_range_end.name + " INT NOT NULL," +
-                                                       temperature_properties_table_column_sensitivity.name + ");";
+                                                       temperature_properties_table_column_prime_start.name + " INT NOT NULL," +
+                                                       temperature_properties_table_column_prime_end.name + " INT NOT NULL," +
+                                                       temperature_properties_table_column_min.name + " INT NOT NULL," +
+                                                       temperature_properties_table_column_max.name + ");";
 
 typedef std::map<int, const SpecieProperties*> SpeciePropertiesHolder;
 
@@ -145,6 +141,7 @@ private:
     std::map<int, const IlluminationProperties*> get_all_illumination_properties();
     std::map<int, const SoilHumidityProperties*> get_all_soil_humidity_properties();
     std::map<int, const SeedingProperties*> get_all_seeding_properties();
+    std::map<int, const TemperatureProperties*> get_all_temp_properties();
 
     /*********************
      * INSERT STATEMENTS *
@@ -155,6 +152,7 @@ private:
     void insert_illumination_properties(int id, const IlluminationProperties & illumination_properties);
     void insert_soil_humidity_properties(int id, const SoilHumidityProperties & soil_humidity_properties);
     void insert_seeding_properties(int id, const SeedingProperties & seeding_properties);
+    void insert_temp_properties(int id, const TemperatureProperties & seeding_properties);
 
     /*********************
      * UPDATE STATEMENTS *
@@ -165,6 +163,7 @@ private:
     void update_illumination_properties(int id, const IlluminationProperties & illumination_properties);
     void update_soil_humidity_properties(int id, const SoilHumidityProperties & soil_humidity_properties);
     void update_seeding_properties(int id, const SeedingProperties & seeding_properties);
+    void update_temp_properties(int id, const TemperatureProperties & seeding_properties);
 
     /*********************
      * DELETE STATEMENTS *

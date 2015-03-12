@@ -105,16 +105,10 @@ void GrowthPropertiesWidget::init_signals()
 /****************************
  * AGEING PROPERTIES WIDGET *
  ****************************/
-AgeingPropertiesWidget::AgeingPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
+AgeingPropertiesWidget::AgeingPropertiesWidget(QWidget* parent, Qt::WindowFlags f) :
+    m_start_of_decline_sb(new MyAgeSpinBox),
+    m_max_age_sb(new MyAgeSpinBox)
 {
-    // Init UI elements
-    m_prob_of_death_at_birth = new MyPercentageSpinBox();
-    m_prob_of_death_at_upper = new MyPercentageSpinBox();
-
-    m_prime_age_start_sb = new MyAgeSpinBox();
-    m_prime_age_end_sb = new MyAgeSpinBox();
-    m_upper_age_sb = new MyAgeSpinBox();
-
     init_layout();
 }
 
@@ -125,30 +119,20 @@ AgeingPropertiesWidget::~AgeingPropertiesWidget()
 
 AgeingProperties* AgeingPropertiesWidget::getProperties()
 {
-    return new AgeingProperties(m_prob_of_death_at_birth->value(),
-                            m_prob_of_death_at_upper->value(),
-                            m_prime_age_start_sb->value(),
-                            m_prime_age_end_sb->value(),
-                            m_upper_age_sb->value());
+    return new AgeingProperties(m_start_of_decline_sb->value(),
+                            m_max_age_sb->value());
 }
 
 void AgeingPropertiesWidget::setProperties(const AgeingProperties * p_properties)
 {
-    m_prob_of_death_at_birth->setValue(p_properties->probability_of_death_at_birth);
-    m_prob_of_death_at_upper->setValue(p_properties->probability_of_death_at_upper);
-    m_prime_age_start_sb->setValue(p_properties->prime_age_start);
-    m_prime_age_end_sb->setValue(p_properties->prime_age_end);
-    m_upper_age_sb->setValue(p_properties->upper_age);
+    m_start_of_decline_sb->setValue(p_properties->start_of_decline);
+    m_max_age_sb->setValue(p_properties->max_age);
 }
 
 void AgeingPropertiesWidget::clear()
 {
-    m_prob_of_death_at_birth->clear();
-    m_prob_of_death_at_upper->clear();
-
-    m_prime_age_start_sb->clear();
-    m_prime_age_end_sb->clear();
-    m_upper_age_sb->clear();
+    m_start_of_decline_sb->clear();
+    m_max_age_sb->clear();
 }
 
 void AgeingPropertiesWidget::init_layout()
@@ -157,45 +141,21 @@ void AgeingPropertiesWidget::init_layout()
 
      int row(0);
 
-     // Prob death at birth
+     // Start of decline
      {
          QHBoxLayout * h_layout = new QHBoxLayout();
-         h_layout->addWidget(new QLabel("Probability of death at birth: "),0,Qt::AlignLeft);
-         h_layout->addWidget(m_prob_of_death_at_birth,0,Qt::AlignRight);
-         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-      // Prob death at upper
-     {
-         QHBoxLayout * h_layout = new QHBoxLayout();
-         h_layout->addWidget(new QLabel("Probability of death at upper: "),0,Qt::AlignLeft);
-         h_layout->addWidget(m_prob_of_death_at_upper,0,Qt::AlignRight);
-         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
-         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-     // Prime age start
-     {
-         QHBoxLayout * h_layout = new QHBoxLayout();
-         h_layout->addWidget(new QLabel("Start of prime age: "),0,Qt::AlignLeft);
-         h_layout->addWidget(m_prime_age_start_sb,0,Qt::AlignRight);
+         h_layout->addWidget(new QLabel("Start of decline: "),0,Qt::AlignLeft);
+         h_layout->addWidget(m_start_of_decline_sb,0,Qt::AlignRight);
          h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
          main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
      }
-      // Prime age end
+     // Max age
      {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("End of prime age: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prime_age_end_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-     }
-     // Upper age
-     {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Upper age: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_upper_age_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+         QHBoxLayout * h_layout = new QHBoxLayout();
+         h_layout->addWidget(new QLabel("Maximum age: "),0,Qt::AlignLeft);
+         h_layout->addWidget(m_max_age_sb,0,Qt::AlignRight);
+         h_layout->addWidget(new QLabel("months"),0,Qt::AlignRight);
+         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
      }
      setLayout(main_layout);
 }
@@ -203,14 +163,12 @@ void AgeingPropertiesWidget::init_layout()
 /**********************************
  * ILLUMINATION PROPERTIES WIDGET *
  **********************************/
-IlluminationPropertiesWidget::IlluminationPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
+IlluminationPropertiesWidget::IlluminationPropertiesWidget(QWidget* parent, Qt::WindowFlags f) :
+    m_prime_illumination_start_sb(new My24HourSpinBox),
+    m_prime_illumination_end_sb(new My24HourSpinBox),
+    m_min_illumination_sb(new My24HourSpinBox),
+    m_max_illumination_sb(new My24HourSpinBox)
 {
-    m_min_illumination_sb = new My24HourSpinBox;
-    m_max_illumination_sb = new My24HourSpinBox;
-
-    m_underexposure_sensitivity_sb = new MySensitivitySpinBox;
-    m_overexposure_sensitivity_sb = new MySensitivitySpinBox;
-
     init_layout();
 }
 
@@ -220,27 +178,25 @@ IlluminationPropertiesWidget::~IlluminationPropertiesWidget()
 
 IlluminationProperties * IlluminationPropertiesWidget::getProperties()
 {
-    return new IlluminationProperties(m_min_illumination_sb->value(),
-                                      m_max_illumination_sb->value(),
-                                      m_underexposure_sensitivity_sb->value(),
-                                      m_overexposure_sensitivity_sb->value());
+    return new IlluminationProperties(Range(m_prime_illumination_start_sb->value(),m_prime_illumination_end_sb->value()),
+                                      m_min_illumination_sb->value(), m_max_illumination_sb->value());
 }
 
 void IlluminationPropertiesWidget::setProperties(const IlluminationProperties * p_properties)
 {
-    m_min_illumination_sb->setValue(p_properties->daily_illumination_hours_prime_start);
-    m_max_illumination_sb->setValue(p_properties->daily_illumination_hours_prime_end);
+    m_prime_illumination_start_sb->setValue(p_properties->prime_illumination.first);
+    m_prime_illumination_end_sb->setValue(p_properties->prime_illumination.second);
 
-    m_underexposure_sensitivity_sb->setValue(p_properties->underexposure_sensitivity);
-    m_overexposure_sensitivity_sb->setValue(p_properties->overexposure_sensitivity);
+    m_min_illumination_sb->setValue(p_properties->min_illumination);
+    m_max_illumination_sb->setValue(p_properties->max_illumination);
 }
 
 void IlluminationPropertiesWidget::clear()
 {
+    m_prime_illumination_start_sb->clear();
+    m_prime_illumination_end_sb->clear();
     m_min_illumination_sb->clear();
     m_max_illumination_sb->clear();
-    m_underexposure_sensitivity_sb->clear();
-    m_overexposure_sensitivity_sb->clear();
 }
 
 void IlluminationPropertiesWidget::init_layout()
@@ -253,14 +209,14 @@ void IlluminationPropertiesWidget::init_layout()
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
         h_layout->addWidget(new QLabel("Start of prime illumination: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_min_illumination_sb,0,Qt::AlignRight);
+        h_layout->addWidget(m_prime_illumination_start_sb,0,Qt::AlignRight);
         h_layout->addWidget(new QLabel(" hours"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
         h_layout->addWidget(new QLabel("End of prime illumination: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_max_illumination_sb,0,Qt::AlignRight);
+        h_layout->addWidget(m_prime_illumination_end_sb,0,Qt::AlignRight);
         h_layout->addWidget(new QLabel(" hours"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
@@ -268,14 +224,16 @@ void IlluminationPropertiesWidget::init_layout()
     // Sensitivity configuration
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Underexposure sensitivity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_underexposure_sensitivity_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Minimum illumination: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_min_illumination_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel(" hours"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Overexposure sensitivity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_overexposure_sensitivity_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Maximum illumination: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_max_illumination_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel(" hours"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
 
@@ -285,13 +243,12 @@ void IlluminationPropertiesWidget::init_layout()
 /***********************************
  * SOIL HUMIDITY PROPERTIES WIDGET *
  ***********************************/
-SoilHumidityPropertiesWidget::SoilHumidityPropertiesWidget(QWidget* parent, Qt::WindowFlags f)
+SoilHumidityPropertiesWidget::SoilHumidityPropertiesWidget(QWidget* parent, Qt::WindowFlags f) :
+    m_prime_humidity_start_sb(new MyPercentageSpinBox),
+    m_prime_humidity_end_sb(new MyPercentageSpinBox),
+    m_min_humidity_sb(new MyPercentageSpinBox),
+    m_max_humidity_sb(new MyPercentageSpinBox)
 {
-    m_prime_soil_humidity_percentage_start_sb = new MyPercentageSpinBox();
-    m_prime_soil_humidity_percentage_end_sb = new MyPercentageSpinBox();
-    m_drought_sensitivity = new MySensitivitySpinBox;
-    m_flooding_sensitivity = new MySensitivitySpinBox;
-
     init_layout();
 }
 
@@ -302,26 +259,24 @@ SoilHumidityPropertiesWidget::~SoilHumidityPropertiesWidget()
 
 SoilHumidityProperties * SoilHumidityPropertiesWidget::getProperties()
 {
-    return new SoilHumidityProperties(m_prime_soil_humidity_percentage_start_sb->value(),
-                                  m_prime_soil_humidity_percentage_end_sb->value(),
-                                  m_drought_sensitivity->value(),
-                                  m_flooding_sensitivity->value());
+    return new SoilHumidityProperties(Range(m_prime_humidity_start_sb->value(), m_prime_humidity_end_sb->value()),
+                                      m_min_humidity_sb->value(), m_max_humidity_sb->value());
 }
 
 void SoilHumidityPropertiesWidget::setProperties(const SoilHumidityProperties * p_properties)
 {
-    m_prime_soil_humidity_percentage_start_sb->setValue(p_properties->soil_humidity_percentage_prime_start);
-    m_prime_soil_humidity_percentage_end_sb->setValue(p_properties->soil_humidity_percentage_prime_end);
-    m_drought_sensitivity->setValue(p_properties->drought_sensitivity);
-    m_flooding_sensitivity->setValue(p_properties->flooding_sensitivity);
+    m_prime_humidity_start_sb->setValue(p_properties->prime_soil_humidity.first);
+    m_prime_humidity_end_sb->setValue(p_properties->prime_soil_humidity.second);
+    m_min_humidity_sb->setValue(p_properties->min_soil_humidity);
+    m_max_humidity_sb->setValue(p_properties->max_soil_humidity);
 }
 
 void SoilHumidityPropertiesWidget::clear()
 {
-    m_prime_soil_humidity_percentage_start_sb->clear();
-    m_prime_soil_humidity_percentage_end_sb->clear();
-    m_drought_sensitivity->clear();
-    m_flooding_sensitivity->clear();
+    m_prime_humidity_start_sb->clear();
+    m_prime_humidity_end_sb->clear();
+    m_min_humidity_sb->clear();
+    m_max_humidity_sb->clear();
 }
 
 void SoilHumidityPropertiesWidget::init_layout()
@@ -334,7 +289,7 @@ void SoilHumidityPropertiesWidget::init_layout()
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
         h_layout->addWidget(new QLabel("Start of prime humidity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prime_soil_humidity_percentage_start_sb,0,Qt::AlignRight);
+        h_layout->addWidget(m_prime_humidity_start_sb,0,Qt::AlignRight);
         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
@@ -342,26 +297,109 @@ void SoilHumidityPropertiesWidget::init_layout()
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
         h_layout->addWidget(new QLabel("End of prime humidity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_prime_soil_humidity_percentage_end_sb,0,Qt::AlignRight);
+        h_layout->addWidget(m_prime_humidity_end_sb,0,Qt::AlignRight);
         h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     // Drought Sensitivity
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Drought sensitivity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_drought_sensitivity,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Minimum humidity: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_min_humidity_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     // Flood Sensitivity
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Flooding sensitivity: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_flooding_sensitivity,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Maximum humidity: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_max_humidity_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("%"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     setLayout(main_layout);
 }
+
+/*********************************
+ * TEMPERATURE PROPERTIES WIDGET *
+ *********************************/
+TemperaturePropertiesWidget::TemperaturePropertiesWidget(QWidget* parent, Qt::WindowFlags f) :
+    m_prime_temp_start_sb(new MyTemperatureSpinBox),
+    m_prime_temp_end_sb(new MyTemperatureSpinBox),
+    m_min_temp_sb(new MyTemperatureSpinBox),
+    m_max_temp_sb(new MyTemperatureSpinBox)
+{
+    init_layout();
+}
+
+TemperaturePropertiesWidget::~TemperaturePropertiesWidget()
+{
+
+}
+
+TemperatureProperties* TemperaturePropertiesWidget::getProperties()
+{
+    return new TemperatureProperties(Range(m_prime_temp_start_sb->value(), m_prime_temp_end_sb->value()),
+                                     m_min_temp_sb->value(), m_max_temp_sb->value());
+}
+
+void TemperaturePropertiesWidget::setProperties(const TemperatureProperties * p_properties)
+{
+    m_prime_temp_start_sb->setValue(p_properties->prime_temp.first);
+    m_prime_temp_end_sb->setValue(p_properties->prime_temp.second);
+    m_min_temp_sb->setValue(p_properties->min_temp);
+    m_max_temp_sb->setValue(p_properties->max_temp);
+}
+
+void TemperaturePropertiesWidget::clear()
+{
+    m_prime_temp_start_sb->clear();
+    m_prime_temp_end_sb->clear();
+    m_min_temp_sb->clear();
+    m_max_temp_sb->clear();
+}
+
+void TemperaturePropertiesWidget::init_layout()
+{
+    QGridLayout * main_layout = new QGridLayout;
+
+    int row(0);
+
+    // Start of prime
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Start of prime temperature: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_prime_temp_start_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("degrees celcius"),0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+    // End of prime
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("End of prime temperature: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_prime_temp_end_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("degrees celcius"),0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+    // Drought Sensitivity
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Minimum temperature: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_min_temp_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("degrees celcius"),0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+    // Flood Sensitivity
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel("Maximum temperature: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_max_temp_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("degrees celcius"),0,Qt::AlignRight);
+        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
+    }
+    setLayout(main_layout);
+}
+
 
 /*****************************
  * SEEDING PROPERTIES WIDGET *

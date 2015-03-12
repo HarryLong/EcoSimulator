@@ -2,31 +2,21 @@
 #define PLANT_PROPERTIES_H
 #include <QString>
 
-struct AgeingProperties {
-    const int probability_of_death_at_birth;
-    const int probability_of_death_at_upper;
+typedef std::pair<int,int> Range;
 
-    const int prime_age_start;
-    const int prime_age_end;
-    const int upper_age;
+struct AgeingProperties {
+    const int start_of_decline;
+    const int max_age;
 
     AgeingProperties(const AgeingProperties & other):
-        probability_of_death_at_birth(other.probability_of_death_at_birth),
-        probability_of_death_at_upper(other.probability_of_death_at_upper),
-        prime_age_start(other.prime_age_start),
-        prime_age_end(other.prime_age_end),
-        upper_age(other.upper_age) {}
+        start_of_decline(other.start_of_decline),
+        max_age(other.max_age) {}
 
 
-    AgeingProperties(int p_probability_of_death_at_birth,
-                     int p_probability_of_death_at_upper,
-                     int p_prime_age_start, int p_prime_age_end,
-                     int p_upper_age) :
-        probability_of_death_at_birth(p_probability_of_death_at_birth),
-        probability_of_death_at_upper(p_probability_of_death_at_upper),
-        prime_age_start(p_prime_age_start),
-        prime_age_end(p_prime_age_end),
-        upper_age(p_upper_age) {}
+    AgeingProperties(int p_start_of_decline,
+                     int p_max_age) :
+        start_of_decline(p_start_of_decline),
+        max_age(p_max_age) {}
 };
 
 struct GrowthProperties {
@@ -48,63 +38,56 @@ struct GrowthProperties {
 };
 
 struct IlluminationProperties {
-    const int daily_illumination_hours_prime_start;
-    const int daily_illumination_hours_prime_end;
-    const int underexposure_sensitivity;
-    const int overexposure_sensitivity;
+    const Range prime_illumination;
+    const int min_illumination;
+    const int max_illumination;
 
     IlluminationProperties(const IlluminationProperties & other) :
-        daily_illumination_hours_prime_start(other.daily_illumination_hours_prime_start),
-        daily_illumination_hours_prime_end(other.daily_illumination_hours_prime_end),
-        underexposure_sensitivity(other.underexposure_sensitivity),
-        overexposure_sensitivity(other.overexposure_sensitivity){}
+        prime_illumination(other.prime_illumination),
+        min_illumination(other.min_illumination),
+        max_illumination(other.max_illumination) {}
 
-    IlluminationProperties( int p_daily_illumination_hours_prime_start, int p_daily_illumination_hours_prime_end,
-                            int p_underexposure_sensitivity, int p_overexposure_sensitivity ) :
-        daily_illumination_hours_prime_start(p_daily_illumination_hours_prime_start),
-        daily_illumination_hours_prime_end(p_daily_illumination_hours_prime_end),
-        underexposure_sensitivity(p_underexposure_sensitivity),
-        overexposure_sensitivity(p_overexposure_sensitivity){}
+    IlluminationProperties( Range p_prime_illumination,
+                            int p_min_illumination, int p_max_illumination) :
+        prime_illumination(p_prime_illumination),
+        min_illumination(p_min_illumination),
+        max_illumination(p_max_illumination) {}
 };
 
 struct SoilHumidityProperties {
-    const int soil_humidity_percentage_prime_start;
-    const int soil_humidity_percentage_prime_end;
-    const int drought_sensitivity;
-    const int flooding_sensitivity;
+    const Range prime_soil_humidity;
+    const int min_soil_humidity;
+    const int max_soil_humidity;
 
     SoilHumidityProperties(const SoilHumidityProperties & other) :
-        soil_humidity_percentage_prime_start(other.soil_humidity_percentage_prime_start),
-        soil_humidity_percentage_prime_end(other.soil_humidity_percentage_prime_end),
-        drought_sensitivity(other.drought_sensitivity),
-        flooding_sensitivity(other.flooding_sensitivity){}
+        prime_soil_humidity(other.prime_soil_humidity),
+        min_soil_humidity(other.min_soil_humidity),
+        max_soil_humidity(other.max_soil_humidity) {}
 
-    SoilHumidityProperties( int p_soil_humidity_percentage_prime_start,
-                            int p_soil_humidity_percentage_prime_end,
-                            int p_drought_sensitivity,
-                            int p_flooding_sensitivity):
-        soil_humidity_percentage_prime_start(p_soil_humidity_percentage_prime_start),
-        soil_humidity_percentage_prime_end(p_soil_humidity_percentage_prime_end),
-        drought_sensitivity(p_drought_sensitivity),
-        flooding_sensitivity(p_flooding_sensitivity){}
+    SoilHumidityProperties( Range p_prime_soil_humidity,
+                            int p_min_soil_humidity,
+                            int p_max_soil_humidity):
+        prime_soil_humidity(p_prime_soil_humidity),
+        min_soil_humidity(p_min_soil_humidity),
+        max_soil_humidity(p_max_soil_humidity) {}
 };
 
 struct TemperatureProperties {
-    const int temperature_range_start;
-    const int temperature_range_end;
-    const int sensitivity;
+    const Range prime_temp;
+    const int min_temp;
+    const int max_temp;
 
     TemperatureProperties(const TemperatureProperties & other) :
-        temperature_range_start(other.temperature_range_start),
-        temperature_range_end(other.temperature_range_end),
-        sensitivity(other.sensitivity){}
+        prime_temp(other.prime_temp),
+        min_temp(other.min_temp),
+        max_temp(other.max_temp){}
 
-    TemperatureProperties( int p_temperature_range_start,
-                            int p_temperature_range_end,
-                            int p_sensitivity):
-        temperature_range_start(p_temperature_range_start),
-        temperature_range_end(p_temperature_range_end),
-        sensitivity(p_sensitivity){}
+    TemperatureProperties( Range p_prime_temp,
+                            int p_min_temp,
+                            int p_max_temp):
+        prime_temp(p_prime_temp),
+        min_temp(p_min_temp),
+        max_temp(p_max_temp){}
 };
 
 struct SeedingProperties {
@@ -132,7 +115,7 @@ struct SpecieProperties{
     const GrowthProperties* growth_properties;
     const IlluminationProperties* illumination_properties;
     const SoilHumidityProperties* soil_humidity_properties;
-//    const TemperatureProperties* temperature_properties;
+    const TemperatureProperties* temperature_properties;
     const SeedingProperties* seeding_properties;
 
     SpecieProperties(const SpecieProperties & other) :
@@ -142,6 +125,7 @@ struct SpecieProperties{
         growth_properties(other.growth_properties),
         illumination_properties(other.illumination_properties),
         soil_humidity_properties(other.soil_humidity_properties),
+        temperature_properties(other.temperature_properties),
         seeding_properties(other.seeding_properties)
     {}
 
@@ -151,12 +135,14 @@ struct SpecieProperties{
               const GrowthProperties* growth_properties,
               const IlluminationProperties* illumination_properties,
               const SoilHumidityProperties* soil_humidity_properties,
+              const TemperatureProperties* temperature_properties,
               const SeedingProperties* seeding_properties) :
         specie_id(id), specie_name(name),
         ageing_properties(ageing_properties),
         growth_properties(growth_properties),
         illumination_properties(illumination_properties),
         soil_humidity_properties(soil_humidity_properties),
+        temperature_properties(temperature_properties),
         seeding_properties(seeding_properties)
     {}
 
@@ -165,12 +151,14 @@ struct SpecieProperties{
                     const GrowthProperties* growth_properties,
                     const IlluminationProperties* illumination_properties,
                     const SoilHumidityProperties* soil_humidity_properties,
+                    const TemperatureProperties* temperature_properties,
                     const SeedingProperties* seeding_properties) :
         specie_id(-1), specie_name(name),
         ageing_properties(ageing_properties),
         growth_properties(growth_properties),
         illumination_properties(illumination_properties),
         soil_humidity_properties(soil_humidity_properties),
+        temperature_properties(temperature_properties),
         seeding_properties(seeding_properties)
         {}
 
@@ -180,6 +168,7 @@ struct SpecieProperties{
         delete growth_properties;
         delete illumination_properties;
         delete soil_humidity_properties;
+        delete temperature_properties;
         delete seeding_properties;
     }
 };

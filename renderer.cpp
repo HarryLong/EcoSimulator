@@ -123,17 +123,23 @@ void RootsRenderer::paintEvent(QPaintEvent * event)
     m_render_data.unlock();
 }
 
-/************
- * LIGHTING *
- ************/
-IlluminationRenderer::IlluminationRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent) :
+/**************************
+ * BASE RESOURCE RENDERER *
+ **************************/
+ResourceRenderer::ResourceRenderer(const EnvironmentSpatialHashMap & render_data, const PixelDataTranslator * translator, QWidget *parent) :
     Renderer(parent),
-    m_render_data(render_data)
+    m_render_data(render_data),
+    m_translator(translator)
 {
-    init_layout();
+
 }
 
-void IlluminationRenderer::paintEvent(QPaintEvent * event)
+ResourceRenderer::~ResourceRenderer()
+{
+    delete m_translator;
+}
+
+void ResourceRenderer::paintEvent(QPaintEvent * event)
 {
     QPainter painter(this);
 
@@ -149,54 +155,54 @@ void IlluminationRenderer::paintEvent(QPaintEvent * event)
         for(int y ( 0 ); y < m_render_data.getVerticalCellCount(); y++)
         {
             int y_screen_space(to_screen_space(cell_height * y));
-
-            IlluminationCell * cell_content(m_render_data.get_const(QPoint(x,y))->illumination_cell);
-            if(cell_content->max_height == .0f)
-            {
-                int intensity ((cell_content->daily_illumination/24.0f) * 255);
-                QColor color( intensity, intensity, 0);
-                painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(color));
-            }
+            QColor color(getPixel(QPoint(x,y)));
+            painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(color));
         }
     }
+}
+
+/************
+ * LIGHTING *
+ ************/
+IlluminationRenderer::IlluminationRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent) :
+    ResourceRenderer(render_data, new IlluminationTranslator, parent)
+{
+    init_layout();
+}
+
+QRgb IlluminationRenderer::getPixel(QPoint pos)
+{
+    IlluminationCell * cell_content(m_render_data.get_const(pos)->illumination_cell);
+    return m_translator->toRGB(cell_content->daily_illumination);
 }
 
 /*****************
  * SOIL HUMIDITY *
  *****************/
 SoilHumidityRenderer::SoilHumidityRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent) :
-    Renderer(parent),
-    m_render_data(render_data)
+    ResourceRenderer(render_data, new SoilHumidityTranslator, parent)
 {
     init_layout();
 }
 
-void SoilHumidityRenderer::paintEvent(QPaintEvent * event)
+QRgb SoilHumidityRenderer::getPixel(QPoint pos)
 {
-    QPainter painter(this);
-
-    int cell_width(m_render_data.getCellWidth());
-    int cell_width_screen_space(to_screen_space(cell_width)+1);
-    int cell_height(m_render_data.getCellHeight());
-    int cell_height_screen_space(to_screen_space(cell_height)+1);
-
-    for(int x ( 0 ); x < m_render_data.getHorizontalCellCount(); x++)
-    {
-        int x_screen_space(to_screen_space(cell_width * x));
-
-        for(int y ( 0 ); y < m_render_data.getVerticalCellCount(); y++)
-        {
-            int y_screen_space(to_screen_space(cell_height * y));
-
-            SoilHumidityCell * cell_content(m_render_data.get_const(QPoint(x,y))->soil_humidity_cell);
-            if(cell_content->grants.size() == 0) // If there are no grants, there is humidity remaining in the soil
-            {
-                int humidity( cell_content->humidity_percentage );
-                QColor color( 0, 0, (humidity / 100.0f) * 255);
-
-                painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space),
-                                 QBrush(color));
-            }
-        }
-    }
+    SoilHumidityCell * cell_content(m_render_data.get_const(pos)->soil_humidity_cell);
+    return m_translator->toRGB(cell_content->humidity_percentage);
 }
+
+/************************
+ * TEMPERATURE RENDERER *
+ ***********************/
+TemperatureRenderer::TemperatureRenderer(const EnvironmentSpatialHashMap & render_data, QWidget *parent) :
+    ResourceRenderer(render_data, new TemperatureTranslator, parent)
+{
+    init_layout();
+}
+
+QRgb TemperatureRenderer::getPixel(QPoint pos)
+{
+    TemperatureCell * cell_content(m_render_data.get_const(pos)->temp_cell);
+    return m_translator->toRGB(cell_content->temp);
+}
+

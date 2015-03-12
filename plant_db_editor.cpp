@@ -25,6 +25,7 @@ PropertyWidgetsWrapper::PropertyWidgetsWrapper() :
     ageing_properties_widget(new AgeingPropertiesWidget),
     illumination_properties_widget(new IlluminationPropertiesWidget),
     soil_humidity_properties_widget(new SoilHumidityPropertiesWidget),
+    temp_properties_widget(new TemperaturePropertiesWidget),
     seeding_properties_widget(new SeedingPropertiesWidget)
 {
     init_layout();
@@ -37,6 +38,7 @@ void PropertyWidgetsWrapper::setProperties(const SpecieProperties * p_plant_data
     growth_property_widget->setProperties(p_plant_data->growth_properties);
     illumination_properties_widget->setProperties(p_plant_data->illumination_properties);
     soil_humidity_properties_widget->setProperties(p_plant_data->soil_humidity_properties);
+    temp_properties_widget->setProperties(p_plant_data->temperature_properties);
     seeding_properties_widget->setProperties(p_plant_data->seeding_properties);
 }
 
@@ -47,6 +49,7 @@ void PropertyWidgetsWrapper::setEnabled(bool p_enabled)
     growth_property_widget->setEnabled(p_enabled);
     illumination_properties_widget->setEnabled(p_enabled);
     soil_humidity_properties_widget->setEnabled(p_enabled);
+    temp_properties_widget->setEnabled(p_enabled);
     seeding_properties_widget->setEnabled(p_enabled);
 }
 
@@ -57,6 +60,7 @@ void PropertyWidgetsWrapper::clear()
     growth_property_widget->clear();
     illumination_properties_widget->clear();
     soil_humidity_properties_widget->clear();
+    temp_properties_widget->clear();
     seeding_properties_widget->clear();
 }
 
@@ -95,6 +99,12 @@ void PropertyWidgetsWrapper::init_layout()
     main_layout->addWidget(soil_humidity_title_lbl);
     main_layout->addWidget(soil_humidity_properties_widget);
 
+    // Temperature properties
+    QLabel * temp_title_lbl = new QLabel("Temperature Properties");
+    temp_title_lbl->setFont(title_font);
+    main_layout->addWidget(temp_title_lbl);
+    main_layout->addWidget(temp_properties_widget);
+
     // Seeding properties
     QLabel * seeding_properties_title_lbl = new QLabel("Seeding Properties");
     seeding_properties_title_lbl->setFont(title_font);
@@ -112,6 +122,7 @@ SpecieProperties * PropertyWidgetsWrapper::toProperties()
                            growth_property_widget->getProperties(),
                            illumination_properties_widget->getProperties(),
                            soil_humidity_properties_widget->getProperties(),
+                           temp_properties_widget->getProperties(),
                            seeding_properties_widget->getProperties());
 }
 
@@ -131,8 +142,6 @@ SpeciePropertiesListItem::~SpeciePropertiesListItem()
 
 void SpeciePropertiesListItem::setSpecieProperties( const SpecieProperties * specie_properties)
 {
-//    if(m_specie_properties)
-//        delete m_specie_properties;
     m_specie_properties = specie_properties;
     setText(specie_properties->specie_name);
 }

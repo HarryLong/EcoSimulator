@@ -3,16 +3,24 @@
 
 #include "spatial_hashmap.h"
 
+typedef std::pair<int,int> Range;
+
 /*********************
  * ILLUMINATION CELL *
  *********************/
-struct IlluminationCell {
-    int daily_illumination;
-    float max_height;
-    std::unordered_map<int, float> id_to_height;
+class IlluminationCell {
+public:
+    IlluminationCell();
+    ~IlluminationCell();
 
-    IlluminationCell(int p_daily_illumination) : max_height(.0f), id_to_height(),
-        daily_illumination(p_daily_illumination) {}
+    int getIllumination(int months_elapsed);
+    float getMaxHeight();
+
+private:
+    std::unordered_map<int, float> id_to_height;
+    Range range;
+    int increments;
+    float max_height;
 };
 
 /**********************
@@ -36,14 +44,24 @@ struct SoilHumidityCell {
     SoilHumidityCell(int humidity_percentage) : humidity_percentage(humidity_percentage), requests(),grants() {}
 };
 
+/********************
+ * TEMPERATURE CELL *
+ ********************/
+struct TemperatureCell{
+    int temp;
+
+    TemperatureCell(int temp) : temp(temp) {}
+};
+
 /*******************************
  * ENVIRONMENT SPATIAL HASHMAP *
  *******************************/
 struct EnvironmentSpatialHashMapCell {
     IlluminationCell * illumination_cell;
     SoilHumidityCell * soil_humidity_cell;
+    TemperatureCell * temp_cell;
 
-    EnvironmentSpatialHashMapCell() : illumination_cell(NULL), soil_humidity_cell(NULL) {}
+    EnvironmentSpatialHashMapCell() : illumination_cell(NULL), soil_humidity_cell(NULL), temp_cell(NULL) {}
 
     ~EnvironmentSpatialHashMapCell()
     {
@@ -51,6 +69,8 @@ struct EnvironmentSpatialHashMapCell {
             delete illumination_cell;
         if(soil_humidity_cell)
             delete soil_humidity_cell;
+        if(temp_cell)
+            delete temp_cell;
     }
 };
 
@@ -61,6 +81,7 @@ public:
     ~EnvironmentSpatialHashMap();
     void insertIlluminationCell(QPoint point, IlluminationCell * illumination_cell);
     void insertSoilHumidityCell(QPoint point, SoilHumidityCell * illumination_cell);
+    void insertTempCell(QPoint point, TemperatureCell * illumination_cell);
 };
 
 

@@ -5,17 +5,19 @@ EnvironmentSoilHumidity::EnvironmentSoilHumidity(EnvironmentSpatialHashMap & map
 {
 }
 
-void EnvironmentSoilHumidity::setSoilHumidityData(const QImage & p_image)
+void EnvironmentSoilHumidity::setSoilHumidityData(PixelData * p_data)
 {
-    QImage scaled_image (p_image.scaled(QSize(m_map.getHorizontalCellCount(), m_map.getVerticalCellCount()),
-                                        Qt::IgnoreAspectRatio));
+    if(p_data->m_width != m_map.getHorizontalCellCount() ||
+            p_data->m_height != m_map.getVerticalCellCount())
+    {
+        p_data->scale(m_map.getHorizontalCellCount(), m_map.getVerticalCellCount());
+    }
 
     for(int x = 0; x < m_map.getHorizontalCellCount(); x++)
     {
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-            int humidity_percentage(std::round((qBlue(scaled_image.pixel(x,y)) / 255.f) * 100.0f));
-            m_map.insertSoilHumidityCell(QPoint(x,y),new SoilHumidityCell(humidity_percentage));
+            m_map.insertSoilHumidityCell(QPoint(x,y),new SoilHumidityCell(p_data->getValue(QPoint(x,y))));
         }
     }
 }

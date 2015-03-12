@@ -14,7 +14,8 @@
 enum ConstrainerType{
     Age,
     Illumination,
-    SoilHumidity
+    SoilHumidity,
+    Temperature
 };
 
 typedef std::map<ConstrainerType, float> Strengths;
@@ -23,13 +24,16 @@ struct Constrainers{
     AgeConstrainer age_constrainer;
     IlluminationConstrainer illumination_constrainer;
     SoilHumidityConstrainer soil_humidity_constrainer;
+    TemperatureConstrainer temp_constrainer;
 
     Constrainers( AgeConstrainer age_constrainer,
                   IlluminationConstrainer illumination_constrainer,
-                  SoilHumidityConstrainer soil_humidity_constrainer):
+                  SoilHumidityConstrainer soil_humidity_constrainer,
+                  TemperatureConstrainer temp_constrainer):
         age_constrainer(age_constrainer),
         illumination_constrainer(illumination_constrainer),
-        soil_humidity_constrainer(soil_humidity_constrainer){}
+        soil_humidity_constrainer(soil_humidity_constrainer),
+        temp_constrainer(temp_constrainer){}
 };
 
 class Plant {
@@ -44,14 +48,15 @@ public:
     float getRootSize() const;
     int getMinimumSoilHumidityRequirement() const;
     std::vector<QPoint> seed();
+    std::vector<QPoint> seed(int seed_count);
     int getVigor() const;
     const QColor * getColor() const;
     int getSeedingInterval();
 
     PlantStatus getStatus();
-    void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage);
+    void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp);
 
-    const int m_unique_id;
+    const long m_unique_id;
     const QPoint m_center_position;
     const QString m_specie_name;
     const int m_specie_id;
