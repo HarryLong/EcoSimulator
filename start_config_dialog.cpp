@@ -85,11 +85,18 @@ void StartConfigDialog::init_signals()
 
 SimulationConfiguration StartConfigDialog::getStartConfiguration()
 {
+    InputWidget * humidity_widget ( static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration)) );
+    InputWidget * illumination_widget ( static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration)) );
+    InputWidget * temperature_widget ( static_cast<InputWidget*>(m_widgets.get(WidgetType::TemperatureConfiguration)) );
+
     SimulationConfiguration ret(
                 static_cast<PlantConfigurationWidget*>(m_widgets.get(WidgetType::PlantConfiguration))->getPlantsToCreate(),
-                static_cast<InputWidget*>(m_widgets.get(WidgetType::SoilHumidityConfiguration))->getPixelData(),
-                static_cast<InputWidget*>(m_widgets.get(WidgetType::IlluminationConfiguration))->getPixelData(),
-                static_cast<InputWidget*>(m_widgets.get(WidgetType::TemperatureConfiguration))->getPixelData(),
+                humidity_widget->getPixelData(),
+                humidity_widget->getVariance(),
+                illumination_widget->getPixelData(),
+                illumination_widget->getVariance(),
+                temperature_widget->getPixelData(),
+                temperature_widget->getVariance(),
                 static_cast<SimulationConfigurationWidget*>(m_widgets.get(WidgetType::SimulationOptions))->getSimulationConfiguration()
                 );
 
@@ -125,9 +132,9 @@ StartConfigDialogWidgets::StartConfigDialogWidgets() : m_widgets(), m_current_wi
 
     // Title
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::PlantConfiguration, QString("Plsnt Configuration")));
-    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SoilHumidityConfiguration, QString("Soil Humidity")));
-    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::IlluminationConfiguration, QString("Illumination")));
-    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::TemperatureConfiguration, QString("Temperature")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SoilHumidityConfiguration, QString("Minimum Humidity")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::IlluminationConfiguration, QString("Minimum Illumination")));
+    m_titles.insert(std::pair<WidgetType, QString>(WidgetType::TemperatureConfiguration, QString("Minimum Temperature")));
     m_titles.insert(std::pair<WidgetType, QString>(WidgetType::SimulationOptions, QString("Simulation Options")));
 
     hide_all();

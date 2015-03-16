@@ -2,24 +2,54 @@
 #define ENVIRONMENT_SPATIAL_HASHMAP_H
 
 #include "spatial_hashmap.h"
+#include <math.h>
 
 typedef std::pair<int,int> Range;
+
+class ResourceCell
+{
+public:
+    ResourceCell(Range range) : range(range), value(0), month(0)
+    {
+        increments = (range.second - range.first) / 6.0f;
+    }
+
+    void setMonth(int month)
+    {
+        value = std::min((int) (range.second - (std::abs(6-month) * increments)), range.second);
+    }
+
+    int get()
+    {
+        return get(month);
+    }
+
+    int get(int p_month)
+    {
+        if(p_month != month)
+        {
+            month = p_month;
+            value = std::min((int) (range.second - (std::abs(6-month) * increments)), range.second);
+        }
+        return value;
+    }
+
+protected:
+    float increments;
+    Range range;
+    int month;
+    int value;
+};
 
 /*********************
  * ILLUMINATION CELL *
  *********************/
-class IlluminationCell {
+class IlluminationCell : public ResourceCell {
 public:
-    IlluminationCell();
+    IlluminationCell(Range p_illumination_range);
     ~IlluminationCell();
 
-    int getIllumination(int months_elapsed);
-    float getMaxHeight();
-
-private:
     std::unordered_map<int, float> id_to_height;
-    Range range;
-    int increments;
     float max_height;
 };
 
@@ -36,42 +66,38 @@ struct ResourceUsageRequest{
 };
 typedef std::unordered_map<int, ResourceUsageRequest> RequestsMap;
 typedef std::unordered_map<int, int> GrantsMap;
-struct SoilHumidityCell {
-    int humidity_percentage;
+class SoilHumidityCell : public ResourceCell{
+public:
+    SoilHumidityCell(Range p_humidity_range);
+    ~SoilHumidityCell();
+
     RequestsMap requests;
     GrantsMap grants;
-
-    SoilHumidityCell(int humidity_percentage) : humidity_percentage(humidity_percentage), requests(),grants() {}
 };
 
 /********************
  * TEMPERATURE CELL *
  ********************/
-struct TemperatureCell{
-    int temp;
-
-    TemperatureCell(int temp) : temp(temp) {}
+class TemperatureCell : public ResourceCell{
+public:
+    TemperatureCell(Range temperature_range);
+    ~TemperatureCell();
 };
 
 /*******************************
  * ENVIRONMENT SPATIAL HASHMAP *
  *******************************/
-struct EnvironmentSpatialHashMapCell {
+class EnvironmentSpatialHashMapCell {
+public:
     IlluminationCell * illumination_cell;
     SoilHumidityCell * soil_humidity_cell;
     TemperatureCell * temp_cell;
 
-    EnvironmentSpatialHashMapCell() : illumination_cell(NULL), soil_humidity_cell(NULL), temp_cell(NULL) {}
+    EnvironmentSpatialHashMapCell();
 
-    ~EnvironmentSpatialHashMapCell()
-    {
-        if(illumination_cell)
-            delete illumination_cell;
-        if(soil_humidity_cell)
-            delete soil_humidity_cell;
-        if(temp_cell)
-            delete temp_cell;
-    }
+    ~EnvironmentSpatialHashMapCell();
+
+    void setMonth(int p_month);
 };
 
 class EnvironmentSpatialHashMap : public SpatialHashMap<EnvironmentSpatialHashMapCell>

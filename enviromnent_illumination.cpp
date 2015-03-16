@@ -6,7 +6,7 @@ EnvironmentIllumination::EnvironmentIllumination(EnvironmentSpatialHashMap & map
 {
 }
 
-void EnvironmentIllumination::setIlluminationData(PixelData * p_data)
+void EnvironmentIllumination::setIlluminationData(PixelData * p_data, int variance)
 {
     if(p_data->m_width != m_map.getHorizontalCellCount() ||
             p_data->m_height != m_map.getVerticalCellCount())
@@ -18,8 +18,9 @@ void EnvironmentIllumination::setIlluminationData(PixelData * p_data)
     {
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-//            std::cout << "Illumination: " << p_data->getValue(QPoint(x,y)) << std::endl;
-            m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(p_data->getValue(QPoint(x,y))));
+            int min(p_data->getValue(QPoint(x,y)));
+//            std::cout << "Min illumination: " << min << std::endl;
+            m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(Range(min, min+variance)));
         }
     }
 }
@@ -30,7 +31,7 @@ float EnvironmentIllumination::getMaxHeight(QPoint p_cell_coord)
 }
 
 #define HEIGHT_BUFFER 5 //cm
-int EnvironmentIllumination::getDailyIllumination(QPoint p_center, float p_canopy_width, float p_height)
+int EnvironmentIllumination::getDailyIllumination(int p_month, QPoint p_center, float p_canopy_width, float p_height)
 {
     std::vector<EnvironmentSpatialHashMapCell*> cells(m_map.getCells(p_center, p_canopy_width/2));
 
@@ -41,7 +42,9 @@ int EnvironmentIllumination::getDailyIllumination(QPoint p_center, float p_canop
         IlluminationCell* cell((*it)->illumination_cell);
 
         if(cell->max_height-HEIGHT_BUFFER <= p_height)
-            aggregated_daily_illumination += cell->daily_illumination;
+        {
+            aggregated_daily_illumination += cell->get(p_month);
+        }
     }
 
     return aggregated_daily_illumination/cells.size(); // Return percentage

@@ -11,14 +11,14 @@ class EnvironmentSoilHumidity
 {
 public:
     EnvironmentSoilHumidity(EnvironmentSpatialHashMap & map);
-    void setSoilHumidityData(PixelData * p_data);
+    void setSoilHumidityData(PixelData * p_data, int variance);
     int getHumidityPercentage(QPoint p_center, float p_roots_size, int p_id);
     void setData(QPoint p_center, float p_roots_size, int p_id, int p_minimum_humidity_percentage);
     void remove(QPoint p_center, float p_roots_size, int p_id);
 
+    void refresh_resource_distribution(int month);
+
 private:
-    void refresh_resource_distribution();
-    bool m_refresh_required;
     EnvironmentSpatialHashMap & m_map;
 };
 

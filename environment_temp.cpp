@@ -4,7 +4,7 @@ EnvironmentTemperature::EnvironmentTemperature(EnvironmentSpatialHashMap & map) 
 {
 }
 
-void EnvironmentTemperature::setTemperatureData(PixelData * p_data)
+void EnvironmentTemperature::setTemperatureData(PixelData * p_data, int variance)
 {
     if(p_data->m_width != m_map.getHorizontalCellCount() ||
             p_data->m_height != m_map.getVerticalCellCount())
@@ -16,13 +16,14 @@ void EnvironmentTemperature::setTemperatureData(PixelData * p_data)
     {
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
-            m_map.insertTempCell(QPoint(x,y),new TemperatureCell(p_data->getValue(QPoint(x,y))));
+            int min(p_data->getValue(QPoint(x,y)));
+            m_map.insertTempCell(QPoint(x,y),new TemperatureCell(Range(min, min+variance)));
         }
     }
 }
 
-int EnvironmentTemperature::getTemperature(QPoint p_center)
+int EnvironmentTemperature::getTemperature(int p_month, QPoint p_center)
 {
-    return m_map.getCells(p_center, 0)[0]->temp_cell->temp;
+    return m_map.getCells(p_center, 0)[0]->temp_cell->get(p_month);
 }
 

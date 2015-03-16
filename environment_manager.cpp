@@ -9,9 +9,9 @@ EnvironmentManager::~EnvironmentManager()
 {
 }
 
-int EnvironmentManager::getDailyIllumination(QPoint p_center, float p_canopy_width, float p_height)
+int EnvironmentManager::getDailyIllumination(int p_month, QPoint p_center, float p_canopy_width, float p_height)
 {
-    return m_resource_controllers.illumination.getDailyIllumination(p_center, p_canopy_width, p_height);
+    return m_resource_controllers.illumination.getDailyIllumination(p_month, p_center, p_canopy_width, p_height);
 }
 
 int EnvironmentManager::getSoilHumidityPercentage(QPoint p_center, float p_roots_size, int p_id)
@@ -19,9 +19,9 @@ int EnvironmentManager::getSoilHumidityPercentage(QPoint p_center, float p_roots
     return m_resource_controllers.soil_humidity.getHumidityPercentage(p_center, p_roots_size, p_id);
 }
 
-int EnvironmentManager::getTemperature(QPoint p_center)
+int EnvironmentManager::getTemperature(int p_month, QPoint p_center)
 {
-    return m_resource_controllers.temperature.getTemperature(p_center);
+    return m_resource_controllers.temperature.getTemperature(p_month, p_center);
 }
 
 void EnvironmentManager::remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id)
@@ -49,10 +49,20 @@ void EnvironmentManager::updateEnvironment(QPoint p_center, float p_canopy_width
     m_resource_controllers.soil_humidity.setData(p_center, p_roots_size, p_id, p_minimum_soil_humidity_request);
 }
 
-void EnvironmentManager::setEnvironmentProperties(PixelData * p_illumination_data, PixelData * p_soil_humidity_data,
-                                                  PixelData * p_temperature_data)
+void EnvironmentManager::setEnvironmentProperties(PixelData * p_illumination_data, int p_illumination_variance,
+                                                  PixelData * p_soil_humidity_data, int p_humidity_variance,
+                                                  PixelData * p_temperature_data, int p_temperature_variance)
 {
-    m_resource_controllers.illumination.setIlluminationData(p_illumination_data);
-    m_resource_controllers.soil_humidity.setSoilHumidityData(p_soil_humidity_data);
-    m_resource_controllers.temperature.setTemperatureData(p_temperature_data);
+    m_resource_controllers.illumination.setIlluminationData(p_illumination_data, p_illumination_variance);
+    m_resource_controllers.soil_humidity.setSoilHumidityData(p_soil_humidity_data, p_humidity_variance);
+    m_resource_controllers.temperature.setTemperatureData(p_temperature_data, p_temperature_variance);
+}
+
+void EnvironmentManager::setMonth(int p_month)
+{
+//    for(int x(0); x < m_spatial_hashmap.getHorizontalCellCount(); x++)
+//        for(int y(0); y < m_spatial_hashmap.getVerticalCellCount(); y++)
+//            m_spatial_hashmap.get(QPoint(x,y))->setMonth(p_month);
+
+    m_resource_controllers.soil_humidity.refresh_resource_distribution(p_month);
 }

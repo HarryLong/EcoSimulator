@@ -4,21 +4,65 @@
 /*********************
  * ILLUMINATION CELL *
  *********************/
-IlluminationCell::IlluminationCell() : max_height(.0f), id_to_height(),
-        daily_illumination(p_daily_illumination) {}
+IlluminationCell::IlluminationCell(Range p_illumination_range) :
+    ResourceCell(p_illumination_range), max_height(.0f), id_to_height()
+{
+}
 
 IlluminationCell::~IlluminationCell()
 {
 
+}
 
-    int getIllumination(int months_elapsed);
-    float getMaxHeight();
+/**********************
+ * SOIL HUMIDITY CELL *
+ **********************/
+SoilHumidityCell::SoilHumidityCell(Range p_humidity_range) :
+    ResourceCell(p_humidity_range), requests(), grants()
+{
 
-    std::unordered_map<int, float> id_to_height;
-    Range range;
-    int increments;
-    float max_height;
-};
+}
+
+SoilHumidityCell::~SoilHumidityCell()
+{
+
+}
+
+/********************
+ * TEMPERATURE CELL *
+ ********************/
+TemperatureCell::TemperatureCell(Range temperature_range) :
+    ResourceCell(temperature_range)
+{
+
+}
+
+TemperatureCell::~TemperatureCell()
+{
+
+}
+
+/************************************
+ * ENVIRONMENT SPATIAL HASHMAP CELL *
+ ************************************/
+EnvironmentSpatialHashMapCell::EnvironmentSpatialHashMapCell() : illumination_cell(NULL), soil_humidity_cell(NULL), temp_cell(NULL) {}
+
+EnvironmentSpatialHashMapCell::~EnvironmentSpatialHashMapCell()
+{
+    if(illumination_cell)
+        delete illumination_cell;
+    if(soil_humidity_cell)
+        delete soil_humidity_cell;
+    if(temp_cell)
+        delete temp_cell;
+}
+
+void EnvironmentSpatialHashMapCell::setMonth(int p_month)
+{
+    illumination_cell->setMonth(p_month);
+    soil_humidity_cell->setMonth(p_month);
+    temp_cell->setMonth(p_month);
+}
 
 /*******************************
  * ENVIRONMENT SPATIAL HASHMAP *

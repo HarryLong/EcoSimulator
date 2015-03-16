@@ -80,7 +80,7 @@ class InputWidget : public QWidget
 {
 Q_OBJECT
 public:
-    InputWidget(PixelData * pixel_data, int width, int height, int min, int max, QString label, QWidget *parent = 0);
+    InputWidget(PixelData * pixel_data, int width, int height, int min, int max, QString label, QString unit, QWidget *parent = 0);
 
     ~InputWidget();
 
@@ -91,6 +91,8 @@ public:
     const QImage & toImage() const;
 
     PixelData * getPixelData();
+
+    int getVariance();
 
 private slots:
     void set_cursor_size(int p_size);
@@ -130,10 +132,13 @@ private:
     QSpinBox * m_gradual_max_sb;
     QPushButton * m_generate_gradual_btn;
 
+    QSpinBox * m_variance_sb;
+
     QCursor m_custom_cursor;
     QCursor m_default_cursor;
 
     QString m_label;
+    QString m_unit;
 
     int m_min;
     int m_max;
@@ -150,7 +155,7 @@ class SoilHumidityInputWidget : public InputWidget
 public:
     SoilHumidityInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new PixelData(new SoilHumidityTranslator, width, height),
                                                                                          width, height,
-                                                                                         0,100, "Humidity (%):", parent) {}
+                                                                                         0,100, "Humidity:", "%", parent) {}
 };
 
 /****************
@@ -161,7 +166,7 @@ class IlluminationInputWidget : public InputWidget
 public:
     IlluminationInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new PixelData(new IlluminationTranslator, width, height),
                                                                                          width, height,
-                                                                                         0,24, "Illumination (hours):", parent) {}
+                                                                                         0,24, "Illumination:", "hours", parent) {}
 };
 
 /***************
@@ -172,6 +177,6 @@ class TemperatureInputWidget : public InputWidget
 public:
     TemperatureInputWidget( int width, int height, QWidget * parent = 0 ) : InputWidget(new PixelData(new TemperatureTranslator, width, height),
                                                                                         width, height,
-                                                                                         -50,50, "Temperature (celcius):", parent) {}
+                                                                                         -50,50, "Temperature:", "degrees (C)", parent) {}
 };
 #endif // INPUT_WIDGETS_H

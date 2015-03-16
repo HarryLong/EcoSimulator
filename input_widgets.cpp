@@ -7,10 +7,10 @@
 /*************************
  * ABSTRACT INPUT WIDGET *
  *************************/
-InputWidget::InputWidget(PixelData * pixel_data, int width, int height, int min, int max, QString label, QWidget *parent)
+InputWidget::InputWidget(PixelData * pixel_data, int width, int height, int min, int max, QString label, QString unit, QWidget *parent)
     : QWidget(parent), m_width(width), m_height(height), m_min(min), m_max(max), m_label(label),
       m_drawing(false), m_pixel_data(pixel_data), m_container_label(width, height),
-      m_default_cursor(), m_custom_cursor(), painting(true)
+      m_default_cursor(), m_custom_cursor(), painting(true), m_unit(unit)
 {
     init_ui_elements();
     init_layout();
@@ -57,6 +57,10 @@ void InputWidget::init_ui_elements()
     m_gradual_max_sb->setRange(m_min, m_max);
     m_gradual_max_sb->setValue(m_max);
     m_generate_gradual_btn = new QPushButton("Generate");
+
+    m_variance_sb = new QSpinBox(this);
+    m_variance_sb->setRange(m_min, m_max);
+    m_variance_sb->setValue(0);
 }
 
 void InputWidget::init_signals()
@@ -100,7 +104,9 @@ void InputWidget::init_layout()
 
         h_layout->addWidget(new QLabel(m_label), 0, Qt::AlignLeft);
         h_layout->addWidget(m_sensitivity_sb, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(m_unit), 0, Qt::AlignLeft);
         h_layout->addWidget(m_fill_all_btn, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(""), 1, Qt::AlignLeft);
         main_layout->addLayout(h_layout);
     }
     // controller buttons
@@ -108,9 +114,12 @@ void InputWidget::init_layout()
         QHBoxLayout * h_layout = new QHBoxLayout();
         h_layout->addWidget(new QLabel("Gradual increase from "), 0, Qt::AlignLeft);
         h_layout->addWidget(m_gradual_min_sb, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(m_unit), 0, Qt::AlignLeft);
         h_layout->addWidget(new QLabel(" to "), 0, Qt::AlignLeft);
         h_layout->addWidget(m_gradual_max_sb, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(m_unit), 0, Qt::AlignLeft);
         h_layout->addWidget(m_generate_gradual_btn, 0, Qt::AlignLeft);
+        h_layout->addWidget(new QLabel(""), 1, Qt::AlignLeft);
         main_layout->addLayout(h_layout);
     }
 
@@ -123,6 +132,16 @@ void InputWidget::init_layout()
         main_layout->addLayout(h_layout);
     }
 
+    // The maximum button
+    {
+        QHBoxLayout * h_layout = new QHBoxLayout();
+        h_layout->addWidget(new QLabel(""), 1, Qt::AlignCenter);
+        h_layout->addWidget(new QLabel("Maximum: + "), 0, Qt::AlignCenter);
+        h_layout->addWidget(m_variance_sb, 0, Qt::AlignCenter);
+        h_layout->addWidget(new QLabel(m_unit), 0, Qt::AlignCenter);
+        h_layout->addWidget(new QLabel(""), 1, Qt::AlignCenter);
+        main_layout->addLayout(h_layout);
+    }
     setLayout(main_layout);
     refresh();
 }
@@ -287,6 +306,11 @@ void InputWidget::set_cursor_size(int p_size)
 void InputWidget::refresh()
 {
     m_container_label.setPixmap(QPixmap::fromImage(m_pixel_data->toImage()));
+}
+
+int InputWidget::getVariance()
+{
+    return m_variance_sb->value();
 }
 
 /*******************

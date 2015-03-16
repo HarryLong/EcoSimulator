@@ -17,7 +17,7 @@ SoilHumidityTranslator::~SoilHumidityTranslator()
 QRgb SoilHumidityTranslator::toRGB(int p_value) const
 {
     float blue_intensity(((float)(p_value-MIN_HUMIDITY))/HUMIDITY_RANGE);
-    return qRgb(0, 0, blue_intensity*255);
+    return qRgb(0, 0, blue_intensity*255+1);
 }
 
 int SoilHumidityTranslator::toValue(QRgb p_pixel) const
@@ -43,7 +43,7 @@ QRgb IlluminationTranslator::toRGB(int p_value) const
 {
     float red_green_intensity(((float)(p_value-MIN_ILLUMINATION))/ILLUMINATION_RANGE);
 
-    return qRgb(red_green_intensity*255, red_green_intensity*255, 0);
+    return qRgb(red_green_intensity*255+1, red_green_intensity*255+1, 0);
 }
 
 int IlluminationTranslator::toValue(QRgb p_pixel) const
@@ -70,14 +70,14 @@ QRgb TemperatureTranslator::toRGB(int p_value) const
     float blue_intensity(0);
     if(p_value < 0)
     {
-        blue_intensity = (((float)p_value)/MIN_TEMP);
+        blue_intensity = ((((float)p_value)/MIN_TEMP) * 255) + 1;
     }
     else if (p_value > 0)
     {
-        red_intensity = (((float)p_value)/MAX_TEMP);
+        red_intensity = ((((float)p_value)/MAX_TEMP) * 255) + 1;
     }
 
-    return qRgb(red_intensity*255, 0, blue_intensity*255);
+    return qRgb(red_intensity, 0, blue_intensity);
 }
 
 int TemperatureTranslator::toValue(QRgb p_pixel) const

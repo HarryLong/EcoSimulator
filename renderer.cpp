@@ -13,6 +13,7 @@
 #include "boost/foreach.hpp"
 #include <iostream>
 #include <mutex>
+#include <math.h>
 
 /*****************
  * BASE RENDERER *
@@ -64,7 +65,7 @@ void Renderer::init_layout()
 
 int Renderer::to_screen_space(float p_distance_in_cm)
 {
-    return (p_distance_in_cm * m_screen_space_multiplier);
+    return std::round(p_distance_in_cm * m_screen_space_multiplier);
 }
 
 /**********
@@ -85,11 +86,12 @@ void PlantRenderer::paintEvent(QPaintEvent * event)
     {
         if(m_filters.find(it->name) == m_filters.end())
         {
-            int r ( std::max(1,to_screen_space(it->canopy_radius)) );
+            int diameter ( to_screen_space(2*it->canopy_radius) );
             QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
             painter.setPen( *(it->color) );
             painter.setBrush( *(it->color) );
-            painter.drawEllipse( center, r, r );
+            int r(std::max(1,(int)std::round(diameter/2)));
+            painter.drawEllipse( center, r, r);
         }
     }
     m_render_data.unlock();
@@ -173,7 +175,7 @@ IlluminationRenderer::IlluminationRenderer(const EnvironmentSpatialHashMap & ren
 QRgb IlluminationRenderer::getPixel(QPoint pos)
 {
     IlluminationCell * cell_content(m_render_data.get_const(pos)->illumination_cell);
-    return m_translator->toRGB(cell_content->daily_illumination);
+    return m_translator->toRGB(cell_content->get());
 }
 
 /*****************
@@ -188,7 +190,7 @@ SoilHumidityRenderer::SoilHumidityRenderer(const EnvironmentSpatialHashMap & ren
 QRgb SoilHumidityRenderer::getPixel(QPoint pos)
 {
     SoilHumidityCell * cell_content(m_render_data.get_const(pos)->soil_humidity_cell);
-    return m_translator->toRGB(cell_content->humidity_percentage);
+    return m_translator->toRGB(cell_content->get());
 }
 
 /************************
@@ -203,6 +205,5 @@ TemperatureRenderer::TemperatureRenderer(const EnvironmentSpatialHashMap & rende
 QRgb TemperatureRenderer::getPixel(QPoint pos)
 {
     TemperatureCell * cell_content(m_render_data.get_const(pos)->temp_cell);
-    return m_translator->toRGB(cell_content->temp);
+    return m_translator->toRGB(cell_content->get());
 }
-

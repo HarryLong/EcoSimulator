@@ -79,14 +79,9 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
     /***************
      * TEMPERATURE *
      ***************/
-    int temp_strength(m_strengths.find(ConstrainerType::Temperature)->second);
-    if(temp_strength == MIN_STRENGTH) // need to calculate the strength
-    {
-        m_constrainers.temp_constrainer.setTemperature(p_temp);
-        temp_strength = m_constrainers.temp_constrainer.getStrength();
-        m_strengths.find(ConstrainerType::Temperature)->second = temp_strength;
-    }
-
+    m_constrainers.temp_constrainer.setTemperature(p_temp);
+    int temp_strength = m_constrainers.temp_constrainer.getStrength();
+    m_strengths.find(ConstrainerType::Temperature)->second = temp_strength;
     if(temp_strength < min_strength)
     {
         min_strength = temp_strength;

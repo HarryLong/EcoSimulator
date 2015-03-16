@@ -11,8 +11,8 @@ class EnvironmentTemperature
 {
 public:
     EnvironmentTemperature(EnvironmentSpatialHashMap & map);
-    void setTemperatureData(PixelData * p_data);
-    int getTemperature(QPoint p_center);
+    void setTemperatureData(PixelData * p_data, int variance);
+    int getTemperature(int p_month, QPoint p_center);
 
 private:
     EnvironmentSpatialHashMap & m_map;
