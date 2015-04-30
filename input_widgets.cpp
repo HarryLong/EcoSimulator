@@ -15,6 +15,7 @@ InputWidget::InputWidget(PixelData * pixel_data, int width, int height, int min,
     init_ui_elements();
     init_layout();
     init_signals();
+    set_default_cursor();
 }
 
 InputWidget::~InputWidget()

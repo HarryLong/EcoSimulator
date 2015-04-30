@@ -30,8 +30,7 @@ private:
     void init_layout();
 
     QButtonGroup * m_seeding_button_group;
-    QCheckBox * m_per_plant_seeding_cb;
-    QCheckBox * m_simplified_seeding_cb;
+    QCheckBox * m_seeding_enabled_cb;
     QCheckBox * m_seeding_disabled_cb;
 
     int m_width, m_height;

@@ -43,7 +43,7 @@ IlluminationConstrainer::IlluminationConstrainer(const IlluminationProperties * 
     // Underexposure equation
     if(m_properties.prime_illumination.first > 0)
     {
-        m_underexposure_equation.a = ((float)MAX_STRENGTH) / (m_properties.prime_illumination.first - m_properties.min_illumination);
+        m_underexposure_equation.a = ((float)MAX_STRENGTH*2.0) / (m_properties.prime_illumination.first - m_properties.min_illumination);
         m_underexposure_equation.b = MAX_STRENGTH - (m_underexposure_equation.a * m_properties.prime_illumination.first);
     }
     else
@@ -55,7 +55,7 @@ IlluminationConstrainer::IlluminationConstrainer(const IlluminationProperties * 
     // Overexposure equation
     if(m_properties.prime_illumination.second < 24)
     {
-        m_overexposure_equation.a = (-1.0f*MAX_STRENGTH) / (m_properties.max_illumination - m_properties.prime_illumination.second);
+        m_overexposure_equation.a = (-2.0f*MAX_STRENGTH) / (m_properties.max_illumination - m_properties.prime_illumination.second);
         m_overexposure_equation.b = MAX_STRENGTH - (m_overexposure_equation.a * m_properties.prime_illumination.second);
     }
     else
@@ -104,7 +104,7 @@ SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * 
     // Build the drought equation
     if(m_properties.prime_soil_humidity.first > 0)
     {
-        m_drought_equation.a = ((float)MAX_STRENGTH) / (m_properties.prime_soil_humidity.first - m_properties.min_soil_humidity);
+        m_drought_equation.a = ((float)MAX_STRENGTH*2.0f) / (m_properties.prime_soil_humidity.first - m_properties.min_soil_humidity);
         m_drought_equation.b = MAX_STRENGTH - (m_drought_equation.a * m_properties.prime_soil_humidity.first);
     }
     else
@@ -116,7 +116,7 @@ SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * 
     // Build the flooding equation
     if(m_properties.prime_soil_humidity.second < 100)
     {
-        m_flood_equation.a = (-1.0f*MAX_STRENGTH) / (m_properties.max_soil_humidity - m_properties.prime_soil_humidity.second);
+        m_flood_equation.a = (-2.0f*MAX_STRENGTH) / (m_properties.max_soil_humidity - m_properties.prime_soil_humidity.second);
         m_flood_equation.b = MAX_STRENGTH - ( m_flood_equation.a * m_properties.prime_soil_humidity.second );
     }
     else
@@ -164,11 +164,11 @@ TemperatureConstrainer::TemperatureConstrainer(const TemperatureProperties * p_t
     m_properties(*p_temperature_properties)
 {
     // Build coldness equation
-    m_chill_equation.a = ((float)MAX_STRENGTH) / (m_properties.prime_temp.first-m_properties.min_temp);
+    m_chill_equation.a = ((float)MAX_STRENGTH*2.0f) / (m_properties.prime_temp.first-m_properties.min_temp);
     m_chill_equation.b = MAX_STRENGTH - (m_chill_equation.a * m_properties.prime_temp.first);
 
     // Build the heat equation
-    m_warmth_equation.a = (-1.0f*MAX_STRENGTH) / (m_properties.max_temp - m_properties.prime_temp.second);
+    m_warmth_equation.a = (-2.0f*MAX_STRENGTH) / (m_properties.max_temp - m_properties.prime_temp.second);
     m_warmth_equation.b = MAX_STRENGTH - (m_warmth_equation.a * m_properties.prime_temp.second);
 }
 

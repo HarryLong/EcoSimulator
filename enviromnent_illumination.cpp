@@ -19,7 +19,6 @@ void EnvironmentIllumination::setIlluminationData(PixelData * p_data, int varian
         for(int y = 0; y < m_map.getVerticalCellCount(); y++)
         {
             int min(p_data->getValue(QPoint(x,y)));
-//            std::cout << "Min illumination: " << min << std::endl;
             m_map.insertIlluminationCell(QPoint(x,y),new IlluminationCell(Range(min, min+variance)));
         }
     }

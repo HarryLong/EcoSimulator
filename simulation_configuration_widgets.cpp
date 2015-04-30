@@ -15,16 +15,15 @@
  * SIMULATION CONFIGURATION WIDGET *
  ***********************************/
 SimulationConfigurationWidget::SimulationConfigurationWidget(int width, int height, QWidget * parent) :
-    QWidget(parent), m_per_plant_seeding_cb(new QCheckBox), m_simplified_seeding_cb(new QCheckBox),
+    QWidget(parent), m_seeding_enabled_cb(new QCheckBox),
     m_seeding_disabled_cb(new QCheckBox), m_seeding_button_group(new QButtonGroup)
 {
     setFixedSize(width,height);
 
     // Defaults
-    m_seeding_button_group->addButton(m_per_plant_seeding_cb);
-    m_seeding_button_group->addButton(m_simplified_seeding_cb);
+    m_seeding_button_group->addButton(m_seeding_enabled_cb);
     m_seeding_button_group->addButton(m_seeding_disabled_cb);
-    m_simplified_seeding_cb->setChecked(true);
+    m_seeding_enabled_cb->setChecked(true);
 
     init_layout();
 }
@@ -36,7 +35,7 @@ SimulationConfigurationWidget::~SimulationConfigurationWidget()
 
 SimulationOptions SimulationConfigurationWidget::getSimulationConfiguration()
 {
-    return SimulationOptions(m_simplified_seeding_cb->isChecked(), m_per_plant_seeding_cb->isChecked());
+    return SimulationOptions(m_seeding_enabled_cb->isChecked());
 }
 
 void SimulationConfigurationWidget::init_layout()
@@ -52,18 +51,11 @@ void SimulationConfigurationWidget::init_layout()
         main_layout->addWidget(seeding_title, 0, Qt::AlignLeft|Qt::AlignTop);
 
         // Simplified seeding v1
-        QHBoxLayout * simplified_seeding_layout = new QHBoxLayout();
-        QLabel * simplified_seeding_label  = new QLabel("Simplified seeding: ");
-        simplified_seeding_layout->addWidget(simplified_seeding_label, 1, Qt::AlignLeft|Qt::AlignTop);
-        simplified_seeding_layout->addWidget(m_simplified_seeding_cb,0, Qt::AlignRight|Qt::AlignTop);
-        main_layout->addLayout(simplified_seeding_layout, 0);
-
-        // Per plant seeding
-        QHBoxLayout * per_plant_seeding_layout = new QHBoxLayout();
-        QLabel * per_plant_seeding_label  = new QLabel("Per plant seeding: ");
-        per_plant_seeding_layout->addWidget(per_plant_seeding_label, 1, Qt::AlignLeft|Qt::AlignTop);
-        per_plant_seeding_layout->addWidget(m_per_plant_seeding_cb,0, Qt::AlignRight|Qt::AlignTop);
-        main_layout->addLayout(per_plant_seeding_layout, 0);
+        QHBoxLayout * seeding_layout = new QHBoxLayout();
+        QLabel * seeding_label  = new QLabel("Seeding enabled: ");
+        seeding_layout->addWidget(seeding_label, 1, Qt::AlignLeft|Qt::AlignTop);
+        seeding_layout->addWidget(m_seeding_enabled_cb,0, Qt::AlignRight|Qt::AlignTop);
+        main_layout->addLayout(seeding_layout, 0);
 
         // Seeding disabled
         QHBoxLayout * seeding_disabled_layout = new QHBoxLayout();

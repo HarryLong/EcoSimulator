@@ -105,6 +105,7 @@ class EnvironmentSpatialHashMap : public SpatialHashMap<EnvironmentSpatialHashMa
 public:
     EnvironmentSpatialHashMap();
     ~EnvironmentSpatialHashMap();
+    std::vector<EnvironmentSpatialHashMapCell*> getCells(QPoint p_center, float p_radius);
     void insertIlluminationCell(QPoint point, IlluminationCell * illumination_cell);
     void insertSoilHumidityCell(QPoint point, SoilHumidityCell * illumination_cell);
     void insertTempCell(QPoint point, TemperatureCell * illumination_cell);

@@ -260,8 +260,7 @@ private:
 
     // UI Elements
     QSpinBox* m_max_seeding_distance_sb;
-    QSpinBox* m_seeding_interval_sb;
-    QSpinBox* m_max_seed_count_sb;
+    QSpinBox* m_seed_count_sb;
 };
 
 

@@ -92,20 +92,16 @@ struct TemperatureProperties {
 
 struct SeedingProperties {
     const int max_seed_distance;
-    const int seeding_interval;
-    const int max_seeds;
+    const int seed_count;
 
     SeedingProperties(const SeedingProperties & other) :
         max_seed_distance(other.max_seed_distance),
-        seeding_interval(other.seeding_interval),
-        max_seeds(other.max_seeds){}
+        seed_count(other.seed_count){}
 
     SeedingProperties( int p_max_seed_distance,
-                       int p_seeding_interval,
                        int p_max_seeds):
         max_seed_distance(p_max_seed_distance),
-        seeding_interval(p_seeding_interval),
-        max_seeds(p_max_seeds){}
+        seed_count(p_max_seeds){}
 };
 
 struct SpecieProperties{

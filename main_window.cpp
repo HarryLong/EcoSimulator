@@ -1,12 +1,11 @@
 #include "main_window.h"
-#include "plant_db_editor.h"
 #include <QAction>
 #include <QMenu>
 #include <QMenuBar>
 #include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) :
-    QMainWindow(parent, flags)
+    QMainWindow(parent, flags), m_plant_db_editor(this)
 {
     init_layout();
     init_actions();
@@ -46,8 +45,7 @@ void MainWindow::init_menu()
 
 void MainWindow::launch_plant_db_manager()
 {
-    PlantDBEditor plant_db_editor(this);
-    plant_db_editor.exec();
+    m_plant_db_editor.exec();
 }
 
 int main(int argc, char *argv[])

@@ -50,6 +50,8 @@ public slots:
     void pause();
     void resume();
     void stop();
+    void generateSnapshot();
+    void generateStatisticalSnapshot();
 
 signals:
     void update(void);

@@ -1,5 +1,6 @@
 #include "environment_spatial_hashmap.h"
 #include <QPoint>
+#include "constants.h"
 
 /*********************
  * ILLUMINATION CELL *
@@ -45,7 +46,8 @@ TemperatureCell::~TemperatureCell()
 /************************************
  * ENVIRONMENT SPATIAL HASHMAP CELL *
  ************************************/
-EnvironmentSpatialHashMapCell::EnvironmentSpatialHashMapCell() : illumination_cell(NULL), soil_humidity_cell(NULL), temp_cell(NULL) {}
+EnvironmentSpatialHashMapCell::EnvironmentSpatialHashMapCell() :
+    illumination_cell(NULL), soil_humidity_cell(NULL), temp_cell(NULL) {}
 
 EnvironmentSpatialHashMapCell::~EnvironmentSpatialHashMapCell()
 {
@@ -67,12 +69,20 @@ void EnvironmentSpatialHashMapCell::setMonth(int p_month)
 /*******************************
  * ENVIRONMENT SPATIAL HASHMAP *
  *******************************/
-EnvironmentSpatialHashMap::EnvironmentSpatialHashMap()
+EnvironmentSpatialHashMap::EnvironmentSpatialHashMap() :
+    SpatialHashMap<EnvironmentSpatialHashMapCell>(SPATIAL_HASHMAP_CELL_WIDTH, SPATIAL_HASHMAP_CELL_HEIGHT,
+                                                 std::ceil(((float)AREA_WIDTH_HEIGHT)/SPATIAL_HASHMAP_CELL_WIDTH),
+                                                 std::ceil(((float)AREA_WIDTH_HEIGHT)/SPATIAL_HASHMAP_CELL_HEIGHT))
 {
 }
 
 EnvironmentSpatialHashMap::~EnvironmentSpatialHashMap()
 {
+}
+
+std::vector<EnvironmentSpatialHashMapCell*> EnvironmentSpatialHashMap::getCells(QPoint p_center, float p_radius)
+{
+    return SpatialHashMap<EnvironmentSpatialHashMapCell>::getCells(p_center, p_radius, true);
 }
 
 void EnvironmentSpatialHashMap::insertIlluminationCell(QPoint point, IlluminationCell * illumination_cell)
@@ -90,7 +100,6 @@ void EnvironmentSpatialHashMap::insertSoilHumidityCell(QPoint point, SoilHumidit
 
     get(point)->soil_humidity_cell = soil_humidity_cell;
 }
-
 
 void EnvironmentSpatialHashMap::insertTempCell(QPoint point, TemperatureCell * temp_cell)
 {

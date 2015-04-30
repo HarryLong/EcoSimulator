@@ -1,0 +1,1 @@
+/home/harry/workspaces/qt-workspace/statistical-analysis-tool/analysis_configuration.h

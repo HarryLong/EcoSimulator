@@ -407,23 +407,16 @@ void TemperaturePropertiesWidget::init_layout()
 #define MIN_SEEDING_DISTANCE 1
 #define MAX_SEEDING_DISTANCE 100
 
-#define MIN_SEEDING_INTERVAL 6
-#define MAX_SEEDING_INTERVAL 24
-
 #define MIN_SEEDS 0
-#define MAX_SEEDS 200
+#define MAX_SEEDS 5000
 
 SeedingPropertiesWidget::SeedingPropertiesWidget(QWidget* parent, Qt::WindowFlags f )
 {
     m_max_seeding_distance_sb = new QSpinBox();
     m_max_seeding_distance_sb->setRange(MIN_SEEDING_DISTANCE, MAX_SEEDING_DISTANCE);
 
-    m_seeding_interval_sb = new QSpinBox();
-    m_seeding_interval_sb->setRange(MIN_SEEDING_INTERVAL, MAX_SEEDING_INTERVAL);
-    m_seeding_interval_sb->setSingleStep(6);
-
-    m_max_seed_count_sb = new QSpinBox();
-    m_max_seed_count_sb->setRange(MIN_SEEDS, MAX_SEEDS);
+    m_seed_count_sb = new QSpinBox();
+    m_seed_count_sb->setRange(MIN_SEEDS, MAX_SEEDS);
 
     init_layout();
 }
@@ -436,20 +429,19 @@ SeedingPropertiesWidget::~SeedingPropertiesWidget()
 SeedingProperties* SeedingPropertiesWidget::getProperties()
 {
     return new SeedingProperties(m_max_seeding_distance_sb->value(),
-                                  m_seeding_interval_sb->value(),
-                                  m_max_seed_count_sb->value());
+                                  m_seed_count_sb->value());
 }
 
 void SeedingPropertiesWidget::setProperties(const SeedingProperties * p_properties)
 {
     m_max_seeding_distance_sb->setValue(p_properties->max_seed_distance);
-    m_seeding_interval_sb->setValue(p_properties->seeding_interval);
-    m_max_seed_count_sb->setValue(p_properties->max_seeds);
+    m_seed_count_sb->setValue(p_properties->seed_count);
 }
 
 void SeedingPropertiesWidget::clear()
 {
-
+    m_max_seeding_distance_sb->clear();
+    m_seed_count_sb->clear();
 }
 
 void SeedingPropertiesWidget::init_layout()
@@ -466,19 +458,11 @@ void SeedingPropertiesWidget::init_layout()
         h_layout->addWidget(new QLabel(" Meters"),0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
-    // End of prime
-    {
-        QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Seeding interval: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_seeding_interval_sb,0,Qt::AlignRight);
-        h_layout->addWidget(new QLabel(" months"),0,Qt::AlignRight);
-        main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
-    }
     // Sensitivity
     {
         QHBoxLayout * h_layout = new QHBoxLayout();
-        h_layout->addWidget(new QLabel("Max seed count: "),0,Qt::AlignLeft);
-        h_layout->addWidget(m_max_seed_count_sb,0,Qt::AlignRight);
+        h_layout->addWidget(new QLabel("Annual seed count: "),0,Qt::AlignLeft);
+        h_layout->addWidget(m_seed_count_sb,0,Qt::AlignRight);
         main_layout->addLayout(h_layout,row++,0,1,1,Qt::AlignLeft);
     }
     setLayout(main_layout);

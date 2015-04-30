@@ -142,6 +142,8 @@ SpeciePropertiesListItem::~SpeciePropertiesListItem()
 
 void SpeciePropertiesListItem::setSpecieProperties( const SpecieProperties * specie_properties)
 {
+    if(m_specie_properties)
+        delete m_specie_properties;
     m_specie_properties = specie_properties;
     setText(specie_properties->specie_name);
 }
@@ -176,8 +178,6 @@ PlantDBEditor::PlantDBEditor(QWidget *parent, Qt::WindowFlags f) :
 
 PlantDBEditor::~PlantDBEditor()
 {
-//    for(auto it (m_plant_data.begin()); it != m_plant_data.end(); it++)
-//        delete it->second;
 }
 
 void PlantDBEditor::init_signals()

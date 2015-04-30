@@ -126,7 +126,7 @@ int Plant::getVigor() const
 std::vector<QPoint> Plant::seed()
 {
     // Number of seeds proportianal to strength
-    int seed_count((int) ((((float)m_strength)/MAX_STRENGTH) * m_seeding_properties->max_seeds));
+    int seed_count((int) ((((float)m_strength)/MAX_STRENGTH) * m_seeding_properties->seed_count));
 
     return seed(seed_count);
 }
@@ -148,14 +148,9 @@ std::vector<QPoint> Plant::seed(int seed_count)
     return seeds;
 }
 
-int Plant::getSeedingInterval()
-{
-    return m_seeding_properties->seeding_interval;
-}
-
 PlantStatus Plant::getStatus()
 {
-    if(m_strength < 0 && m_random_id <= (m_strength * -1.f * 10)) // Could die
+    if(m_strength < 0 && m_random_id <= (m_strength * -1.f * 10)) // Die
     {
         switch(m_strength_bottleneck){
         case Illumination:

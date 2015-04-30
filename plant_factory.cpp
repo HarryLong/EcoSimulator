@@ -61,6 +61,12 @@ QPoint PlantFactory::generate_random_position()
     return QPoint(rand()%AREA_WIDTH_HEIGHT, rand()%AREA_WIDTH_HEIGHT);
 }
 
+const SpecieProperties* PlantFactory::getSpecieProperties(int p_specie_id)
+{
+    auto it(m_specie_properties.find(p_specie_id));
+    return it != m_specie_properties.end() ? it->second : NULL;
+}
+
 SpecieToColorMapper::SpecieToColorMapper() : m_specie_id_to_color(), m_color_stack()
 {
     // Initialize the stack

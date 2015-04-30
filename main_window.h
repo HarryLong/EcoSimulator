@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QObject>
 #include "central_widget.h"
+#include "plant_db_editor.h"
 
 class MainWindow : public QMainWindow
 {
@@ -29,6 +30,8 @@ private:
 
     // Menu elements
     QMenu * m_file_menu;
+
+    PlantDBEditor m_plant_db_editor;
 
     CentralWidget * m_central_widget;
 };

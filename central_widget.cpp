@@ -11,7 +11,8 @@
 CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
     QWidget(parent, f),
     m_simulator_manager(),
-    m_render_manager(m_simulator_manager.getPlantRenderingData(), m_simulator_manager.getEnvironmentRenderingData())
+    m_render_manager(m_simulator_manager.getPlantRenderingData(), m_simulator_manager.getEnvironmentRenderingData()),
+    m_start_config_dialog(NULL)
 {
     init_widgets();
     init_layout();
@@ -76,7 +77,20 @@ void CentralWidget::init_layout()
         main_layout->addWidget(renderer,1,0,9,1, Qt::AlignCenter);
 
     main_layout->addWidget(m_overview_widget,1,1,9,1, Qt::AlignCenter);
-    main_layout->addLayout(slider_layout,10,0,1,2, Qt::AlignBottom);
+
+    // Buttons
+    {
+        m_generate_snapshot_btn = new QPushButton("Generate Snapshot");
+        m_generate_statistical_snapshot_btn = new QPushButton("Generate Statistical Snapshot");
+
+        QHBoxLayout * buttons_layout = new QHBoxLayout;
+        buttons_layout->addWidget(m_generate_snapshot_btn);
+        buttons_layout->addWidget(m_generate_statistical_snapshot_btn);
+
+        main_layout->addLayout(buttons_layout,10,0,1,2, Qt::AlignCenter);
+    }
+
+    main_layout->addLayout(slider_layout,11,0,1,2, Qt::AlignBottom);
 
     setLayout(main_layout);
     setWindowTitle("ECOSYSTEM SIMULATOR");
@@ -112,6 +126,10 @@ void CentralWidget::init_signals()
     // The overview widget render filter
     connect(m_overview_widget, SIGNAL(filter(QString)), &m_render_manager, SLOT(filter(QString)));
     connect(m_overview_widget, SIGNAL(unfilter(QString)), &m_render_manager, SLOT(unfilter(QString)));
+
+    // Snapshot generation
+    connect(m_generate_snapshot_btn, SIGNAL(clicked()), &m_simulator_manager, SLOT(generateSnapshot()));
+    connect(m_generate_statistical_snapshot_btn, SIGNAL(clicked()), &m_simulator_manager, SLOT(generateStatisticalSnapshot()));
 }
 
 void CentralWidget::updateRender()

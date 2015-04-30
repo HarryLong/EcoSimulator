@@ -373,8 +373,7 @@ std::map<int, const SeedingProperties*> PlantDB::get_all_seeding_properties()
     {
         int id;
         int max_seeding_distance;
-        int seeding_interval;
-        int max_seed_count;
+        int seed_count;
 
         for(int c (0); c < sqlite3_column_count(statement); c++)
         {
@@ -382,10 +381,8 @@ std::map<int, const SeedingProperties*> PlantDB::get_all_seeding_properties()
                 id = sqlite3_column_int(statement,c);
             else if(c == seeding_properties_table_column_max_seeding_distance.index)
                 max_seeding_distance = sqlite3_column_int(statement,c);
-            else if(c == seeding_properties_table_column_seeding_interval.index)
-                seeding_interval = sqlite3_column_int(statement,c);
-            else if(c == seeding_properties_table_column_max_seed_count.index)
-                max_seed_count = sqlite3_column_int(statement,c);
+            else if(c == seeding_properties_table_column_seed_count.index)
+                seed_count = sqlite3_column_int(statement,c);
             else
             {
                 std::cerr << "Unknown column: " << sqlite3_column_name(statement,c) <<
@@ -394,8 +391,7 @@ std::map<int, const SeedingProperties*> PlantDB::get_all_seeding_properties()
             }
         }
         ret.insert(std::pair<int,const SeedingProperties*>(id, new SeedingProperties(max_seeding_distance,
-                                                                                          seeding_interval,
-                                                                                          max_seed_count)));
+                                                                                          seed_count)));
     }
     // finalise the statement
     sqlite3_finalize(statement);
@@ -618,9 +614,8 @@ void PlantDB::insert_seeding_properties(int id, const SeedingProperties & seedin
     static const std::string sql = "INSERT INTO " + seeding_properties_table_name + " (" +
             column_id.name + "," +
             seeding_properties_table_column_max_seeding_distance.name + "," +
-            seeding_properties_table_column_seeding_interval.name+  "," +
-            seeding_properties_table_column_max_seed_count.name+  ")" +
-            " VALUES ( ?, ?, ?, ?);";
+            seeding_properties_table_column_seed_count.name+  ")" +
+            " VALUES ( ?, ?, ?);";
 
     // Prepare the statement
     exit_on_error(sqlite3_prepare_v2(db, sql.c_str(),-1/*null-terminated*/,&statement,NULL), __LINE__);
@@ -628,8 +623,7 @@ void PlantDB::insert_seeding_properties(int id, const SeedingProperties & seedin
     // Perform binding
     exit_on_error(sqlite3_bind_int(statement, column_id.index+1, id), __LINE__);
     exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_max_seeding_distance.index+1, seeding_properties.max_seed_distance), __LINE__);
-    exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_seeding_interval.index+1, seeding_properties.seeding_interval), __LINE__);
-    exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_max_seed_count.index+1, seeding_properties.max_seeds), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, seeding_properties_table_column_seed_count.index+1, seeding_properties.seed_count), __LINE__);
 
     // Commit
     exit_on_error(sqlite3_step(statement), __LINE__);
@@ -826,8 +820,7 @@ void PlantDB::update_seeding_properties(int id, const SeedingProperties & seedin
 
     static const std::string sql = "UPDATE " + seeding_properties_table_name + " SET " +
             seeding_properties_table_column_max_seeding_distance.name + " = ?," +
-            seeding_properties_table_column_seeding_interval.name +  " = ?," +
-            seeding_properties_table_column_max_seed_count.name +  " = ?" +
+            seeding_properties_table_column_seed_count.name +  " = ?" +
             " WHERE " + column_id.name + " = ?;";
 
     // Prepare the statement
@@ -836,8 +829,7 @@ void PlantDB::update_seeding_properties(int id, const SeedingProperties & seedin
     // Perform binding
     int bind_index (seeding_properties_table_column_max_seeding_distance.index);
     exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.max_seed_distance), __LINE__);
-    exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.seeding_interval), __LINE__);
-    exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.max_seeds), __LINE__);
+    exit_on_error(sqlite3_bind_int(statement, bind_index++, seeding_properties.seed_count), __LINE__);
     exit_on_error(sqlite3_bind_int(statement, bind_index++, id), __LINE__);
 
     // Commit

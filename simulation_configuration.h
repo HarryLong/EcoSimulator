@@ -6,12 +6,10 @@
 #include "input_widgets.h"
 
 struct SimulationOptions{
-    SimulationOptions(bool simplified_seeding_enabled, bool per_plant_seeding_enabled) :
-        simplified_seeding_enabled(simplified_seeding_enabled),
-            per_plant_seeding_enabled(per_plant_seeding_enabled){}
+    SimulationOptions(bool seeding_enabled) :
+            seeding_enabled(seeding_enabled){}
 
-    bool per_plant_seeding_enabled;
-    bool simplified_seeding_enabled;
+    bool seeding_enabled;
 };
 
 struct SimulationConfiguration {

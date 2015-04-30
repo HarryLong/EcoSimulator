@@ -1,5 +1,5 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef CENTRAL_WIDGET_H
+#define CENTRAL_WIDGET_H
 
 #include <QWidget>
 #include <QScopedPointer>
@@ -55,6 +55,8 @@ private:
 
     // UI ELEMENTS
     QSlider * m_time_control_slider;
+    QPushButton * m_generate_snapshot_btn;
+    QPushButton * m_generate_statistical_snapshot_btn;
     QLabel * m_trigger_frequency_lbl;
     QLabel * m_elapsed_time_lbl;
     QComboBox * m_renderers_cb;
@@ -62,4 +64,4 @@ private:
     QPushButton * m_pause_resume_button;
 };
 
-#endif //WINDOW_H
+#endif //CENTRAL_WIDGET_H

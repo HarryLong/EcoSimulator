@@ -51,7 +51,6 @@ public:
     std::vector<QPoint> seed(int seed_count);
     int getVigor() const;
     const QColor * getColor() const;
-    int getSeedingInterval();
 
     PlantStatus getStatus();
     void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp);
@@ -60,6 +59,7 @@ public:
     const QPoint m_center_position;
     const QString m_specie_name;
     const int m_specie_id;
+    const std::shared_ptr<const QColor> m_color;
 private:
     // Managers
     GrowthManager m_growth_manager;
@@ -72,7 +72,6 @@ private:
     Strengths m_strengths;
     ConstrainerType m_strength_bottleneck;
 
-    std::shared_ptr<const QColor> m_color;
     int m_strength;
     int m_random_id; // Random number between 0 and 1000 used for statistical purposes
     int m_age;

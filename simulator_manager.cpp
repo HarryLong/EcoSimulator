@@ -92,6 +92,7 @@ void SimulatorManager::trigger()
 
     m_elapsed_months++;
 
+    m_plant_storage.lock();
 
     std::vector<Plant*> plants(m_plant_storage.getPlants());
     /*
@@ -135,13 +136,6 @@ void SimulatorManager::trigger()
             // Update the environment
             m_environment_mgr.updateEnvironment(p->m_center_position, p->getCanopyWidth(), p->getHeight(),
                                                 p->getRootSize(), p->m_unique_id, p->getMinimumSoilHumidityRequirement());
-
-            // Seeding
-            if(m_simulation_options->per_plant_seeding_enabled && m_elapsed_months % p->getSeedingInterval() % 12 == 6)
-            {
-                for(QPoint position : p->seed())
-                    add_plant(m_plant_factory.generate(p->m_specie_id, position));
-            }
         }
         else
         {
@@ -157,48 +151,46 @@ void SimulatorManager::trigger()
         remove_plant(p);
     }
 
-    if(m_simulation_options->simplified_seeding_enabled && m_elapsed_months % 12 == 6)
+    // Seeding
+    if(m_simulation_options->seeding_enabled && m_elapsed_months % 12 == 6)
     {
         PlantStorageStructure species(m_plant_storage.getSpecies());
-        int total_plant_count(m_plant_storage.getPlantCount());
 
         for(auto specie(species.begin()); specie != species.end(); specie++)
         {
             int specie_id(specie->first);
-            if(specie->second.size() > 0) // Ignore if there are no species
+            int specie_seed_count(m_plant_factory.getSpecieProperties(specie_id)->seeding_properties->seed_count);
+
+            if(specie->second.size() > 0)
             {
-                int specie_seeds(std::max(MIN_SEEDS_PER_SPECIE,(int)((((float)specie->second.size())/total_plant_count) * SIMPLIFIED_SEEDING_SEED_COUNT)));
-                std::vector<int> all_plant_ids;
-                for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
-                    all_plant_ids.push_back(plant->first);
+                std::vector<Plant*> seeding_plants(m_plant_storage.getOnePlantPerCell(specie_id));
 
-                const std::vector<int> all_plants_ids_backup(all_plant_ids);
+                auto plant_it(seeding_plants.begin());
 
-                for(int i = 0; i < specie_seeds; i++)
+                int seed_count(0);
+                while(seed_count++ < specie_seed_count)
                 {
-                    if(all_plant_ids.size() == 0)
-                        all_plant_ids = std::vector<int>(all_plants_ids_backup);
-
-                    int random_index ( rand() % all_plant_ids.size() );
-                    Plant * plant_to_seed(specie->second[all_plant_ids[random_index]]);
-                    QPoint position (plant_to_seed->seed(1).at(0));
+                    Plant * seeding_plant (*plant_it);
+                    QPoint position (seeding_plant->seed(1).at(0));
                     if(position.x() >= 0 && position.x() < AREA_WIDTH_HEIGHT &&
                         position.y() >= 0 && position.y() < AREA_WIDTH_HEIGHT)
                     {
                         add_plant(m_plant_factory.generate(specie_id, position));
                     }
 
-                    all_plant_ids.erase(all_plant_ids.begin()+random_index);
+                    if(++plant_it == seeding_plants.end())
+                        plant_it = seeding_plants.begin();
                 }
             }
             else
             {
-                for(int i(0); i < MIN_SEEDS_PER_SPECIE; i++)
+                for(int i(0); i < specie_seed_count; i++)
                     add_plant(m_plant_factory.generate(specie_id));
             }
         }
     }
 
+    m_plant_storage.unlock();
     refresh_rendering_data();
 
     emit update();
@@ -253,4 +245,14 @@ void SimulatorManager::refresh_rendering_data()
     }
 
     m_plant_rendering_data.unlock();
+}
+
+void SimulatorManager::generateSnapshot()
+{
+    new std::thread(&PlantStorage::generateSnapshot, &m_plant_storage);
+}
+
+void SimulatorManager::generateStatisticalSnapshot()
+{
+    new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage);
 }

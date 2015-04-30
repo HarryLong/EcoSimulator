@@ -81,13 +81,12 @@ static const std::string soil_humidity_properties_table_creation_code =
  **********************************/
 static const std::string seeding_properties_table_name = "seeding_properties";
 static const Column seeding_properties_table_column_max_seeding_distance = Column(1,"max_seeding_distance");
-static const Column seeding_properties_table_column_max_seed_count = Column(3,"annual_seed_count");
+static const Column seeding_properties_table_column_seed_count = Column(2,"annual_seed_count");
 static const std::string seeding_properties_table_creation_code =
                 "CREATE TABLE IF NOT EXISTS " + seeding_properties_table_name + "( " +
                                                        column_id.name + " INTEGER REFERENCES " + specie_table_name + "(" + column_id.name + ") ON DELETE CASCADE," +
                                                        seeding_properties_table_column_max_seeding_distance.name + " INT NOT NULL," +
-                                                       seeding_properties_table_column_seeding_interval.name + " INT NOT NULL, " +
-                                                       seeding_properties_table_column_max_seed_count.name + " INT NOT NULL);";
+                                                       seeding_properties_table_column_seed_count.name + " INT NOT NULL);";
 
 /***************************
  * AGEING PROPERTIES TABLE *

@@ -33,6 +33,7 @@ public:
     Plant* generate(int p_specie_id, QPoint p_center_coord);
     Plant* generate(int p_specie_id);
     std::vector<QString> getAllSpecieNames();
+    const SpecieProperties* getSpecieProperties(int p_specie_id);
 
 private:
     int get_specie_id(const QString & name);

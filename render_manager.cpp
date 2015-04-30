@@ -1,5 +1,5 @@
 #include "render_manager.h"
-
+#include "constants.h"
 
 RendererManager::RendererManager(const PlantRenderDataContainer & plant_render_data, const EnvironmentSpatialHashMap & environment_render_data) :
     m_active_renderer(s_plant_renderer), m_time_manager()

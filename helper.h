@@ -7,8 +7,6 @@
 
 class Plant;
 
-using namespace std;
-
 #include <QPoint>
 
 enum PlantStatus{
@@ -55,18 +53,18 @@ public:
     }
 };
 
-namespace std {
-  template <>
-  struct hash<QPoint>
-  {
-    std::size_t operator()(const QPoint & t) const
-    {
-      std::size_t val = 0 ;
-      boost::hash_combine(val,t.x());
-      boost::hash_combine(val,t.y());
-      return val;
-    }
-  };
-}
+//namespace std {
+//  template <>
+//  struct hash<QPoint>
+//  {
+//    std::size_t operator()(const QPoint & t) const
+//    {
+//      std::size_t val = 0 ;
+//      boost::hash_combine(val,t.x());
+//      boost::hash_combine(val,t.y());
+//      return val;
+//    }
+//  };
+//}
 
 #endif // HELPER_H
