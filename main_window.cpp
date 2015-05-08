@@ -48,6 +48,12 @@ void MainWindow::launch_plant_db_manager()
     m_plant_db_editor.exec();
 }
 
+void MainWindow::closeEvent ( QCloseEvent * event )
+{
+    std::cout << "Stopping..." << std::endl;
+    m_central_widget->stop_simulation();
+}
+
 int main(int argc, char *argv[])
 {
     std::cout << "Starting..." << std::endl;
@@ -57,10 +63,4 @@ int main(int argc, char *argv[])
     w.showMaximized();
 
     return app.exec();
-}
-
-void MainWindow::closeEvent ( QCloseEvent * event )
-{
-    std::cout << "Stopping..." << std::endl;
-    m_central_widget->stop_simulation();
 }

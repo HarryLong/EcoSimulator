@@ -1,11 +1,14 @@
 #include "environment_temp.h"
 
-EnvironmentTemperature::EnvironmentTemperature(EnvironmentSpatialHashMap & map) : m_map(map)
+EnvironmentTemperature::EnvironmentTemperature(EnvironmentSpatialHashMap & map) : m_map(map), m_range(0,0)
 {
 }
 
 void EnvironmentTemperature::setTemperatureData(PixelData * p_data, int variance)
 {
+    int min (p_data->getValue(QPoint(0,0)));
+    m_range = std::pair<int,int>(min, min+variance);
+
     if(p_data->m_width != m_map.getHorizontalCellCount() ||
             p_data->m_height != m_map.getVerticalCellCount())
     {
@@ -27,3 +30,7 @@ int EnvironmentTemperature::getTemperature(int p_month, QPoint p_center)
     return m_map.getCells(p_center, 0)[0]->temp_cell->get(p_month);
 }
 
+std::pair<int,int> EnvironmentTemperature::getRange()
+{
+    return m_range;
+}

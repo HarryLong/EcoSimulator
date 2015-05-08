@@ -1,12 +1,15 @@
 #include "environment_soil_humidity.h"
 #include "math.h"
 
-EnvironmentSoilHumidity::EnvironmentSoilHumidity(EnvironmentSpatialHashMap & map) : m_map(map)
+EnvironmentSoilHumidity::EnvironmentSoilHumidity(EnvironmentSpatialHashMap & map) : m_map(map), m_range(0,0)
 {
 }
 
 void EnvironmentSoilHumidity::setSoilHumidityData(PixelData * p_data, int variance)
 {
+    int min (p_data->getValue(QPoint(0,0)));
+    m_range = std::pair<int,int>(min, min+variance);
+
     if(p_data->m_width != m_map.getHorizontalCellCount() ||
             p_data->m_height != m_map.getVerticalCellCount())
     {
@@ -139,4 +142,9 @@ void EnvironmentSoilHumidity::refresh_resource_distribution(int month)
             }
         }
     }
+}
+
+std::pair<int,int> EnvironmentSoilHumidity::getRange()
+{
+    return m_range;
 }

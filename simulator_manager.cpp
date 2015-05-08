@@ -6,6 +6,7 @@
 
 #include "debuger.h"
 #include <mutex>
+#include "utils.h"
 
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 
@@ -154,14 +155,14 @@ void SimulatorManager::trigger()
     // Seeding
     if(m_simulation_options->seeding_enabled && m_elapsed_months % 12 == 6)
     {
-        PlantStorageStructure species(m_plant_storage.getSpecies());
+        PlantStorageStructure species(m_plant_storage.getPlantsBySpecies());
 
         for(auto specie(species.begin()); specie != species.end(); specie++)
         {
             int specie_id(specie->first);
             int specie_seed_count(m_plant_factory.getSpecieProperties(specie_id)->seeding_properties->seed_count);
 
-            if(specie->second.size() > 0)
+            if(specie->second.size() > 0) // Use existing plants to seed
             {
                 std::vector<Plant*> seeding_plants(m_plant_storage.getOnePlantPerCell(specie_id));
 
@@ -182,9 +183,24 @@ void SimulatorManager::trigger()
                         plant_it = seeding_plants.begin();
                 }
             }
-            else
+            else // spawn new plants
             {
-                for(int i(0); i < specie_seed_count; i++)
+                int n_planted(0);
+                const SpecieProperties * specie_properties (m_plant_factory.getSpecieProperties(specie_id));
+                if(specie_properties->illumination_properties->min_illumination == 0 && m_elapsed_months > 240)
+                {
+                    // shade loving - spawn half at existing plant locations (shaded)
+                    std::vector<Plant*> plants (m_plant_storage.getPlants());
+                    for(; n_planted < specie_seed_count/2; n_planted++)
+                    {
+                        // Select a random plant
+                        Plant * random_plant(*(plants.begin() + (rand()%plants.size())));
+                        QPoint location(RandomUtils::getRandomPointInCircle(random_plant->m_center_position,
+                                                                            std::max(1.0f,random_plant->getCanopyWidth()/2.f)));
+                        add_plant(m_plant_factory.generate(specie_id, location));
+                    }
+                }
+                for(; n_planted < specie_seed_count; n_planted++)
                     add_plant(m_plant_factory.generate(specie_id));
             }
         }
@@ -254,5 +270,6 @@ void SimulatorManager::generateSnapshot()
 
 void SimulatorManager::generateStatisticalSnapshot()
 {
-    new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage);
+    new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidityRange(), m_environment_mgr.getIlluminationRange(),
+                    m_environment_mgr.getTemperatureRange(), m_elapsed_months);
 }

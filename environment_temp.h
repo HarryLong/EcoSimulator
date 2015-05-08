@@ -13,8 +13,10 @@ public:
     EnvironmentTemperature(EnvironmentSpatialHashMap & map);
     void setTemperatureData(PixelData * p_data, int variance);
     int getTemperature(int p_month, QPoint p_center);
+    std::pair<int,int> getRange();
 
 private:
+    std::pair<int,int> m_range;
     EnvironmentSpatialHashMap & m_map;
 };
 

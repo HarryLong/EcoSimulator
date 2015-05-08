@@ -2,12 +2,15 @@
 #include <QImage>
 #include <math.h>
 
-EnvironmentIllumination::EnvironmentIllumination(EnvironmentSpatialHashMap & map) : m_map(map)
+EnvironmentIllumination::EnvironmentIllumination(EnvironmentSpatialHashMap & map) : m_map(map), m_range(0,0)
 {
 }
 
 void EnvironmentIllumination::setIlluminationData(PixelData * p_data, int variance)
 {
+    int min (p_data->getValue(QPoint(0,0)));
+    m_range = std::pair<int,int>(min, min+variance);
+
     if(p_data->m_width != m_map.getHorizontalCellCount() ||
             p_data->m_height != m_map.getVerticalCellCount())
     {
@@ -92,4 +95,9 @@ void EnvironmentIllumination::remove(QPoint p_center, float p_canopy_width, int 
             cell->max_height = max_height;
         }
     }
+}
+
+std::pair<int,int> EnvironmentIllumination::getRange()
+{
+    return m_range;
 }

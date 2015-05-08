@@ -23,6 +23,10 @@ public:
     int getSoilHumidityPercentage(QPoint p_center, float p_roots_size, int p_id);
     int getTemperature(int p_month, QPoint p_center);
 
+    std::pair<int,int> getTemperatureRange();
+    std::pair<int,int> getHumidityRange();
+    std::pair<int,int> getIlluminationRange();
+
     void remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id);
     void reset();
 

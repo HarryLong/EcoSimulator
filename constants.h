@@ -7,12 +7,12 @@
 #define TIME_SLIDER_DEFAULT 2000 // 1000ms
 #define TIME_SLIDER_MIN 0 // 5000 ms
 
-#define AREA_WIDTH_HEIGHT 5000 //10000 // Centimeters ==> [50m x 50m]
+#define AREA_WIDTH_HEIGHT 10000 //10000 // Centimeters ==> [50m x 50m]
 #define RENDER_WINDOW_WIDTH_HEIGHT 700 // Pixels
 #define OVERVIEW_WIDGET_WINDOW_WIDTH_HEIGHT 700 // Pixels
 
-#define SPATIAL_HASHMAP_CELL_WIDTH 30 // Centimeters
-#define SPATIAL_HASHMAP_CELL_HEIGHT 30 // Centimeters
+#define SPATIAL_HASHMAP_CELL_WIDTH 25 // Centimeters
+#define SPATIAL_HASHMAP_CELL_HEIGHT 25 // Centimeters
 
 #define MIN_STRENGTH -100
 #define MAX_STRENGTH 100
@@ -27,6 +27,6 @@
  ****************************/
 //#define SEED_PROPAGATION_RADIUS 50
 
-#define PI 3.14159f
+//#define PI 3.14159f
 
 #endif //CONSTANTS_H

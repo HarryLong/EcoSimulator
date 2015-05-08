@@ -64,3 +64,18 @@ void EnvironmentManager::setMonth(int p_month)
 {
     m_resource_controllers.soil_humidity.refresh_resource_distribution(p_month);
 }
+
+std::pair<int,int> EnvironmentManager::getTemperatureRange()
+{
+    return m_resource_controllers.temperature.getRange();
+}
+
+std::pair<int,int> EnvironmentManager::getIlluminationRange()
+{
+    return m_resource_controllers.illumination.getRange();
+}
+
+std::pair<int,int> EnvironmentManager::getHumidityRange()
+{
+    return m_resource_controllers.soil_humidity.getRange();
+}

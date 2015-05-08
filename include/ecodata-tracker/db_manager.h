@@ -1,0 +1,1 @@
+/home/harry/workspaces/qt-workspace/ecodata_tracker/db_manager.h

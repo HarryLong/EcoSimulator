@@ -23,10 +23,6 @@ void PlantDB::init()
     char *error_msg = 0;
     sqlite3 * db (open_db());
 
-    // Create tables if they don't exists
-    exit_on_error ( sqlite3_open(db_name.c_str(), &db), __LINE__, "" );
-    std::cout << "Database created succesfully" << std::endl;
-
     // Specie Table
     int rc (sqlite3_exec(db, specie_table_creation_code.c_str(), NULL, 0, &error_msg));
     exit_on_error ( rc, __LINE__, error_msg );
@@ -165,6 +161,9 @@ std::map<int,QString> PlantDB::get_all_species()
         specie_id_to_name.insert(std::pair<int,QString>(id, QString(plant_name)));
     }
 
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
+
     return specie_id_to_name;
 }
 
@@ -206,6 +205,9 @@ std::map<int, const AgeingProperties*> PlantDB::get_all_ageing_properties()
         ret.insert(std::pair<int,const AgeingProperties*>(id, new AgeingProperties(start_of_decline,
                                                                         max_age)));
     }
+
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 
     return ret;
 }
@@ -252,6 +254,8 @@ std::map<int, const GrowthProperties*> PlantDB::get_all_growth_properties()
                                                                         max_root_size,
                                                                         max_canopy_width)));
     }
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 
     return ret;
 }
@@ -300,7 +304,8 @@ std::map<int, const IlluminationProperties*> PlantDB::get_all_illumination_prope
         ret.insert(std::pair<int,const IlluminationProperties*>(id, new IlluminationProperties(Range(prime_start, prime_end),
                                                                                                min, max)));
     }
-
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
     return ret;
 }
 
@@ -351,6 +356,7 @@ std::map<int, const SoilHumidityProperties*> PlantDB::get_all_soil_humidity_prop
 
     // finalise the statement
     sqlite3_finalize(statement);
+    sqlite3_close(db);
 
     return ret;
 }
@@ -395,6 +401,7 @@ std::map<int, const SeedingProperties*> PlantDB::get_all_seeding_properties()
     }
     // finalise the statement
     sqlite3_finalize(statement);
+    sqlite3_close(db);
 
     return ret;
 }
@@ -445,6 +452,7 @@ std::map<int, const TemperatureProperties*> PlantDB::get_all_temp_properties()
     }
     // finalise the statement
     sqlite3_finalize(statement);
+    sqlite3_close(db);
 
     return ret;
 }
@@ -477,7 +485,8 @@ int PlantDB::insert_plant(QString name)
     int inserted_row_id(sqlite3_last_insert_rowid(db));
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__, error_msg);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 
     return inserted_row_id;
 }
@@ -507,7 +516,8 @@ void PlantDB::insert_ageing_properties(int id, const AgeingProperties & ageing_p
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::insert_growth_properties(int id, const GrowthProperties & growth_properties)
@@ -536,7 +546,8 @@ void PlantDB::insert_growth_properties(int id, const GrowthProperties & growth_p
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::insert_illumination_properties(int id, const IlluminationProperties & illumination_properties)
@@ -571,7 +582,8 @@ void PlantDB::insert_illumination_properties(int id, const IlluminationPropertie
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::insert_soil_humidity_properties(int id, const SoilHumidityProperties & soil_humidity_properties)
@@ -602,7 +614,8 @@ void PlantDB::insert_soil_humidity_properties(int id, const SoilHumidityProperti
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::insert_seeding_properties(int id, const SeedingProperties & seeding_properties)
@@ -629,7 +642,8 @@ void PlantDB::insert_seeding_properties(int id, const SeedingProperties & seedin
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::insert_temp_properties(int id, const TemperatureProperties & temp_properties)
@@ -660,7 +674,8 @@ void PlantDB::insert_temp_properties(int id, const TemperatureProperties & temp_
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 /*********************
@@ -691,7 +706,8 @@ void PlantDB::update_specie_name(int id, QString name)
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__, error_msg);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::update_ageing_properties(int id, const AgeingProperties & ageing_properties)
@@ -718,7 +734,8 @@ void PlantDB::update_ageing_properties(int id, const AgeingProperties & ageing_p
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::update_growth_properties(int id, const GrowthProperties & growth_properties)
@@ -747,7 +764,8 @@ void PlantDB::update_growth_properties(int id, const GrowthProperties & growth_p
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::update_illumination_properties(int id, const IlluminationProperties & illumination_properties)
@@ -778,7 +796,8 @@ void PlantDB::update_illumination_properties(int id, const IlluminationPropertie
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::update_soil_humidity_properties(int id, const SoilHumidityProperties & soil_humidity_properties)
@@ -809,7 +828,8 @@ void PlantDB::update_soil_humidity_properties(int id, const SoilHumidityProperti
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::update_seeding_properties(int id, const SeedingProperties & seeding_properties)
@@ -836,7 +856,8 @@ void PlantDB::update_seeding_properties(int id, const SeedingProperties & seedin
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 void PlantDB::update_temp_properties(int id, const TemperatureProperties & temp_properties)
@@ -867,7 +888,8 @@ void PlantDB::update_temp_properties(int id, const TemperatureProperties & temp_
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 /*********************
@@ -892,7 +914,8 @@ void PlantDB::delete_plant(int id)
     exit_on_error(sqlite3_step(statement), __LINE__);
 
     // finalise the statement
-    exit_on_error(sqlite3_finalize(statement), __LINE__);
+    sqlite3_finalize(statement);
+    sqlite3_close(db);
 }
 
 /******************

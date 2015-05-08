@@ -7,6 +7,7 @@
 
 #include "debuger.h"
 #include <math.h>
+#include "utils.h"
 
 Plant::Plant(const SpecieProperties * p_specie_properties, std::shared_ptr<const QColor> p_color, QPoint p_center_coord, long p_unique_id, int p_random_id) :
     m_center_position(p_center_coord), m_unique_id(p_unique_id), m_random_id(p_random_id), m_strengths(), m_age(0), m_strength(MAX_STRENGTH),
@@ -134,16 +135,10 @@ std::vector<QPoint> Plant::seed()
 std::vector<QPoint> Plant::seed(int seed_count)
 {
     std::vector<QPoint> seeds;
+    int max_distance(m_seeding_properties->max_seed_distance * 100); // To centimeters
 
     for( int i(0); i < seed_count; i++ )
-    {
-        int distance(rand() % (m_seeding_properties->max_seed_distance * 100)); // To centimeters
-        float angle_in_radians((((float)rand())/RAND_MAX) * 2 * PI);
-
-        QPoint diff(cos(angle_in_radians) * distance, sin(angle_in_radians) * distance);
-        QPoint position(QPoint(m_center_position + diff));
-        seeds.push_back(position);
-    }
+        seeds.push_back(RandomUtils::getRandomPointInCircle(m_center_position, max_distance));
 
     return seeds;
 }

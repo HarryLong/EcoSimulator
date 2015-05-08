@@ -33,11 +33,12 @@ public:
     int getPlantCount();
     std::vector<Plant*> getPlants();
     std::vector<Plant*> getSortedPlants(SortingCriteria p_sorting_criteria);
-    const PlantStorageStructure& getSpecies();
+    const PlantStorageStructure& getPlantsBySpecies();
     void generateSnapshot();
-    void generateStatisticalSnapshot();
+    void generateStatisticalSnapshot(std::pair<int,int> humidity, std::pair<int,int> illumination, std::pair<int,int> temperature, int elapsed_months);
     bool isPlantAtLocation(QPoint p_location);
     std::vector<Plant*> getOnePlantPerCell(int p_specie_id);
+    const std::set<int> getSpecieIds();
 
     void lock();
     void unlock();
