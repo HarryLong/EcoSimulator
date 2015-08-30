@@ -7,15 +7,44 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/Qt/5.3/gcc_64/")
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
-find_package(sqlite3 REQUIRED)
+find_package(OpenMP REQUIRED)
+#find_package(PlantDB REQUIRED)
+
+set(LIBS ${LIBS} ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} PlantDB)
+set(INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/spatial_hashmap/" ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
+
+#"${CMAKE_SOURCE_DIR}/include/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/include/ecodata-tracker/"
+#StatsAnalysisisTool EcoDataTracker
 
 set(CMAKE_AUTOMOC ON)
 
+#SET(DB_SRC_FILES db/plant_db db/plant_db_editor db/plant_db_editor_widgets db/plant_properties)
+SET(RESOURCES_SRC_FILES resources/environment_manager resources/environment_illumination resources/environment_soil_humidity resources/environment_temp)
+SET(GUI_SRC_FILES gui/main_window)
+SET(WIDGETS_SRC_FILES gui/widgets/simulation_configuration_widget gui/widgets/plant_configuration_widget
+gui/widgets/overview_widget gui/widgets/central_widget)
+SET(DIALOGS_SRC_FILES gui/dialogs/start_config_dialog gui/dialogs/monthly_edit_dlg gui/dialogs/monthly_temp_edit_dlg gui/dialogs/monthly_illumination_edit_dlg
+gui/dialogs/monthly_humidity_edit_dlg)
+SET(RENDERING_SRC_FILES gui/rendering/renderer gui/rendering/render_manager gui/rendering/resource_visual_converters)
+SET(DATA_HOLDERS_SRC_FILES data_holders/environment_spatial_hashmap
+data_holders/plant_rendering_data data_holders/plant_rendering_data_container)
+set(SIMULATOR_CORE_SRC_FILES simulator/core/simulation_configuration simulator/core/simulator_manager)
+set(SIMULATOR_PLANTS_SRC_FILES simulator/plants/plant_factory simulator/plants/plants_storage simulator/plants/plant simulator/plants/growth_manager simulator/plants/constrainers)
+SET(MATH_SRC_FILES math/linear_equation math/dice_roller)
+SET(UTILS_SRC_FILES utils/utils utils/time_manager utils/debuger)
+
 link_directories("${CMAKE_SOURCE_DIR}/lib/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/lib/ecodata-tracker/")
-include_directories("${CMAKE_SOURCE_DIR}/include/spatial_hashmap/" "${CMAKE_SOURCE_DIR}/include/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/include/ecodata-tracker/")
+include_directories(${INCLUDE_DIRECTORIES})
+
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${OpenMP_CXX_FLAGS} -O2 -g -DGL_DEBUG -std=c++11 -Wno-write-strings")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OpenMP_CXX_FLAGS} -O2 -std=c++11 -Wno-write-strings")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${OpenMP_CXX_FLAGS} -O0 -cd ../g -DGL_DEBUG -std=c++11 -Wno-write-strings")
+
+#SET(CMAKE_BUILD_TYPE RELEASE)
+SET(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCC_GL_DEBUG_ -DDEBUG_ON -Wall -g -std=c++11 -Wno-reorder -Wno-unused-variable") #DEBUG
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_ON -O3 -Wall -std=c++11 -Wno-reorder -Wno-unused-variable") #DEBUG
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_ON -O3 -Wall -std=c++11 -Wno-reorder -Wno-unused-variable") #DEBUG
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pg -std=c++11 -pthread -Wno-reorder") # profiling
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11 -pthread -Wno-reorder") # base
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -std=c++11 -pthread -Wno-reorder") #debug
@@ -23,6 +52,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_ON -O3 -Wall -std=c++11 -Wno-reo
 #SET(CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE} "-O2")
 #SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG} "-O0 -g")
 
-add_executable(EcoSim utils environment_temp simulation_configuration time_manager main_window constants simulator_manager helper plant_factory plant growth_manager dice_roller plants_storage renderer overview_widget debuger render_manager environment_manager enviromnent_illumination constrainers plant_properties environment_soil_humidity start_config_dialog simulation_configuration_widgets input_widgets plant_db plant_db_editor central_widget properties_editor_widgets environment_spatial_hashmap pixel_data_translator)
-target_link_libraries(EcoSim StatsAnalysisisTool EcoDataTracker Qt5::Widgets Qt5::Core Qt5::Gui sqlite3)
+add_executable(EcoSim main
+${DB_SRC_FILES}
+${RESOURCES_SRC_FILES}
+${WIDGETS_SRC_FILES}
+${GUI_SRC_FILES}
+${DATA_HOLDERS_SRC_FILES}
+${DIALOGS_SRC_FILES}
+${RENDERING_SRC_FILES}
+${SIMULATOR_CORE_SRC_FILES}
+${SIMULATOR_PLANTS_SRC_FILES}
+${MATH_SRC_FILES}
+${UTILS_SRC_FILES})
+
+target_link_libraries(EcoSim ${LIBS})
 # Use the Widgets module from Qt 5.
+
+#INSTALL EXECUTABLE
+install(TARGETS EcoSim
+        RUNTIME DESTINATION bin
+        CONFIGURATIONS Release)
