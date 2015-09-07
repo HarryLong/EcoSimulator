@@ -48,12 +48,6 @@ void PlantStorage::add(Plant * p_plant)
     LocationCell * cell(m_location_plant_accessor.getCell(p_plant->m_center_position, true));
     if(cell->species.find(p_plant->m_specie_id) == cell->species.end())
         cell->species.emplace(p_plant->m_specie_id, QHash<QPoint,Plant*>());
-
-    if(cell->species[p_plant->m_specie_id].contains(QPoint(p_plant->m_center_position.x(), p_plant->m_center_position.y())))
-    {
-        qCritical() << "Already a plant at this position yo";
-    }
-
     cell->species[p_plant->m_specie_id].insert(QPoint(p_plant->m_center_position.x(), p_plant->m_center_position.y()), p_plant);
 
     m_plant_count++;

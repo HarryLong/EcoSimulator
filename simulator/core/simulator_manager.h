@@ -2,12 +2,15 @@
 #define SIMULATOR_MANAGER_H
 
 #include "../../utils/time_manager.h"
-#include "../../data_holders/plant_rendering_data_container.h"
 #include "../plants/plant_factory.h"
 #include "../plants/plants_storage.h"
 #include "../../resources/environment_manager.h"
 #include "../plants/plant.h"
 #include "simulation_configuration.h"
+
+#ifdef GUI_MODE
+#include "../../data_holders/plant_rendering_data_container.h"
+#endif
 
 #include <QObject>
 #include <vector>
@@ -27,6 +30,9 @@ public:
 
     SimulatorManager();
     ~SimulatorManager();
+
+    static void PerformSimulation(SimulationConfiguration simulation_config);
+
     int getElapsedMonths() { return m_elapsed_months; }
 
     void setMonthlyTriggerFrequency(int p_frequency);
@@ -35,8 +41,10 @@ public:
 
     State getState() { return m_state; }
 
+#ifdef GUI_MODE
     const PlantRenderDataContainer & getPlantRenderingData();
     const EnvironmentSpatialHashMap & getEnvironmentRenderingData();
+#endif
 
     static const int _AREA_WIDTH_HEIGHT = 10000; //10000 // Centimeters ==> [50m x 50m]
 
@@ -55,14 +63,18 @@ signals:
 
 private:
     void remove_plant(Plant * p);
-    void refresh_rendering_data();
     void add_plant(Plant * p_plant);
 
     EnvironmentManager m_environment_mgr;
 
     TimeManager m_time_keeper;
 
+#ifdef GUI_MODE
+    void refresh_rendering_data();
     PlantRenderDataContainer m_plant_rendering_data;
+#endif
+
+    SimulationConfiguration m_configuration;
 
     PlantStorage m_plant_storage;
 

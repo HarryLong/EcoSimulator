@@ -15,7 +15,7 @@ SimulatorManager::SimulatorManager() : m_time_keeper(),
     m_plant_storage(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_environment_mgr(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_plant_factory(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
-    m_elapsed_months(0), m_state(Stopped), m_plant_rendering_data()
+    m_elapsed_months(0), m_state(Stopped)
 {
     m_time_keeper.addListener(this);
 }
@@ -23,6 +23,12 @@ SimulatorManager::SimulatorManager() : m_time_keeper(),
 SimulatorManager::~SimulatorManager()
 {
 
+}
+
+void SimulatorManager::PerformSimulation(SimulationConfiguration simulation_config)
+{
+    SimulatorManager simulator;
+    simulator.start(simulation_config);
 }
 
 void SimulatorManager::add_plant(Plant * p_plant)
@@ -44,6 +50,7 @@ void SimulatorManager::remove_plant(Plant * p)
 
 void SimulatorManager::start( SimulationConfiguration configuration)
 {
+    m_configuration = configuration;
     m_environment_mgr.setEnvironmentProperties(configuration.m_slope,
                                                configuration.m_humidity,
                                                configuration.m_illumination,
@@ -85,15 +92,14 @@ void SimulatorManager::stop()
 
     std::this_thread::sleep_for(std::chrono::milliseconds(250)); // Wait a delay to ensure all data processing has stopped from the previous trigger
 
-//    m_environment_mgr.reset();
+#ifdef GUI_MODE
     m_plant_rendering_data.lock();
     m_plant_rendering_data.clear();
     m_plant_rendering_data.unlock();
+#endif
 
     m_plant_storage.clear();
     m_elapsed_months = 0;
-
-    emit updated(1);// In order to remove on screen elements
 }
 
 void SimulatorManager::trigger()
@@ -102,6 +108,9 @@ void SimulatorManager::trigger()
         return;
 
     m_elapsed_months++;
+
+    if(m_configuration.m_duration != -1 && m_elapsed_months >= m_configuration.m_duration)
+        stop();
 
     m_plant_storage.lock();
 
@@ -179,9 +188,6 @@ void SimulatorManager::trigger()
             {
                 std::vector<Plant*> seeding_plants(m_plant_storage.getOnePlantPerCell(specie_id));
 
-                qCritical() << "Plant of specie: " << specie->second.size();
-                qCritical() << "Seeding plants of specie count: " << seeding_plants.size();
-
                 auto plant_it(seeding_plants.begin());
 
                 int seed_count(0);
@@ -223,11 +229,14 @@ void SimulatorManager::trigger()
     }
 
     m_plant_storage.unlock();
-    refresh_rendering_data();
 
+#ifdef GUI_MODE
+    refresh_rendering_data();
+#endif
     emit updated(month);
 }
 
+#ifdef GUI_MODE
 const PlantRenderDataContainer& SimulatorManager::getPlantRenderingData()
 {
     return m_plant_rendering_data;
@@ -237,6 +246,7 @@ const EnvironmentSpatialHashMap & SimulatorManager::getEnvironmentRenderingData(
 {
     return m_environment_mgr.getRenderingData();
 }
+#endif
 
 void SimulatorManager::setMonthlyTriggerFrequency(int p_frequency)
 {
@@ -265,6 +275,7 @@ QString SimulatorManager::plant_status_to_string(Plant::PlantStatus status)
     }
 }
 
+#ifdef GUI_MODE
 void SimulatorManager::refresh_rendering_data()
 {
     m_plant_rendering_data.lock();
@@ -278,6 +289,7 @@ void SimulatorManager::refresh_rendering_data()
 
     m_plant_rendering_data.unlock();
 }
+#endif
 
 void SimulatorManager::generateSnapshot()
 {
