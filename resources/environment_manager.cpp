@@ -24,7 +24,7 @@ int EnvironmentManager::getSoilHumidity(QPoint p_center, float p_roots_size, int
 
 int EnvironmentManager::getTemperature()
 {
-    return m_temperature.at(m_month-1);
+    return m_temperatures.at(m_month-1);
 }
 
 void EnvironmentManager::remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id)
@@ -59,33 +59,29 @@ void EnvironmentManager::setEnvironmentProperties( float slope, std::vector<int>
 {
     m_environment_spatial_hashmap.resetAllCells();
 
-    m_humidity = humidity;
-    m_illumination = illumination;
-    m_temperature = temperature;
+    m_humidities = humidity;
+    m_illuminations = illumination;
+    m_temperatures = temperature;
 }
 
 void EnvironmentManager::setMonth(int p_month)
 {
     m_month = p_month;
-    m_environment_spatial_hashmap.setAvailableResources(m_illumination.at(p_month-1), m_humidity.at(p_month-1), m_temperature.at(p_month-1));
+    m_environment_spatial_hashmap.setAvailableResources(m_illuminations.at(p_month-1), m_humidities.at(p_month-1), m_temperatures.at(p_month-1));
 }
 
-//void EnvironmentManager::setMonth(int p_month)
-//{
-//    m_resource_controllers.soil_humidity.refresh_resource_distribution(p_month);
-//}
+std::vector<int> EnvironmentManager::getHumidities() const
+{
+    return m_humidities;
+}
 
-//std::pair<int,int> EnvironmentManager::getTemperatureRange()
-//{
-//    return m_resource_controllers.temperature.getRange();
-//}
+std::vector<int> EnvironmentManager::getIlluminations() const
+{
+    return m_illuminations;
+}
 
-//std::pair<int,int> EnvironmentManager::getIlluminationRange()
-//{
-//    return m_resource_controllers.illumination.getRange();
-//}
+std::vector<int> EnvironmentManager::getTemperatures() const
+{
+    return m_temperatures;
+}
 
-//std::pair<int,int> EnvironmentManager::getHumidityRange()
-//{
-//    return m_resource_controllers.soil_humidity.getRange();
-//}

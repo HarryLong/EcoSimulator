@@ -10,7 +10,7 @@ find_package(Qt5Gui REQUIRED)
 find_package(OpenMP REQUIRED)
 #find_package(PlantDB REQUIRED)
 
-set(LIBS ${LIBS} ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} PlantDB)
+set(LIBS ${LIBS} ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} PlantDB RadialDistributionAnalyser EcoDataTracker)
 set(INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/spatial_hashmap/" ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
 
 #"${CMAKE_SOURCE_DIR}/include/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/include/ecodata-tracker/"

@@ -298,6 +298,6 @@ void SimulatorManager::generateSnapshot()
 
 void SimulatorManager::generateStatisticalSnapshot()
 {
-//    new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidityRange(), m_environment_mgr.getIlluminationRange(),
-//                    m_environment_mgr.getTemperatureRange(), m_elapsed_months);
+    new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
+                    m_environment_mgr.getTemperatures(), m_elapsed_months);
 }

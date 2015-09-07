@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <mutex>
 
-//#include "analyzer.h"
+#include <radialDistribution/analyser/analysis_configuration.h>
 #include "spatial_hashmap.h"
 #include <QPoint>
 #include <QHash>
@@ -37,7 +37,7 @@ public:
     std::vector<Plant*> getSortedPlants(SortingCriteria p_sorting_criteria);
     const PlantStorageStructure& getPlantsBySpecies();
     void generateSnapshot();
-    void generateStatisticalSnapshot(std::pair<int,int> humidity, std::pair<int,int> illumination, std::pair<int,int> temperature, int elapsed_months);
+    void generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months);
     bool isPlantAtLocation(QPoint p_location);
     std::vector<Plant*> getOnePlantPerCell(int p_specie_id);
     const std::set<int> getSpecieIds();
@@ -54,7 +54,7 @@ private:
     int m_plant_count;
     int m_area_width, m_area_height;
 
-//    AnalysisConfiguration m_statistical_analyzer_config;
+    AnalysisConfiguration m_statistical_analyzer_config;
 };
 
 #endif //PLANT_STORAGE_H

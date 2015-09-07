@@ -29,6 +29,10 @@ public:
 
     void updateEnvironment(QPoint p_center, float p_canopy_width, float p_height, float p_roots_size, int p_id, int p_minimum_soil_humidity_request);
 
+    std::vector<int> getHumidities() const;
+    std::vector<int> getIlluminations() const;
+    std::vector<int> getTemperatures() const;
+
     const EnvironmentSpatialHashMap & getRenderingData();
     void setEnvironmentProperties( float slope, std::vector<int> humidity, std::vector<int> illumination, std::vector<int> temperature );
 private:
@@ -36,9 +40,9 @@ private:
     ResourceControllers m_resource_controllers;
 
     int m_month;
-    std::vector<int> m_humidity;
-    std::vector<int> m_illumination;
-    std::vector<int> m_temperature;
+    std::vector<int> m_humidities;
+    std::vector<int> m_illuminations;
+    std::vector<int> m_temperatures;
 };
 
 #endif // ENVIRONMENT_MANAGER_H

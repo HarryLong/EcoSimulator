@@ -1,7 +1,8 @@
 #include "plants_storage.h"
 #include "plant.h"
-//#include "tracker.h"
-//#include "analysis_point.h"
+#include <ecotracker/tracker.h>
+#include <radialDistribution/analysis_point.h>
+#include <radialDistribution/analyser/analyzer.h>
 
 #include <iostream>
 #include <algorithm>
@@ -21,7 +22,7 @@ uint qHash (const QPoint & key)
 PlantStorage::PlantStorage(int area_width, int area_height) : m_plants(), m_plant_count(0),
   m_location_plant_accessor(LOCATION_STORAGE_CELL_SIZE, LOCATION_STORAGE_CELL_SIZE, std::ceil(((float)area_width)/LOCATION_STORAGE_CELL_SIZE),
                             std::ceil(((float)area_height)/LOCATION_STORAGE_CELL_SIZE)),
-//  m_statistical_analyzer_config(0, 500, 20, area_width, area_width),
+  m_statistical_analyzer_config(0, 500, 20, area_width, area_width),
   m_area_width(area_width), m_area_height(area_height)
 {
 
@@ -234,49 +235,49 @@ void PlantStorage::generateSnapshot()
     unlock();
 }
 
-void PlantStorage::generateStatisticalSnapshot( std::pair<int,int> humidity, std::pair<int,int> illumination, std::pair<int,int> temperature,
-                                                int elapsed_months)
+void PlantStorage::generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months)
 {
-//    QTemporaryDir tmp_dir;
-//    if(tmp_dir.isValid())
-//    {
-//        std::map<float,int> avg_height_to_specie_id;
-//        // Create analysis points
-//        std::map<int, std::vector<AnalysisPoint*>> specie_analysis_points;
-//        lock();
-//        for(auto specie(m_plants.begin()); specie != m_plants.end(); specie++)
-//        {
-//            int specie_id(specie->first);
-//            float avg_height = 0;
-//            std::vector<AnalysisPoint*> analysis_points;
-//            for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
-//            {
-//                Plant * p = plant->second;
-//                avg_height += p->getHeight();
-//                analysis_points.push_back(new AnalysisPoint(specie_id, p->m_center_position, std::max(1.0f,p->getCanopyWidth()/2.0f)));
-//            }
-//            avg_height /= specie->second.size();
-//            avg_height_to_specie_id.insert(std::pair<float,int>(avg_height, specie_id));
-//            specie_analysis_points.insert(std::pair<int, std::vector<AnalysisPoint*>>(specie_id, analysis_points));
-//        }
-//        unlock();
+    QTemporaryDir tmp_dir;
+    if(tmp_dir.isValid())
+    {
+        std::map<float,int> avg_height_to_specie_id;
+        // Create analysis points
+        std::map<int, std::vector<AnalysisPoint*>> specie_analysis_points;
+        lock();
+        for(auto specie(m_plants.begin()); specie != m_plants.end(); specie++)
+        {
+            int specie_id(specie->first);
+            float avg_height = 0;
+            std::vector<AnalysisPoint*> analysis_points;
+            for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
+            {
+                Plant * p = plant->second;
+                avg_height += p->getHeight();
+                analysis_points.push_back(new AnalysisPoint(specie_id, p->m_center_position, std::max(1.0f,p->getCanopyWidth()/2.0f)));
+            }
+            avg_height /= specie->second.size();
+            avg_height_to_specie_id.emplace(avg_height, specie_id);
+            specie_analysis_points.emplace(specie_id, analysis_points);
+        }
+        unlock();
 
-//        std::vector<int> priority_sorted_category_ids;
-//        for(auto it(avg_height_to_specie_id.rbegin()); it != avg_height_to_specie_id.rend(); it++)
-//        {
-//            std::cout << it->first << " > ";
-//            priority_sorted_category_ids.push_back(it->second);
-//        }
-//        m_statistical_analyzer_config.setPrioritySortedCategoryIds(priority_sorted_category_ids);
+        /**********************
+         * PREPARE CATEGORIES *
+         **********************/
+        std::vector<int> priority_sorted_category_ids;
+        for(auto it(avg_height_to_specie_id.rbegin()); it != avg_height_to_specie_id.rend(); it++)
+            priority_sorted_category_ids.push_back(it->second);
 
-//        Analyzer::analyze(tmp_dir.path(), specie_analysis_points, m_statistical_analyzer_config);
+        m_statistical_analyzer_config.setPrioritySortedCategoryIds(priority_sorted_category_ids);
 
-//        Tracker::setNewData(humidity, illumination, temperature, elapsed_months, getSpecieIds(), tmp_dir);
-//    }
-//    else
-//    {
-//        std::cerr << "Failed to create temporary directory..." << std::endl;
-//    }
+        Analyzer::analyze(tmp_dir.path(), specie_analysis_points, m_statistical_analyzer_config);
+
+        Tracker::addEntry(humidities, illuminations, temperatures, elapsed_months, getSpecieIds(), tmp_dir);
+    }
+    else
+    {
+        qCritical() << "Failed to create temporary directory for statistical snapshot...";
+    }
 }
 
 const std::set<int> PlantStorage::getSpecieIds()
