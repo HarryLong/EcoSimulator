@@ -19,22 +19,6 @@ enum ConstrainerType{
 
 typedef std::map<ConstrainerType, float> Strengths;
 
-struct Constrainers{
-    AgeConstrainer age_constrainer;
-    IlluminationConstrainer illumination_constrainer;
-    SoilHumidityConstrainer soil_humidity_constrainer;
-    TemperatureConstrainer temp_constrainer;
-
-    Constrainers( AgeConstrainer age_constrainer,
-                  IlluminationConstrainer illumination_constrainer,
-                  SoilHumidityConstrainer soil_humidity_constrainer,
-                  TemperatureConstrainer temp_constrainer):
-        age_constrainer(age_constrainer),
-        illumination_constrainer(illumination_constrainer),
-        soil_humidity_constrainer(soil_humidity_constrainer),
-        temp_constrainer(temp_constrainer){}
-};
-
 class Plant {
 public:
     enum PlantStatus{
@@ -48,8 +32,10 @@ public:
         DeathByHeat
     };
 
-    Plant(const SpecieProperties * m_specie_properties, std::shared_ptr<const QColor> p_color, QPoint p_center_coord, long p_unique_id, int p_random_id);
+    Plant(SpecieProperties m_specie_properties, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id);
     ~Plant();
+
+//    Plant & operator=(const Plant& other);
 
     void newMonth();
 
@@ -60,25 +46,25 @@ public:
     std::vector<QPoint> seed();
     std::vector<QPoint> seed(int seed_count);
     int getVigor() const;
-    const QColor * getColor() const;
+    QColor getColor() const;
 
     PlantStatus getStatus();
     void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp);
 
-    const long m_unique_id;
-    const QPoint m_center_position;
-    const QString m_specie_name;
-    const int m_specie_id;
-    const std::shared_ptr<const QColor> m_color;
+    long m_unique_id;
+    QPoint m_center_position;
+    QString m_specie_name;
+    int m_specie_id;
+    const QColor m_color;
 
 private:
     // Managers
     GrowthManager m_growth_manager;
 
-    const SeedingProperties * m_seeding_properties;
+    const SeedingProperties m_seeding_properties;
 
     // Constrainers
-    Constrainers m_constrainers;
+    ConstrainersWrapper m_constrainers;
 
     Strengths m_strengths;
     ConstrainerType m_strength_bottleneck;

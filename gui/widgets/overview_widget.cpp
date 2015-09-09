@@ -50,12 +50,12 @@ void OverViewWidget::cell_changed(int row, int column)
     }
 }
 
-void OverViewWidget::addPlant(QString specie_name, const QColor * color)
+void OverViewWidget::addPlant(QString specie_name, QColor color)
 {
     if(m_data.find(specie_name) == m_data.end())
     {
         int row_id (rowCount());
-        m_data.insert(std::pair<QString, SpecieRow>(specie_name, SpecieRow(row_id)));
+        m_data.emplace(specie_name, SpecieRow(row_id));
         insertRow(row_id);
 
         // Specie column
@@ -69,7 +69,7 @@ void OverViewWidget::addPlant(QString specie_name, const QColor * color)
 
         // Color column
         setItem(row_id, ColorColumn,  generate_read_only_cell());
-        item(row_id, ColorColumn)->setBackgroundColor(QColor(*color));
+        item(row_id, ColorColumn)->setBackgroundColor(color);
     }
     m_data.find(specie_name)->second.occurence_count++;
     refresh(specie_name);
@@ -121,8 +121,6 @@ void OverViewWidget::refresh(QString specie_name)
 void OverViewWidget::reset()
 {
     m_data.clear();
-    while (rowCount() > 0)
-        removeRow(0);
 }
 
 QTableWidgetItem * OverViewWidget::generate_read_only_cell(QString p_cell_content)

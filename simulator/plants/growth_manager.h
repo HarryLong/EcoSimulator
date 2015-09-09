@@ -9,7 +9,8 @@
 class GrowthManager
 {
 public:
-    GrowthManager(const GrowthProperties * p_growth_properties, const AgeingProperties* p_ageing_properties);
+    GrowthManager(const GrowthProperties & p_growth_properties, const AgeingProperties & p_ageing_properties);
+    ~GrowthManager();
 
     float getHeight() const;
     float getCanopyWidth() const;

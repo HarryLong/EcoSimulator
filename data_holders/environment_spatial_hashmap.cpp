@@ -8,7 +8,7 @@
  * ILLUMINATION CELL *
  *********************/
 int IlluminationCell::_total_available_illumination = 0;
-IlluminationCell::IlluminationCell()
+IlluminationCell::IlluminationCell() : id_to_height()
 {
     reset();
 }
@@ -41,11 +41,13 @@ int IlluminationCell::getIllumination(int p_id, int p_height)
     return 0;
 }
 
+#include <QDebug>
 void IlluminationCell::refresh()
 {
-    for(auto it(id_to_height.begin()); it != id_to_height.end(); it++)
+    int i(0);
+    for(auto it(id_to_height.begin()); it != id_to_height.end(); it++, i++)
     {
-        if(it->second > m_max_height)
+        if(i == 0 || it->second > m_max_height)
         {
             m_max_height_id = it->first;
             m_max_height = it->second;
@@ -59,7 +61,7 @@ void IlluminationCell::remove(int p_id)
     reset();
 }
 
-int IlluminationCell::getRenderingIllumination()
+int IlluminationCell::getRenderingIllumination() const
 {
     return (id_to_height.size() > 0 ? 0 : IlluminationCell::_total_available_illumination);
 }
@@ -180,7 +182,7 @@ void SoilHumidityCell::refresh()
     m_refresh_required = false;
 }
 
-int SoilHumidityCell::getRenderingHumidity()
+int SoilHumidityCell::getRenderingHumidity() const
 {
     return (m_grants.size() > 0 ? 0 : SoilHumidityCell::_total_available_humidity);
 }
@@ -199,7 +201,7 @@ TemperatureCell::~TemperatureCell()
 
 }
 
-int TemperatureCell::getTemperature()
+int TemperatureCell::getTemperature() const
 {
     return _temperature;
 }
@@ -208,17 +210,17 @@ int TemperatureCell::getTemperature()
  * ENVIRONMENT SPATIAL HASHMAP CELL *
  ************************************/
 EnvironmentSpatialHashMapCell::EnvironmentSpatialHashMapCell() :
-    illumination_cell(NULL), soil_humidity_cell(NULL)
+    illumination_cell(), soil_humidity_cell(), temp_cell()
 {
 
 }
 
 EnvironmentSpatialHashMapCell::~EnvironmentSpatialHashMapCell()
 {
-    if(illumination_cell)
-        delete illumination_cell;
-    if(soil_humidity_cell)
-        delete soil_humidity_cell;
+//    if(illumination_cell)
+//        delete illumination_cell;
+//    if(soil_humidity_cell)
+//        delete soil_humidity_cell;
 }
 
 /*******************************
@@ -229,17 +231,17 @@ EnvironmentSpatialHashMap::EnvironmentSpatialHashMap(int area_width, int area_he
                                                  std::ceil(((float)area_width)/SPATIAL_HASHMAP_CELL_WIDTH),
                                                  std::ceil(((float)area_height)/SPATIAL_HASHMAP_CELL_HEIGHT))
 {
-    for(int x = 0; x < getHorizontalCellCount(); x++)
-    {
-        for(int y = 0; y < getVerticalCellCount(); y++)
-        {
-            init_cell(QPoint(x,y));
-            EnvironmentSpatialHashMapCell * cell = get(QPoint(x,y));
-            cell->soil_humidity_cell = new SoilHumidityCell;
-            cell->illumination_cell = new IlluminationCell;
-            cell->temp_cell = new TemperatureCell;
-        }
-    }
+//    for(int x = 0; x < getHorizontalCellCount(); x++)
+//    {
+//        for(int y = 0; y < getVerticalCellCount(); y++)
+//        {
+//            init_cell(QPoint(x,y));
+//            EnvironmentSpatialHashMapCell * cell = get(QPoint(x,y));
+//            cell->soil_humidity_cell = new SoilHumidityCell;
+//            cell->illumination_cell = new IlluminationCell;
+//            cell->temp_cell = new TemperatureCell;
+//        }
+//    }
 }
 
 EnvironmentSpatialHashMap::~EnvironmentSpatialHashMap()
@@ -247,9 +249,9 @@ EnvironmentSpatialHashMap::~EnvironmentSpatialHashMap()
 
 }
 
-std::vector<EnvironmentSpatialHashMapCell*> EnvironmentSpatialHashMap::getCells(QPoint p_center, float p_radius)
+std::vector<QPoint> EnvironmentSpatialHashMap::getPoints(QPoint p_center, float p_radius)
 {
-    return SpatialHashMap<EnvironmentSpatialHashMapCell>::getCells(p_center, p_radius, true);
+    return SpatialHashMap<EnvironmentSpatialHashMapCell>::getPoints(p_center, p_radius, true);
 }
 
 void EnvironmentSpatialHashMap::setAvailableResources(int p_available_illumination, int p_available_humidity, int p_temperature)
@@ -266,9 +268,9 @@ void EnvironmentSpatialHashMap::resetAllCells()
     {
         for(int y = 0; y < getVerticalCellCount(); y++)
         {
-            EnvironmentSpatialHashMapCell * cell = get(QPoint(x,y));
-            cell->soil_humidity_cell->reset();
-            cell->illumination_cell->reset();
+            EnvironmentSpatialHashMapCell & cell ( this->operator [](QPoint(x,y) ));
+            cell.soil_humidity_cell.reset();
+            cell.illumination_cell.reset();
         }
     }
 }

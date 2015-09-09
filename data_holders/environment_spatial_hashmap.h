@@ -1,7 +1,7 @@
 #ifndef ENVIRONMENT_SPATIAL_HASHMAP_H
 #define ENVIRONMENT_SPATIAL_HASHMAP_H
 
-#include "spatial_hashmap.h"
+#include "SpatialHashmap/spatial_hashmap.h"
 #include <math.h>
 
 /*********************
@@ -15,13 +15,13 @@ public:
     void reset();
     int getIllumination(int p_id, int p_height);
     void remove(int p_id);
-    int getRenderingIllumination();
+    int getRenderingIllumination() const;
 
     static int _total_available_illumination;
 
 private:
     void refresh();
-    std::unordered_map<int, float> id_to_height;
+    std::map<int, float> id_to_height;
     float m_max_height;
     int m_max_height_id;
 };
@@ -37,7 +37,7 @@ struct ResourceUsageRequest{
     ResourceUsageRequest(int p_requested_amount, float p_size, int p_requestee_id) :
         requested_amount(p_requested_amount), size(p_size), requestee_id(p_requestee_id) {}
 };
-typedef std::unordered_map<int, ResourceUsageRequest> RequestsMap;
+typedef std::map<int, ResourceUsageRequest> RequestsMap;
 typedef std::map<int, int> GrantsMap;
 class SoilHumidityCell{
 public:
@@ -48,7 +48,7 @@ public:
     void remove(int p_id);
     void update(int p_id, float p_roots_size,int p_minimum_humidity);
 
-    int getRenderingHumidity();
+    int getRenderingHumidity() const;
     static int _total_available_humidity;
 
 private:
@@ -67,7 +67,7 @@ public:
     TemperatureCell();
     ~TemperatureCell();
 
-    int getTemperature();
+    int getTemperature() const;
 
     static int _temperature;
 };
@@ -77,9 +77,9 @@ public:
  *******************************/
 class EnvironmentSpatialHashMapCell {
 public:
-    IlluminationCell * illumination_cell;
-    SoilHumidityCell * soil_humidity_cell;
-    TemperatureCell * temp_cell;
+    IlluminationCell illumination_cell;
+    SoilHumidityCell soil_humidity_cell;
+    TemperatureCell temp_cell;
 
     EnvironmentSpatialHashMapCell();
     ~EnvironmentSpatialHashMapCell();
@@ -90,7 +90,7 @@ class EnvironmentSpatialHashMap : public SpatialHashMap<EnvironmentSpatialHashMa
 public:
     EnvironmentSpatialHashMap(int area_width, int area_height);
     ~EnvironmentSpatialHashMap();
-    std::vector<EnvironmentSpatialHashMapCell*> getCells(QPoint p_center, float p_radius);
+    std::vector<QPoint> getPoints(QPoint p_center, float p_radius);
     void setAvailableResources(int p_available_illumination, int p_available_humidity, int p_temperature );
     void resetAllCells();
 };

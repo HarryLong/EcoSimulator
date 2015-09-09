@@ -46,7 +46,7 @@ public:
     const EnvironmentSpatialHashMap & getEnvironmentRenderingData();
 #endif
 
-    static const int _AREA_WIDTH_HEIGHT = 10000; //10000 // Centimeters ==> [50m x 50m]
+    static const int _AREA_WIDTH_HEIGHT;//10000; //10000 // Centimeters ==> [50m x 50m]
 
 public slots:
     void start(SimulationConfiguration configuration);
@@ -58,12 +58,12 @@ public slots:
 
 signals:
     void updated(int);
-    void newPlant(QString name,const QColor * color);
+    void newPlant(QString name, QColor color);
     void removedPlant(QString name, QString cause_of_death);
 
 private:
-    void remove_plant(Plant * p);
-    void add_plant(Plant * p_plant);
+    void remove_plant(Plant p);
+    void add_plant(Plant p_plant);
 
     EnvironmentManager m_environment_mgr;
 

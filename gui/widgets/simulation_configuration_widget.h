@@ -21,6 +21,7 @@ public:
     ~SimulationConfigurationWidget();
     bool seedingEnabled();
 //    SimulationOptions getSimulationConfiguration();
+    void reset();
 
 private:
     void init_layout();

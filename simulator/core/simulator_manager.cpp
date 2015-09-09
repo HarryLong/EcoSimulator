@@ -10,7 +10,7 @@
 #include <QDebug>
 
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
-
+const int SimulatorManager::_AREA_WIDTH_HEIGHT = 10000;
 SimulatorManager::SimulatorManager() : m_time_keeper(),
     m_plant_storage(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_environment_mgr(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
@@ -31,19 +31,19 @@ void SimulatorManager::PerformSimulation(SimulationConfiguration simulation_conf
     simulator.start(simulation_config);
 }
 
-void SimulatorManager::add_plant(Plant * p_plant)
+void SimulatorManager::add_plant(Plant p_plant)
 {
-    if(!m_plant_storage.isPlantAtLocation(p_plant->m_center_position))
+    if(!m_plant_storage.isPlantAtLocation(p_plant.m_center_position))
     {
         m_plant_storage.add(p_plant);
-        m_environment_mgr.updateEnvironment(p_plant->m_center_position, p_plant->getCanopyWidth(), p_plant->getHeight(), p_plant->getRootSize(),
-                                            p_plant->m_unique_id, p_plant->getMinimumSoilHumidityRequirement()); // Update resources in environment
+        m_environment_mgr.updateEnvironment(p_plant.m_center_position, p_plant.getCanopyWidth(), p_plant.getHeight(), p_plant.getRootSize(),
+                                            p_plant.m_unique_id, p_plant.getMinimumSoilHumidityRequirement()); // Update resources in environment
 
-        emit newPlant(p_plant->m_specie_name, p_plant->getColor());
+        emit newPlant(p_plant.m_specie_name, p_plant.getColor());
     }
 }
 
-void SimulatorManager::remove_plant(Plant * p)
+void SimulatorManager::remove_plant(Plant p)
 {
     m_plant_storage.remove(p);
 }
@@ -64,7 +64,6 @@ void SimulatorManager::start( SimulationConfiguration configuration)
             add_plant(m_plant_factory.generate(specie_it->first));
         }
     }
-
     m_state = Running;
     m_stopping.store(false);
     m_time_keeper.start();
@@ -114,33 +113,34 @@ void SimulatorManager::trigger()
 
     m_plant_storage.lock();
 
-    std::vector<Plant*> plants(m_plant_storage.getPlants());
-    /*
-     * ITERATION # 1:
-     * - Based on environmental factors calculates the strength of each plant
-     * - Checks the status of the plant and acts accordingly (dies or grows)
-     */
+    std::vector<Plant> plants(m_plant_storage.getPlants());
+//    /*
+//     * ITERATION # 1:
+//     * - Based on environmental factors calculates the strength of each plant
+//     * - Checks the status of the plant and acts accordingly (dies or grows)
+//     */
     int month((m_elapsed_months%12) + 1);
+
     m_environment_mgr.setMonth(month);
 
 #pragma omp parallel for
     for(int i = 0; i < plants.size(); i++)
     {
-        Plant * p = plants.at(i);
-        // Shade
-        int daily_illumination(m_environment_mgr.getDailyIllumination(p->m_center_position, p->m_unique_id, p->getCanopyWidth(), p->getHeight()));
+        Plant p (plants.at(i));
+        //Shade
+        int daily_illumination(m_environment_mgr.getDailyIllumination(p.m_center_position, p.m_unique_id, p.getCanopyWidth(), p.getHeight()));
 
-        // Humidity
-        int soil_humidity(m_environment_mgr.getSoilHumidity(p->m_center_position, p->getRootSize(), p->m_unique_id));
+        //Humidity
+        int soil_humidity(m_environment_mgr.getSoilHumidity(p.m_center_position, p.getRootSize(), p.m_unique_id));
 
-        // Temperature [This is static but refetched each time in case it gets dynamic]
+        //Temperature [This is static but refetched each time in case it gets dynamic]
         int temp(m_environment_mgr.getTemperature());
 
-        p->calculateStrength(daily_illumination, soil_humidity, temp);
+        p.calculateStrength(daily_illumination, soil_humidity, temp);
     }
 
     // Check plant status
-    std::vector<Plant *> plants_to_remove;
+    std::vector<Plant> plants_to_remove;
 
     /*
      * ITERATION # 1:
@@ -150,26 +150,26 @@ void SimulatorManager::trigger()
      */
     for(int i = 0; i < plants.size(); i++)
     {
-        Plant * p = plants.at(i);
-        Plant::PlantStatus status (p->getStatus());
+        Plant p ( plants.at(i) );
+        Plant::PlantStatus status (p.getStatus());
         if(status == Plant::PlantStatus::Alive)
         {
-            p->newMonth();
+            p.newMonth();
 
             // Update the environment
-            m_environment_mgr.updateEnvironment(p->m_center_position, p->getCanopyWidth(), p->getHeight(),
-                                                p->getRootSize(), p->m_unique_id, p->getMinimumSoilHumidityRequirement());
+            m_environment_mgr.updateEnvironment(p.m_center_position, p.getCanopyWidth(), p.getHeight(),
+                                                p.getRootSize(), p.m_unique_id, p.getMinimumSoilHumidityRequirement());
         }
         else
         {
             plants_to_remove.push_back(p);
-            m_environment_mgr.remove(p->m_center_position, p->getCanopyWidth(), p->getRootSize(), p->m_unique_id);
-            emit removedPlant(p->m_specie_name, plant_status_to_string(status));
+            m_environment_mgr.remove(p.m_center_position, p.getCanopyWidth(), p.getRootSize(), p.m_unique_id);
+            emit removedPlant(p.m_specie_name, plant_status_to_string(status));
         }
     }
 
     // Remove the plants
-    for(Plant * p : plants_to_remove)
+    for(Plant p : plants_to_remove)
     {
         remove_plant(p);
     }
@@ -182,19 +182,19 @@ void SimulatorManager::trigger()
         for(auto specie(species.begin()); specie != species.end(); specie++)
         {
             int specie_id(specie->first);
-            int specie_seed_count(m_plant_factory.getSpecieProperties(specie_id)->seeding_properties->seed_count);
+            int specie_seed_count(m_plant_factory.getSpecieProperties(specie_id).seeding_properties.seed_count);
 
             if(specie->second.size() > 0) // Use existing plants to seed
             {
-                std::vector<Plant*> seeding_plants(m_plant_storage.getOnePlantPerCell(specie_id));
+                std::vector<Plant> seeding_plants(m_plant_storage.getOnePlantPerCell(specie_id));
 
                 auto plant_it(seeding_plants.begin());
 
                 int seed_count(0);
                 while(seed_count++ < specie_seed_count)
                 {
-                    Plant * seeding_plant (*plant_it);
-                    QPoint position (seeding_plant->seed(1).at(0));
+                    Plant seeding_plant (*plant_it);
+                    QPoint position (seeding_plant.seed(1).at(0));
                     if(position.x() >= 0 && position.x() < SimulatorManager::_AREA_WIDTH_HEIGHT &&
                         position.y() >= 0 && position.y() < SimulatorManager::_AREA_WIDTH_HEIGHT)
                     {
@@ -208,17 +208,17 @@ void SimulatorManager::trigger()
             else // spawn new plants
             {
                 int n_planted(0);
-                const SpecieProperties * specie_properties (m_plant_factory.getSpecieProperties(specie_id));
-                if(specie_properties->illumination_properties->min_illumination == 0 && m_elapsed_months > 240)
+                const SpecieProperties specie_properties (m_plant_factory.getSpecieProperties(specie_id));
+                if(specie_properties.illumination_properties.min_illumination == 0 && m_elapsed_months > 240)
                 {
                     // shade loving - spawn half at existing plant locations (shaded)
-                    std::vector<Plant*> plants (m_plant_storage.getPlants());
+                    std::vector<Plant> plants (m_plant_storage.getPlants());
                     for(; n_planted < specie_seed_count/2; n_planted++)
                     {
                         // Select a random plant
-                        Plant * random_plant(*(plants.begin() + (rand()%plants.size())));
-                        QPoint location(Utils::getRandomPointInCircle(random_plant->m_center_position,
-                                                                            std::max(1.0f,random_plant->getCanopyWidth()/2.f)));
+                        Plant random_plant(*(plants.begin() + (rand()%plants.size())));
+                        QPoint location(Utils::getRandomPointInCircle(random_plant.m_center_position,
+                                                                            std::max(1.0f,random_plant.getCanopyWidth()/2.f)));
                         add_plant(m_plant_factory.generate(specie_id, location));
                     }
                 }
@@ -281,10 +281,9 @@ void SimulatorManager::refresh_rendering_data()
     m_plant_rendering_data.lock();
     m_plant_rendering_data.clear();
 
-    for(Plant * p : m_plant_storage.getSortedPlants(SortingCriteria::Height))
+    for(Plant & p : m_plant_storage.getSortedPlants(SortingCriteria::Height))
     {
-        m_plant_rendering_data.push_back(
-                    PlantRenderingData(p->m_specie_name, p->getColor(), p->m_center_position, p->getHeight(), p->getCanopyWidth(), p->getRootSize()));
+        m_plant_rendering_data.push_back( PlantRenderingData(p.m_specie_name, p.getColor(), p.m_center_position, p.getHeight(), p.getCanopyWidth(), p.getRootSize()));
     }
 
     m_plant_rendering_data.unlock();

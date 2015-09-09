@@ -1,12 +1,44 @@
 #include "constrainers.h"
 #include "math.h"
 
+
+const int Constrainer::_MIN_STRENGTH = -100;
+const int Constrainer::_MAX_STRENGTH = 100;
+
+/***********
+ * WRAPPER *
+ ***********/
+ConstrainersWrapper::ConstrainersWrapper( AgeConstrainer age_constrainer, IlluminationConstrainer illumination_constrainer,
+                                          SoilHumidityConstrainer soil_humidity_constrainer, TemperatureConstrainer temp_constrainer):
+                                          age_constrainer(age_constrainer), illumination_constrainer(illumination_constrainer),
+                                          soil_humidity_constrainer(soil_humidity_constrainer), temp_constrainer(temp_constrainer)
+{
+
+}
+
+ConstrainersWrapper::~ConstrainersWrapper()
+{
+
+}
+
+//ConstrainersWrapper & ConstrainersWrapper::operator=(const ConstrainersWrapper& other)
+//{
+//    if (this != &other) // protect against invalid self-assignment
+//    {
+//        age_constrainer = other.age_constrainer;
+//        illumination_constrainer = other.illumination_constrainer;
+//        soil_humidity_constrainer = other.soil_humidity_constrainer;
+//        temp_constrainer = other.temp_constrainer;
+//    }
+//    // by convention, always return *this
+//    return *this;
+//}
+
 /*******************
  * AGE CONSTRAINER *
  *******************/
-
-AgeConstrainer::AgeConstrainer(const AgeingProperties * p_ageing_properties) :
-    m_age(0), m_properties(*p_ageing_properties)
+AgeConstrainer::AgeConstrainer(const AgeingProperties & p_ageing_properties) :
+    m_age(0), m_properties(p_ageing_properties)
 {
     // Build the pre-prime linear equation
     {
@@ -18,6 +50,18 @@ AgeConstrainer::AgeConstrainer(const AgeingProperties * p_ageing_properties) :
 AgeConstrainer::~AgeConstrainer()
 {
 }
+
+//AgeConstrainer & AgeConstrainer::operator=(const AgeConstrainer& other)
+//{
+//    if (this != &other) // protect against invalid self-assignment
+//    {
+//        m_age = other.m_age;
+//        m_properties = other.m_properties;
+//        m_ageing_equation = other.m_ageing_equation;
+//    }
+//    // by convention, always return *this
+//    return *this;
+//}
 
 void AgeConstrainer::setAge(int p_age)
 {
@@ -36,8 +80,8 @@ int AgeConstrainer::getStrength() const
 /****************************
  * ILLUMINATION CONSTRAINER *
  ****************************/
-IlluminationConstrainer::IlluminationConstrainer(const IlluminationProperties * p_illumination_properties) :
-    m_daily_illumination(0), m_properties(*p_illumination_properties)
+IlluminationConstrainer::IlluminationConstrainer(const IlluminationProperties & p_illumination_properties) :
+    m_daily_illumination(0), m_properties(p_illumination_properties)
 {
     // Underexposure equation
     if(m_properties.prime_illumination.first > 0)
@@ -68,6 +112,19 @@ IlluminationConstrainer::~IlluminationConstrainer()
 {
 }
 
+//IlluminationConstrainer & IlluminationConstrainer::operator=(const IlluminationConstrainer& other)
+//{
+//    if (this != &other) // protect against invalid self-assignment
+//    {
+//        m_properties = other.m_properties;
+//        m_underexposure_equation = other.m_underexposure_equation;
+//        m_overexposure_equation = other.m_overexposure_equation;
+//        m_daily_illumination = other.m_daily_illumination;
+//    }
+//    // by convention, always return *this
+//    return *this;
+//}
+
 void IlluminationConstrainer::setDailyIllumination(int p_daily_illumination)
 {
     m_daily_illumination = p_daily_illumination;
@@ -97,8 +154,8 @@ int IlluminationConstrainer::getStrength() const
 /*****************
  * SOIL HUMIDITY *
  *****************/
-SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties * p_soil_humidity_properties) :
-    m_properties(*p_soil_humidity_properties)
+SoilHumidityConstrainer::SoilHumidityConstrainer(const SoilHumidityProperties & p_soil_humidity_properties) :
+    m_properties(p_soil_humidity_properties)
 {
     // Build the drought equation
     if(m_properties.prime_soil_humidity.first > 0)
@@ -130,6 +187,19 @@ SoilHumidityConstrainer::~SoilHumidityConstrainer()
 
 }
 
+//SoilHumidityConstrainer & SoilHumidityConstrainer::operator=(const SoilHumidityConstrainer& other)
+//{
+//    if (this != &other) // protect against invalid self-assignment
+//    {
+//        m_drought_equation = other.m_drought_equation;
+//        m_flood_equation = other.m_flood_equation;
+//        m_properties = other.m_properties;
+//        m_soil_humidity = other.m_soil_humidity;
+//    }
+//    // by convention, always return *this
+//    return *this;
+//}
+
 int SoilHumidityConstrainer::getStrength() const
 {
     if(m_soil_humidity < m_properties.prime_soil_humidity.first)
@@ -159,8 +229,8 @@ int SoilHumidityConstrainer::getMinimumPrimeSoilHumidity() const
 /***************
  * TEMPERATURE *
  ***************/
-TemperatureConstrainer::TemperatureConstrainer(const TemperatureProperties * p_temperature_properties) :
-    m_properties(*p_temperature_properties)
+TemperatureConstrainer::TemperatureConstrainer(const TemperatureProperties & p_temperature_properties) :
+    m_properties(p_temperature_properties)
 {
     // Build coldness equation
     m_chill_equation.a = ((float)Constrainer::_MAX_STRENGTH*2.0f) / (m_properties.prime_temp.first-m_properties.min_temp);
@@ -175,6 +245,19 @@ TemperatureConstrainer::~TemperatureConstrainer()
 {
 
 }
+
+//TemperatureConstrainer & TemperatureConstrainer::operator=(const TemperatureConstrainer& other)
+//{
+//    if (this != &other) // protect against invalid self-assignment
+//    {
+//        m_chill_equation = other.m_chill_equation;
+//        m_warmth_equation = other.m_warmth_equation;
+//        m_properties = other.m_properties;
+//        m_temperature = other.m_temperature;
+//    }
+//    // by convention, always return *this
+//    return *this;
+//}
 
 int TemperatureConstrainer::getStrength() const
 {

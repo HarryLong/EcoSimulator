@@ -11,7 +11,7 @@ struct ResourceControllers{
     EnvironmentSoilHumidity soil_humidity;
     EnvironmentTemperature temperature;
 
-    ResourceControllers(EnvironmentSpatialHashMap & map) : illumination(map), soil_humidity(map) {}
+    ResourceControllers() {}
 };
 
 class EnvironmentManager{

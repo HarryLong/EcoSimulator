@@ -35,7 +35,7 @@ public:
     QSize sizeHint() const;
 
 public slots:
-    void addPlant(QString specie_name, const QColor * color);
+    void addPlant(QString specie_name, QColor color);
     void removePlant(QString specie_name, QString cause_of_death);
     void reset();
 

@@ -47,6 +47,7 @@ void PlantConfigurationWidget::reset()
 {
     m_species_added.clear();
     m_added_plants_table->clearContents();
+    m_added_plants_table->setRowCount(0);
 }
 
 void PlantConfigurationWidget::init_layout()

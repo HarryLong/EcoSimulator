@@ -9,29 +9,20 @@
 
 #include "../../math/dice_roller.h"
 #include "plantDB/plant_db.h"
+#include <QPoint>
 
 class Plant;
-
-class SpecieToColorMapper {
-public:
-    SpecieToColorMapper();
-    std::shared_ptr<QColor> getColor(int p_specie_id);
-
-private:
-    std::map<int, std::shared_ptr<QColor>> m_specie_id_to_color;
-    std::stack<QColor> m_color_stack;
-};
 
 class PlantFactory {
 public:
     PlantFactory(int area_width, int area_height);
     ~PlantFactory();
-    Plant* generate(QString p_specie_name, QPoint p_center_coord);
-    Plant* generate(QString p_specie_name);
-    Plant* generate(int p_specie_id, QPoint p_center_coord);
-    Plant* generate(int p_specie_id);
+    Plant generate(QString p_specie_name, QPoint p_center_coord);
+    Plant generate(QString p_specie_name);
+    Plant generate(int p_specie_id, QPoint p_center_coord);
+    Plant generate(int p_specie_id);
     std::vector<QString> getAllSpecieNames();
-    const SpecieProperties* getSpecieProperties(int p_specie_id);
+    const SpecieProperties & getSpecieProperties(int p_specie_id);
 
 private:
     int get_specie_id(const QString & name);
@@ -41,7 +32,11 @@ private:
     PlantDB::SpeciePropertiesHolder m_specie_properties;
     std::map<QString, int> m_specie_name_to_id_mapper;
     DiceRoller m_dice_roller;
-    SpecieToColorMapper m_plant_color_mapper;
+
+    static std::map<int, int> specie_id_to_color_index;
+    static std::vector<QColor> get_specie_colors();
+    static int color_index;
+    const static std::vector<QColor> _COLORS;
 };
 
 #endif // PLANT_FACTORY_H

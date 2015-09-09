@@ -73,6 +73,11 @@ void StartConfigDialog::display_previous()
     }
 }
 
+void StartConfigDialog::reset()
+{
+    m_widgets.reset();
+}
+
 void StartConfigDialog::update_previous_button(bool enabled)
 {
     m_previous_btn->setEnabled(enabled);
@@ -126,7 +131,7 @@ QSize StartConfigDialog::sizeHint() const
 /*****************
  * WIDGET HOLDER *
  *****************/
-StartConfigDialogWidgets::StartConfigDialogWidgets() : m_current_widget(StartConfigDialogWidgets::WidgetType::PlantConfiguration)
+StartConfigDialogWidgets::StartConfigDialogWidgets() : m_current_widget()
 {
     // Add the widgets
     m_raw_widgets[StartConfigDialogWidgets::WidgetType::PlantConfiguration] = new PlantConfigurationWidget;
@@ -143,8 +148,7 @@ StartConfigDialogWidgets::StartConfigDialogWidgets() : m_current_widget(StartCon
     m_titles[StartConfigDialogWidgets::WidgetType::Temperature] = "Temperature";
     m_titles[StartConfigDialogWidgets::WidgetType::SimulationOptions] = "Simulation Options";
 
-    hide_all();
-    show(m_current_widget);
+    reset();
 }
 
 StartConfigDialogWidgets::~StartConfigDialogWidgets()
@@ -152,8 +156,19 @@ StartConfigDialogWidgets::~StartConfigDialogWidgets()
     // All widgets will be inserted into a layout. The layout will delete them
 }
 
+void StartConfigDialogWidgets::reset()
+{
+    static_cast<PlantConfigurationWidget*>(m_raw_widgets[StartConfigDialogWidgets::WidgetType::PlantConfiguration])->reset();
+    static_cast<MonthlyEditDialog*>(m_raw_widgets[StartConfigDialogWidgets::WidgetType::Humidity])->reset();
+    static_cast<MonthlyEditDialog*>(m_raw_widgets[StartConfigDialogWidgets::WidgetType::Illumination])->reset();
+    static_cast<MonthlyEditDialog*>(m_raw_widgets[StartConfigDialogWidgets::WidgetType::Temperature])->reset();
+    static_cast<SimulationConfigurationWidget*>(m_raw_widgets[StartConfigDialogWidgets::WidgetType::SimulationOptions])->reset();
+    show(StartConfigDialogWidgets::WidgetType::PlantConfiguration);
+}
+
 void StartConfigDialogWidgets::show(WidgetType p_type)
 {
+    hide_all();
     m_raw_widgets[p_type]->show();
     m_current_widget = p_type;
 }
@@ -185,7 +200,6 @@ QString StartConfigDialogWidgets::displayPrevious()
 {
     if(hasPrevious())
     {
-        hide(m_current_widget);
         show(static_cast<WidgetType>(static_cast<int>(m_current_widget)-1));
     }
     return m_titles[m_current_widget];
@@ -195,7 +209,6 @@ QString StartConfigDialogWidgets::displayNext()
 {
     if(hasNext())
     {
-        hide(m_current_widget);
         show(static_cast<WidgetType>(static_cast<int>(m_current_widget)+1));
     }
     return m_titles[m_current_widget];

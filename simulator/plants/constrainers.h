@@ -9,8 +9,8 @@
 class Constrainer
 {
 public:
-    static const int _MIN_STRENGTH = -100;
-    static const int _MAX_STRENGTH = 100;
+    static const int _MIN_STRENGTH;
+    static const int _MAX_STRENGTH;
 
     virtual ~Constrainer() {}
     virtual int getStrength() const = 0;
@@ -22,8 +22,9 @@ public:
 class AgeConstrainer : public Constrainer
 {
 public:
-    AgeConstrainer(const AgeingProperties * p_ageing_properties);
+    AgeConstrainer(const AgeingProperties & p_ageing_properties);
     ~AgeConstrainer();
+//    AgeConstrainer & operator=(const AgeConstrainer& other);
 
     virtual int getStrength() const ;
 
@@ -41,8 +42,9 @@ private:
 class IlluminationConstrainer : public Constrainer
 {
 public:
-    IlluminationConstrainer(const IlluminationProperties * p_illumination_properties);
+    IlluminationConstrainer(const IlluminationProperties & p_illumination_properties);
     ~IlluminationConstrainer();
+//    IlluminationConstrainer & operator=(const IlluminationConstrainer& other);
 
     virtual int getStrength() const;
 
@@ -63,8 +65,9 @@ private:
 class SoilHumidityConstrainer : public Constrainer
 {
 public:
-    SoilHumidityConstrainer(const SoilHumidityProperties * p_humidity_properties);
+    SoilHumidityConstrainer(const SoilHumidityProperties & p_humidity_properties);
     ~SoilHumidityConstrainer();
+//    SoilHumidityConstrainer & operator=(const SoilHumidityConstrainer& other);
 
     virtual int getStrength() const;
     bool isInDrought() const;
@@ -85,8 +88,10 @@ private:
 class TemperatureConstrainer : public Constrainer
 {
 public:
-    TemperatureConstrainer(const TemperatureProperties * p_temperature_properties);
+    TemperatureConstrainer(const TemperatureProperties & p_temperature_properties);
     ~TemperatureConstrainer();
+//    TemperatureConstrainer & operator=(const TemperatureConstrainer& other);
+
 
     virtual int getStrength() const;
     bool isTooCold() const;
@@ -98,6 +103,24 @@ private:
     LinearEquation m_warmth_equation;
     TemperatureProperties m_properties;
     int m_temperature;
+};
+
+/***********
+ * WRAPPER *
+ ***********/
+class ConstrainersWrapper{
+public:
+    ConstrainersWrapper(AgeConstrainer age_constrainer,
+                        IlluminationConstrainer illumination_constrainer,
+                        SoilHumidityConstrainer soil_humidity_constrainer,
+                        TemperatureConstrainer temp_constrainer);
+    ~ConstrainersWrapper();
+//    ConstrainersWrapper & operator=(const ConstrainersWrapper& other);
+
+    AgeConstrainer age_constrainer;
+    IlluminationConstrainer illumination_constrainer;
+    SoilHumidityConstrainer soil_humidity_constrainer;
+    TemperatureConstrainer temp_constrainer;
 };
 
 #endif //CONSTRAINERS_H

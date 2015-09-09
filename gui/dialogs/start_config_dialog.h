@@ -38,6 +38,7 @@ public:
     QString displayNext();
     QWidget* operator[](WidgetType p_type);
     QWidget** getAllWidgets();
+    void reset();
 
 private:
     void show(WidgetType p_type);
@@ -58,6 +59,9 @@ public:
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
     SimulationConfiguration getStartConfiguration();
+
+public slots:
+    void reset();
 
 private slots:
     void display_next();

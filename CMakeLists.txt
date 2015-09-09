@@ -11,7 +11,7 @@ find_package(OpenMP REQUIRED)
 #find_package(PlantDB REQUIRED)
 
 set(LIBS ${LIBS} ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} PlantDB RadialDistributionAnalyser EcoDataTracker)
-set(INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/spatial_hashmap/" ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
+set(INCLUDE_DIRECTORIES ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
 
 #"${CMAKE_SOURCE_DIR}/include/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/include/ecodata-tracker/"
 #StatsAnalysisisTool EcoDataTracker
@@ -40,10 +40,12 @@ include_directories(${INCLUDE_DIRECTORIES})
 
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${OpenMP_CXX_FLAGS} -O2 -g -std=c++11 -DGUI_MODE -Wno-write-strings")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${OpenMP_CXX_FLAGS} -O2 -std=c++11 -DGUI_MODE -Wno-write-strings")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${OpenMP_CXX_FLAGS} -O0 --std=c++11 -DGUI_MODE -Wno-write-strings")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${OpenMP_CXX_FLAGS} -O0 -std=c++11 -DGUI_MODE -Wno-write-strings")
 
-SET(CMAKE_BUILD_TYPE RELEASE)
-#SET(CMAKE_BUILD_TYPE RELWITHDEBINFO)
+#SET(CMAKE_BUILD_TYPE RELEASE)
+SET(CMAKE_BUILD_TYPE RELWITHDEBINFO)
+#SET(CMAKE_BUILD_TYPE DEBUG)
+
 
 add_executable(EcoSim main
 ${RESOURCES_SRC_FILES}
@@ -63,4 +65,4 @@ target_link_libraries(EcoSim ${LIBS})
 #INSTALL EXECUTABLE
 install(TARGETS EcoSim
         RUNTIME DESTINATION bin
-        CONFIGURATIONS Release)
+        CONFIGURATIONS RELWITHDEBINFO)

@@ -22,9 +22,9 @@ SimulationConfigurationWidget::SimulationConfigurationWidget(QWidget * parent) :
     // Defaults
     m_seeding_button_group->addButton(m_seeding_enabled_cb);
     m_seeding_button_group->addButton(m_seeding_disabled_cb);
-    m_seeding_enabled_cb->setChecked(true);
 
     init_layout();
+    reset();
 }
 
 SimulationConfigurationWidget::~SimulationConfigurationWidget()
@@ -32,6 +32,11 @@ SimulationConfigurationWidget::~SimulationConfigurationWidget()
 
 }
 
+
+void SimulationConfigurationWidget::reset()
+{
+    m_seeding_enabled_cb->setChecked(true);
+}
 
 bool SimulationConfigurationWidget::seedingEnabled()
 {

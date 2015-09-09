@@ -1,1 +1,0 @@
-/home/harry/workspaces/qt-workspace/statistical-analysis-tool/category_properties.h

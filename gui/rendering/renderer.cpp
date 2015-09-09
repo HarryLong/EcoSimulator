@@ -86,8 +86,8 @@ void PlantRenderer::paintEvent(QPaintEvent * event)
         {
             int diameter ( to_screen_space(2*it->canopy_radius) );
             QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
-            painter.setPen( *(it->color) );
-            painter.setBrush( *(it->color) );
+            painter.setPen( it->color );
+            painter.setBrush( it->color );
             int r(std::max(1,(int)std::round(diameter/2)));
             painter.drawEllipse( center, r, r);
         }
@@ -118,8 +118,8 @@ void RootsRenderer::paintEvent(QPaintEvent * event)
         {
             int r ( std::max(1,to_screen_space(it->roots_radius)) );
             QPoint center(to_screen_space(it->center_position.x()), to_screen_space(it->center_position.y()));
-            painter.setPen( *(it->color) );
-            painter.setBrush( *(it->color) );
+            painter.setPen( it->color );
+            painter.setBrush( it->color );
             painter.drawEllipse( center, r, r );
         }
     }
@@ -180,7 +180,7 @@ IlluminationRenderer::IlluminationRenderer(int area_width, int area_height, std:
 
 int IlluminationRenderer::getResource(const EnvironmentSpatialHashMap & environment_spatial_hashmap, QPoint pos)
 {
-    return environment_spatial_hashmap.get_const(pos)->illumination_cell->getRenderingIllumination();
+    return environment_spatial_hashmap[pos].illumination_cell.getRenderingIllumination();
 }
 
 /*****************
@@ -194,7 +194,7 @@ SoilHumidityRenderer::SoilHumidityRenderer(int area_width, int area_height, std:
 
 int SoilHumidityRenderer::getResource(const EnvironmentSpatialHashMap & environment_spatial_hashmap, QPoint pos)
 {
-    return environment_spatial_hashmap.get_const(pos)->soil_humidity_cell->getRenderingHumidity();
+    return environment_spatial_hashmap[pos].soil_humidity_cell.getRenderingHumidity();
 }
 
 /************************
@@ -208,7 +208,7 @@ TemperatureRenderer::TemperatureRenderer(int area_width, int area_height, std::f
 
 int TemperatureRenderer::getResource(const EnvironmentSpatialHashMap & environment_spatial_hashmap, QPoint pos)
 {
-    return environment_spatial_hashmap.get_const(pos)->temp_cell->getTemperature();
+    return environment_spatial_hashmap[pos].temp_cell.getTemperature();
 //    return QRgb();
 //    TemperatureCell * cell_content(m_render_data.get_const(pos)->temp_cell);
 //    return m_translator->toRGB(cell_content->get());

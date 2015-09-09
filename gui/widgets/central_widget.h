@@ -9,6 +9,7 @@
 
 #include "../../simulator/core/simulator_manager.h"
 #include "../rendering/render_manager.h"
+#include "../dialogs/start_config_dialog.h"
 
 class QPushButton;
 class QSlider;
@@ -51,7 +52,7 @@ private:
     OverViewWidget * m_overview_widget;
 
     // DIALOGS
-    StartConfigDialog * m_start_config_dialog;
+    StartConfigDialog m_start_config_dialog;
 
     // UI ELEMENTS
     QSlider * m_time_control_slider;

@@ -1,6 +1,5 @@
 #include "central_widget.h"
 
-#include "../dialogs/start_config_dialog.h"
 #include "overview_widget.h"
 
 #include <QGridLayout>
@@ -17,7 +16,7 @@
 CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
     QWidget(parent, f),
     m_simulator_manager(),
-    m_start_config_dialog(NULL),
+    m_start_config_dialog(this),
     m_render_manager(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT,
                      std::bind(&SimulatorManager::getPlantRenderingData, &m_simulator_manager),
                      std::bind(&SimulatorManager::getEnvironmentRenderingData, &m_simulator_manager))
@@ -29,8 +28,7 @@ CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
 
 CentralWidget::~CentralWidget()
 {
-    if(m_start_config_dialog)
-        delete m_start_config_dialog;
+
 }
 
 void CentralWidget::init_layout()
@@ -129,7 +127,7 @@ void CentralWidget::init_signals()
     m_renderers_cb->setCurrentIndex(static_cast<int>(RendererManager::_DEFAULT_RENDER_TYPE));
 
     // The overview widget to the simulator
-    connect(&m_simulator_manager, SIGNAL(newPlant(QString, const QColor*)), m_overview_widget, SLOT(addPlant(QString,const QColor*)));
+    connect(&m_simulator_manager, SIGNAL(newPlant(QString, QColor)), m_overview_widget, SLOT(addPlant(QString, QColor)));
     connect(&m_simulator_manager, SIGNAL(removedPlant(QString, QString)), m_overview_widget, SLOT(removePlant(QString,QString)));
 
     // The overview widget render filter
@@ -139,6 +137,9 @@ void CentralWidget::init_signals()
     // Snapshot generation
     connect(m_generate_snapshot_btn, SIGNAL(clicked()), &m_simulator_manager, SLOT(generateSnapshot()));
     connect(m_generate_statistical_snapshot_btn, SIGNAL(clicked()), &m_simulator_manager, SLOT(generateStatisticalSnapshot()));
+
+    // Config dialog
+    connect(&m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
 }
 
 void CentralWidget::updateRender()
@@ -189,7 +190,7 @@ void CentralWidget::start_simulation()
     m_stop_start_button->setText("Stop");
     // Enable pause/resume button
     m_pause_resume_button->setEnabled(true);
-    m_simulator_manager.start(m_start_config_dialog->getStartConfiguration());
+    m_simulator_manager.start(m_start_config_dialog.getStartConfiguration());
     m_render_manager.start();
 }
 
@@ -210,11 +211,6 @@ void CentralWidget::stop_simulation()
 
 void CentralWidget::display_start_configuration_dialog()
 {
-    // The start config dialog upon accepted should forward data to the simulator
-    if(m_start_config_dialog)
-        delete m_start_config_dialog;
-
-    m_start_config_dialog = new StartConfigDialog(this);
-    connect(m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
-    m_start_config_dialog->exec();
+    m_start_config_dialog.reset();
+    m_start_config_dialog.exec();
 }

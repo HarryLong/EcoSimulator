@@ -1,1 +1,0 @@
-/home/harry/workspaces/qt-workspace/ecodata_tracker/main_window.h

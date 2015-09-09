@@ -4,26 +4,50 @@
 #include <math.h>
 #include "../../utils/utils.h"
 
-Plant::Plant(const SpecieProperties * p_specie_properties, std::shared_ptr<const QColor> p_color, QPoint p_center_coord, long p_unique_id, int p_random_id) :
+#include <QDebug>
+Plant::Plant(SpecieProperties p_specie_properties, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id) :
     m_center_position(p_center_coord), m_unique_id(p_unique_id), m_random_id(p_random_id), m_strengths(), m_age(0), m_strength(Constrainer::_MAX_STRENGTH),
-    m_color(p_color),m_specie_name(p_specie_properties->specie_name), m_specie_id(p_specie_properties->specie_id),
-    m_constrainers(AgeConstrainer(p_specie_properties->ageing_properties),
-                   IlluminationConstrainer(p_specie_properties->illumination_properties),
-                   SoilHumidityConstrainer(p_specie_properties->soil_humidity_properties),
-                   TemperatureConstrainer(p_specie_properties->temperature_properties)),
-    m_seeding_properties(p_specie_properties->seeding_properties),
-    m_growth_manager(GrowthManager(p_specie_properties->growth_properties, p_specie_properties->ageing_properties)),
+    m_color(p_color),m_specie_name(p_specie_properties.specie_name), m_specie_id(p_specie_properties.specie_id),
+    m_constrainers(AgeConstrainer(p_specie_properties.ageing_properties),
+                   IlluminationConstrainer(p_specie_properties.illumination_properties),
+                   SoilHumidityConstrainer(p_specie_properties.soil_humidity_properties),
+                   TemperatureConstrainer(p_specie_properties.temperature_properties)),
+    m_seeding_properties(p_specie_properties.seeding_properties),
+    m_growth_manager(GrowthManager(p_specie_properties.growth_properties, p_specie_properties.ageing_properties)),
     m_pain_enducer(0)
 {
-    m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Age, Constrainer::_MIN_STRENGTH));
-    m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Illumination, Constrainer::_MIN_STRENGTH));
-    m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::SoilHumidity, Constrainer::_MIN_STRENGTH));
-    m_strengths.insert(std::pair<ConstrainerType, int>(ConstrainerType::Temperature, Constrainer::_MIN_STRENGTH));
+    m_strengths.emplace(ConstrainerType::Age, Constrainer::_MIN_STRENGTH);
+    m_strengths.emplace(ConstrainerType::Illumination, Constrainer::_MIN_STRENGTH);
+    m_strengths.emplace(ConstrainerType::SoilHumidity, Constrainer::_MIN_STRENGTH);
+    m_strengths.emplace(ConstrainerType::Temperature, Constrainer::_MIN_STRENGTH);
 }
 
 Plant::~Plant()
 {
 }
+
+//Plant & Plant::operator=(const Plant& other)
+//{
+//    if (this != &other) // protect against invalid self-assignment
+//    {
+//        m_unique_id = other.m_unique_id;
+//        m_center_position = other.m_center_position;
+//        m_specie_name = other.m_specie_name;
+//        m_specie_id = other.m_specie_id;
+//        m_color = other.m_color;
+//        m_growth_manager = other.m_growth_manager;
+//        m_seeding_properties = other.m_seeding_properties;
+//        m_constrainers = other.m_constrainers;
+//        m_strengths = other.m_strengths;
+//        m_strength_bottleneck = other.m_strength_bottleneck;
+//        m_strength = other.m_strength;
+//        m_random_id = other.m_random_id;
+//        m_age = other.m_age;
+//        m_pain_enducer = other.m_pain_enducer;
+//    }
+//    // by convention, always return *this
+//    return *this;
+//}
 
 void Plant::newMonth()
 {
@@ -122,7 +146,7 @@ int Plant::getVigor() const
 std::vector<QPoint> Plant::seed()
 {
     // Number of seeds proportianal to strength
-    int seed_count((int) ((((float)m_strength)/Constrainer::_MAX_STRENGTH) * m_seeding_properties->seed_count));
+    int seed_count((int) ((((float)m_strength)/Constrainer::_MAX_STRENGTH) * m_seeding_properties.seed_count));
 
     return seed(seed_count);
 }
@@ -130,7 +154,7 @@ std::vector<QPoint> Plant::seed()
 std::vector<QPoint> Plant::seed(int seed_count)
 {
     std::vector<QPoint> seeds;
-    int max_distance(m_seeding_properties->max_seed_distance * 100); // To centimeters
+    int max_distance(m_seeding_properties.max_seed_distance * 100); // To centimeters
 
     for( int i(0); i < seed_count; i++ )
         seeds.push_back(Utils::getRandomPointInCircle(m_center_position, max_distance));
@@ -165,7 +189,7 @@ Plant::PlantStatus Plant::getStatus()
     return Alive;
 }
 
-const QColor * Plant::getColor() const
+QColor Plant::getColor() const
 {
-    return m_color.get();
+    return m_color;
 }

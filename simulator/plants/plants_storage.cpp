@@ -19,13 +19,17 @@ uint qHash (const QPoint & key)
     return (key.x() << 16) + key.y();
 }
 
+bool operator<(const QPoint & lhs, const QPoint & rhs)
+{
+    return lhs.x() < rhs.x() || lhs.y() < rhs.y();
+}
+
 PlantStorage::PlantStorage(int area_width, int area_height) : m_plants(), m_plant_count(0),
   m_location_plant_accessor(LOCATION_STORAGE_CELL_SIZE, LOCATION_STORAGE_CELL_SIZE, std::ceil(((float)area_width)/LOCATION_STORAGE_CELL_SIZE),
                             std::ceil(((float)area_height)/LOCATION_STORAGE_CELL_SIZE)),
-  m_statistical_analyzer_config(0, 500, 20, area_width, area_width),
+//  m_statistical_analyzer_config(0, 500, 20, area_width, area_width),
   m_area_width(area_width), m_area_height(area_height)
 {
-
 
 }
 
@@ -34,54 +38,53 @@ PlantStorage::~PlantStorage()
     clear();
 }
 
-void PlantStorage::add(Plant * p_plant)
+void PlantStorage::add(Plant p_plant)
 {
     // Ensure specie exists in data collection
-    auto it(m_plants.find(p_plant->m_specie_id));
+    auto it(m_plants.find(p_plant.m_specie_id));
     if(it == m_plants.end()) // Specie not yet inserted
     {
-        m_plants.emplace(p_plant->m_specie_id, std::map<long, Plant*>());
+        m_plants.emplace(p_plant.m_specie_id, std::map<long, Plant>());
     }
     // Insert the specie
-    m_plants[p_plant->m_specie_id].emplace(p_plant->m_unique_id, p_plant);
+    m_plants[p_plant.m_specie_id].emplace(p_plant.m_unique_id, p_plant);
 
     // Location based
-    LocationCell * cell(m_location_plant_accessor.getCell(p_plant->m_center_position, true));
-    if(cell->species.find(p_plant->m_specie_id) == cell->species.end())
-        cell->species.emplace(p_plant->m_specie_id, QHash<QPoint,Plant*>());
-    cell->species[p_plant->m_specie_id].insert(QPoint(p_plant->m_center_position.x(), p_plant->m_center_position.y()), p_plant);
+    LocationCell & cell(m_location_plant_accessor.getCell(p_plant.m_center_position));
+    if(cell.species.find(p_plant.m_specie_id) == cell.species.end())
+        cell.species.emplace(p_plant.m_specie_id, std::map<QPoint,Plant>());
+    cell.species[p_plant.m_specie_id].emplace(QPoint(p_plant.m_center_position.x(), p_plant.m_center_position.y()), p_plant);
 
     m_plant_count++;
 }
 
-void PlantStorage::remove(Plant * p_plant)
+void PlantStorage::remove(Plant p_plant)
 {
     if(contains(p_plant))
     {
-        m_plants[p_plant->m_specie_id].erase(p_plant->m_unique_id);
+        m_plants[p_plant.m_specie_id].erase(p_plant.m_unique_id);
         // Location based
-        LocationCell * cell(m_location_plant_accessor.getCell(p_plant->m_center_position));
-        cell->species[p_plant->m_specie_id].remove(QPoint(p_plant->m_center_position.x(), p_plant->m_center_position.y()));
+        LocationCell & cell(m_location_plant_accessor.getCell(p_plant.m_center_position));
+        cell.species[p_plant.m_specie_id].erase(QPoint(p_plant.m_center_position.x(), p_plant.m_center_position.y()));
 
-        delete p_plant;
         m_plant_count--;
     }
 }
 
-bool PlantStorage::contains(Plant * p_plant) const
+bool PlantStorage::contains(Plant p_plant) const
 {
-    auto it(m_plants.find(p_plant->m_specie_id));
-    return it != m_plants.end() && it->second.find(p_plant->m_unique_id) != it->second.end();
+    auto it(m_plants.find(p_plant.m_specie_id));
+    return it != m_plants.end() && it->second.find(p_plant.m_unique_id) != it->second.end();
 }
 
-std::vector<Plant*> PlantStorage::getOnePlantPerCell(int p_specie_id)
+std::vector<Plant> PlantStorage::getOnePlantPerCell(int p_specie_id)
 {
-    std::vector<Plant*> ret;
+    std::vector<Plant> ret;
     auto it(m_plants.find(p_specie_id));
 
     if(it != m_plants.end()) // No plants of this specie
     {
-        std::vector<QHash<QPoint, Plant*> > relevant_cells;
+        std::vector<std::map<QPoint, Plant> > relevant_cells;
 
         for(auto location_cell(m_location_plant_accessor.begin()); location_cell != m_location_plant_accessor.end(); location_cell++)
         {
@@ -92,22 +95,22 @@ std::vector<Plant*> PlantStorage::getOnePlantPerCell(int p_specie_id)
             }
         }
 
-        std::sort(relevant_cells.begin(), relevant_cells.end(), [](QHash<QPoint, Plant*> lhs, QHash<QPoint, Plant*> rhs) {return lhs.size() < rhs.size();});
+        std::sort(relevant_cells.begin(), relevant_cells.end(), [](std::map<QPoint, Plant> lhs, std::map<QPoint, Plant> rhs) {return lhs.size() < rhs.size();});
 
-        for(QHash<QPoint, Plant*> plant_cell : relevant_cells)
+        for(std::map<QPoint, Plant> plant_cell : relevant_cells)
         {
             auto random_plant(plant_cell.begin());
             std::advance(random_plant, rand() % plant_cell.size());
-            ret.push_back(random_plant.value());
+            ret.push_back(random_plant->second);
         }
     }
 
     return ret;
 }
 
-std::vector<Plant*> PlantStorage::getPlants()
+std::vector<Plant> PlantStorage::getPlants()
 {
-    std::vector<Plant*> all_plants;
+    std::vector<Plant> all_plants;
 
     for(auto specie(m_plants.begin()); specie!= m_plants.end(); specie++)
     {
@@ -118,27 +121,26 @@ std::vector<Plant*> PlantStorage::getPlants()
     return all_plants;
 }
 
-std::vector<Plant*> PlantStorage::getSortedPlants(SortingCriteria p_sorting_criteria)
+std::list<Plant> PlantStorage::getSortedPlants(SortingCriteria p_sorting_criteria)
 {
-    std::vector<Plant*> plants(getPlants());
+    std::vector<Plant> plants(getPlants());
+    std::list<Plant> ret;
+    ret.insert(ret.begin(), plants.begin(), plants.end());
 
     switch(p_sorting_criteria)
     {
     case SortingCriteria::Strength:
-        std::sort(plants.begin(), plants.end(), [](Plant * lhs, Plant* rhs) {return lhs->getHeight() < rhs->getHeight();});
+        ret.sort([](const Plant & lhs, const Plant & rhs){ return lhs.getVigor() > rhs.getVigor(); });
         break;
     case SortingCriteria::Height:
-        std::sort(plants.begin(), plants.end(), [](Plant * lhs, Plant* rhs) {return lhs->getVigor() < rhs->getVigor();});
+        ret.sort([](const Plant & lhs, const Plant & rhs){ return lhs.getHeight() > rhs.getHeight(); });
         break;
     }
-    return plants;
+    return ret;
 }
 
 void PlantStorage::clear()
 {
-    for(Plant * p : getPlants())
-        delete p;
-
     m_plants.clear();
     m_location_plant_accessor.clear();
 }
@@ -155,15 +157,17 @@ int PlantStorage::getPlantCount()
 
 bool PlantStorage::isPlantAtLocation(QPoint p_location)
 {
-    LocationCell * cell (m_location_plant_accessor.getCell(p_location));
-    if(cell == NULL) // No plants in cell
-        return false;
+    LocationCell & cell (m_location_plant_accessor.getCell(p_location));
 
-    std::map<int, QHash<QPoint, Plant*> > species_in_cell (cell->species);
+    std::map<int, std::map<QPoint, Plant> > & species_in_cell (cell.species);
 
     for(auto it(species_in_cell.begin()); it != species_in_cell.end(); it++)
+    {
         if(it->second.find(p_location) != it->second.end())
+        {
             return true;
+        }
+    }
 
     return false;
 }
@@ -202,14 +206,14 @@ void PlantStorage::generateSnapshot()
         QPainter * specie_painter = painters[specie_idx];
         for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
         {
-            Plant * p = plant->second;
+            Plant p (plant->second);
 
-            specie_painter->setBrush(*(p->m_color.get()));
-            base_painter->setBrush(*(p->m_color.get()));
+            specie_painter->setBrush(p.m_color);
+            base_painter->setBrush(p.m_color);
 
-            int radius(std::max(1,(int)std::round(p->getCanopyWidth()/2.0f)));
-            specie_painter->drawEllipse(p->m_center_position,radius,radius);
-            base_painter->drawEllipse(p->m_center_position,radius,radius);
+            int radius(std::max(1,(int)std::round(p.getCanopyWidth()/2.0f)));
+            specie_painter->drawEllipse(p.m_center_position,radius,radius);
+            base_painter->drawEllipse(p.m_center_position,radius,radius);
         }
         specie_painter->end();
     }
@@ -237,47 +241,47 @@ void PlantStorage::generateSnapshot()
 
 void PlantStorage::generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months)
 {
-    QTemporaryDir tmp_dir;
-    if(tmp_dir.isValid())
-    {
-        std::map<float,int> avg_height_to_specie_id;
-        // Create analysis points
-        std::map<int, std::vector<AnalysisPoint*>> specie_analysis_points;
-        lock();
-        for(auto specie(m_plants.begin()); specie != m_plants.end(); specie++)
-        {
-            int specie_id(specie->first);
-            float avg_height = 0;
-            std::vector<AnalysisPoint*> analysis_points;
-            for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
-            {
-                Plant * p = plant->second;
-                avg_height += p->getHeight();
-                analysis_points.push_back(new AnalysisPoint(specie_id, p->m_center_position, std::max(1.0f,p->getCanopyWidth()/2.0f)));
-            }
-            avg_height /= specie->second.size();
-            avg_height_to_specie_id.emplace(avg_height, specie_id);
-            specie_analysis_points.emplace(specie_id, analysis_points);
-        }
-        unlock();
+//    QTemporaryDir tmp_dir;
+//    if(tmp_dir.isValid())
+//    {
+//        std::map<float,int> avg_height_to_specie_id;
+//        // Create analysis points
+//        std::map<int, std::vector<AnalysisPoint*>> specie_analysis_points;
+//        lock();
+//        for(auto specie(m_plants.begin()); specie != m_plants.end(); specie++)
+//        {
+//            int specie_id(specie->first);
+//            float avg_height = 0;
+//            std::vector<AnalysisPoint*> analysis_points;
+//            for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
+//            {
+//                Plant p ( plant->second );
+//                avg_height += p.getHeight();
+//                analysis_points.push_back(new AnalysisPoint(specie_id, p.m_center_position, std::max(1.0f,p.getCanopyWidth()/2.0f)));
+//            }
+//            avg_height /= specie->second.size();
+//            avg_height_to_specie_id.emplace(avg_height, specie_id);
+//            specie_analysis_points.emplace(specie_id, analysis_points);
+//        }
+//        unlock();
 
-        /**********************
-         * PREPARE CATEGORIES *
-         **********************/
-        std::vector<int> priority_sorted_category_ids;
-        for(auto it(avg_height_to_specie_id.rbegin()); it != avg_height_to_specie_id.rend(); it++)
-            priority_sorted_category_ids.push_back(it->second);
+//        /**********************
+//         * PREPARE CATEGORIES *
+//         **********************/
+//        std::vector<int> priority_sorted_category_ids;
+//        for(auto it(avg_height_to_specie_id.rbegin()); it != avg_height_to_specie_id.rend(); it++)
+//            priority_sorted_category_ids.push_back(it->second);
 
-        m_statistical_analyzer_config.setPrioritySortedCategoryIds(priority_sorted_category_ids);
+//        m_statistical_analyzer_config.setPrioritySortedCategoryIds(priority_sorted_category_ids);
 
-        Analyzer::analyze(tmp_dir.path(), specie_analysis_points, m_statistical_analyzer_config);
+//        Analyzer::analyze(tmp_dir.path(), specie_analysis_points, m_statistical_analyzer_config);
 
-        Tracker::addEntry(humidities, illuminations, temperatures, elapsed_months, getSpecieIds(), tmp_dir);
-    }
-    else
-    {
-        qCritical() << "Failed to create temporary directory for statistical snapshot...";
-    }
+//        Tracker::addEntry(humidities, illuminations, temperatures, elapsed_months, getSpecieIds(), tmp_dir);
+//    }
+//    else
+//    {
+//        qCritical() << "Failed to create temporary directory for statistical snapshot...";
+//    }
 }
 
 const std::set<int> PlantStorage::getSpecieIds()
