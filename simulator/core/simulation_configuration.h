@@ -22,8 +22,8 @@ struct SimulationConfiguration {
                             std::vector<int> humidity,
                             std::vector<int> illumination,
                             std::vector<int> temperature,
-                            int duration = -1,
-                            bool enable_seeding = true) :
+                            int duration,
+                            bool enable_seeding) :
         m_plants_to_generate(plants_to_generate),
         m_slope(slope),
         m_humidity(humidity),

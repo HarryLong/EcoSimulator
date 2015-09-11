@@ -121,6 +121,7 @@ void OverViewWidget::refresh(QString specie_name)
 void OverViewWidget::reset()
 {
     m_data.clear();
+    setRowCount(0);
 }
 
 QTableWidgetItem * OverViewWidget::generate_read_only_cell(QString p_cell_content)

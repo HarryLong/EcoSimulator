@@ -110,11 +110,12 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
 
     // Pain enducer is used to prevent a plant from being in negative strength too long
     if(min_strength < 0)
-        m_pain_enducer++;
+        m_pain_enducer += 10;
     else
         m_pain_enducer = 0;
 
     m_strength = min_strength-m_pain_enducer;
+
     m_strength_bottleneck = bottleneck;
 }
 

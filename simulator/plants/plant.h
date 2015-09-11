@@ -5,7 +5,6 @@
 #include <QColor>
 #include <QPoint>
 #include <unordered_set>
-#include "plants_storage.h"
 #include "plantDB/plant_properties.h"
 #include "growth_manager.h"
 #include "constrainers.h"

@@ -1,7 +1,7 @@
 #include "render_manager.h"
 #include <QDebug>
 
-#define RENDER_INTERVAL 200 //ms
+#define RENDER_INTERVAL 500 //ms
 
 RendererManager::RendererManager(int area_width, int area_height,
                                  std::function<const PlantRenderDataContainer&()> plant_rendering_data_retriever_fn,

@@ -9,9 +9,8 @@
 
 #include "../../math/dice_roller.h"
 #include "plantDB/plant_db.h"
+#include "plant.h"
 #include <QPoint>
-
-class Plant;
 
 class PlantFactory {
 public:

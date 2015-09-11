@@ -37,8 +37,8 @@ struct ResourceUsageRequest{
     ResourceUsageRequest(int p_requested_amount, float p_size, int p_requestee_id) :
         requested_amount(p_requested_amount), size(p_size), requestee_id(p_requestee_id) {}
 };
-typedef std::map<int, ResourceUsageRequest> RequestsMap;
-typedef std::map<int, int> GrantsMap;
+typedef std::unordered_map<int, ResourceUsageRequest> RequestsMap;
+typedef std::unordered_map<int, int> GrantsMap;
 class SoilHumidityCell{
 public:
     SoilHumidityCell();
@@ -56,6 +56,8 @@ private:
     RequestsMap m_requests;
     GrantsMap m_grants;
     bool m_refresh_required;
+    int m_unique_id;
+    static int id_incrementor;
 };
 
 

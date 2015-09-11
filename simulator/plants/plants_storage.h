@@ -6,14 +6,15 @@
 #include <unordered_set>
 #include <mutex>
 
+#include "../../resources/environment_manager.h"
 #include <radialDistribution/analyser/analysis_configuration.h>
 #include "SpatialHashmap/spatial_hashmap.h"
 #include <QPoint>
 #include <QHash>
+#include <vector>
+#include <exception>
 
-class Plant;
-
-typedef std::map<int, std::map<long, Plant> > PlantStorageStructure;
+#include "plant.h"
 
 enum SortingCriteria{
     Strength,
@@ -22,41 +23,59 @@ enum SortingCriteria{
 
 class LocationCell{
 public:
+    typedef std::map<int, std::unordered_map<QPoint, int> > SpecieLocationQueryablePlants;
     LocationCell() : species() {}
-    std::map<int, std::map<QPoint, Plant> > species;
+    SpecieLocationQueryablePlants species;
 };
 
 class PlantStorage{
 public:
+    typedef SpatialHashMap<LocationCell> PlantSpatialHashMap;
+    typedef std::unordered_map<int, Plant> BasePlantStorage;
+    typedef std::unordered_map<int, std::unordered_set<int> > SpecieQueryablePlants;
+
+    class InvalidPlantIDException : public std::exception
+    {
+    public:
+        virtual const char* what() const noexcept
+        {
+            return "Requested invalid plant id!";
+        }
+    };
+
     PlantStorage(int area_width, int area_height);
     ~PlantStorage();
-    void add(Plant p_plant);
-    void remove(Plant p_plant);
-    bool contains(Plant p_plant) const;
-    void clear();
-    int getPlantCount();
-    std::vector<Plant> getPlants();
-    std::list<Plant> getSortedPlants(SortingCriteria p_sorting_criteria);
-    const PlantStorageStructure& getPlantsBySpecies();
-    void generateSnapshot();
-    void generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months);
-    bool isPlantAtLocation(QPoint p_location);
-    std::vector<Plant> getOnePlantPerCell(int p_specie_id);
-    const std::set<int> getSpecieIds();
+    void add(const Plant & p_plant, bool mutex_lock = true);
+    void remove(const Plant & plant, bool mutex_lock = true);
+    void clear(bool mutex_lock = true);
+    int getPlantCount() const;
+    std::vector<Plant> getPlants(bool mutex_lock = true) const;
+    std::list<Plant> getSortedPlants(SortingCriteria p_sorting_criteria, bool mutex_lock = true) const;
+    bool isPlantAtLocation(QPoint p_location, bool mutex_lock = true) const;
+    std::set<int> getSpecieIds(bool mutex_lock = true) const;
+    std::vector<Plant> getOnePlantPerCell(int p_specie_id, bool mutex_lock = true) const;
+    bool containsSpecie(int specie_id, bool mutex_lock = true) const;
 
-    void lock();
-    void unlock();
-
-    typedef SpatialHashMap<LocationCell> PlantSpatialHashMap;
+    SpecieQueryablePlants getPlantsBySpecies();
+    void generateSnapshot(bool mutex_lock = true) const;
+    void generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months, bool mutex_lock = true);
+    void update(EnvironmentManager & environment_manager, std::vector<Plant> & surviving_plants, std::vector<Plant> & deceased_plants, bool mutex_lock = true);
 
 private:
-    PlantStorageStructure m_plants;
-    PlantSpatialHashMap m_location_plant_accessor;
+    Plant operator[](int plant_id) const;
+    bool contains_plant(int plant_id, bool mutex_lock = true) const;
+    void lock() const;
+    void unlock() const;
+
+    BasePlantStorage m_plants;
+    SpecieQueryablePlants m_specie_id_queryable_plants;
+    PlantSpatialHashMap m_location_queryable_plants;
+
     mutable std::mutex m_storage_accessor_mutex;
     int m_plant_count;
     int m_area_width, m_area_height;
 
-//    AnalysisConfiguration m_statistical_analyzer_config;
+    AnalysisConfiguration m_statistical_analyzer_config;
 };
 
 #endif //PLANT_STORAGE_H

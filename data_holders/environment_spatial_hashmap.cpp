@@ -70,7 +70,8 @@ int IlluminationCell::getRenderingIllumination() const
  * SOIL HUMIDITY CELL *
  **********************/
 int SoilHumidityCell::_total_available_humidity = 0;
-SoilHumidityCell::SoilHumidityCell() : m_requests(), m_grants(), m_refresh_required(false)
+int SoilHumidityCell::id_incrementor = 0;
+SoilHumidityCell::SoilHumidityCell() : m_requests(), m_grants(), m_refresh_required(true), m_unique_id(id_incrementor++)
 {
 
 }
@@ -88,7 +89,7 @@ void SoilHumidityCell::reset()
 
 int SoilHumidityCell::getGrantedHumidity(int p_id)
 {
-    if(m_grants.empty()) // Refresh requited
+    if(m_refresh_required) // Refresh requited
         refresh();
 
     auto it(m_grants.find(p_id));
@@ -264,13 +265,19 @@ void EnvironmentSpatialHashMap::setAvailableResources(int p_available_illuminati
 
 void EnvironmentSpatialHashMap::resetAllCells()
 {
-    for(int x = 0; x < getHorizontalCellCount(); x++)
+    for(auto it(begin()); it != end(); it++)
     {
-        for(int y = 0; y < getVerticalCellCount(); y++)
-        {
-            EnvironmentSpatialHashMapCell & cell ( this->operator [](QPoint(x,y) ));
-            cell.soil_humidity_cell.reset();
-            cell.illumination_cell.reset();
-        }
+        it->second.soil_humidity_cell.reset();
+        it->second.illumination_cell.reset();
     }
+//    clear();
+//    for(int x = 0; x < getHorizontalCellCount(); x++)
+//    {
+//        for(int y = 0; y < getVerticalCellCount(); y++)
+//        {
+//            EnvironmentSpatialHashMapCell & cell ( this->operator [](QPoint(x,y) ));
+//            cell.soil_humidity_cell.reset();
+//            cell.illumination_cell.reset();
+//        }
+//    }
 }

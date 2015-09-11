@@ -198,11 +198,13 @@ void CentralWidget::stop_simulation()
 {
     if(m_simulator_manager.getState() != SimulatorManager::State::Stopped ) // Starting
     {
-        m_render_manager.stop();
         m_simulator_manager.stop();
         m_overview_widget->reset();
         m_stop_start_button->setText("Start");
         m_pause_resume_button->setText("Pause");
+
+        m_render_manager.trigger(); // Make sure it triggers one last time to clear
+        m_render_manager.stop();
 
         // Disable pause/resume button
         m_pause_resume_button->setEnabled(false);

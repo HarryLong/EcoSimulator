@@ -62,7 +62,7 @@ signals:
     void removedPlant(QString name, QString cause_of_death);
 
 private:
-    void remove_plant(Plant p);
+//    void remove_plant(Plant p);
     void add_plant(Plant p_plant);
 
     EnvironmentManager m_environment_mgr;
@@ -85,6 +85,9 @@ private:
     State m_state;
 
     PlantFactory m_plant_factory;
+
+    std::thread * m_snapshot_creator_thread;
+    std::thread * m_statistical_snapshot_thread;
 
     // Configuration
     bool m_seeding_enabled;

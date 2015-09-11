@@ -15,14 +15,17 @@ SimulatorManager::SimulatorManager() : m_time_keeper(),
     m_plant_storage(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_environment_mgr(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_plant_factory(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
-    m_elapsed_months(0), m_state(Stopped)
+    m_elapsed_months(0), m_state(Stopped), m_snapshot_creator_thread(nullptr), m_statistical_snapshot_thread(nullptr)
 {
     m_time_keeper.addListener(this);
 }
 
 SimulatorManager::~SimulatorManager()
 {
-
+    if(m_snapshot_creator_thread)
+        delete m_snapshot_creator_thread;
+    if(m_statistical_snapshot_thread)
+        delete m_statistical_snapshot_thread;
 }
 
 void SimulatorManager::PerformSimulation(SimulationConfiguration simulation_config)
@@ -43,10 +46,10 @@ void SimulatorManager::add_plant(Plant p_plant)
     }
 }
 
-void SimulatorManager::remove_plant(Plant p)
-{
-    m_plant_storage.remove(p);
-}
+//void SimulatorManager::remove_plant(Plant p)
+//{
+//    m_plant_storage.remove(p);
+//}
 
 void SimulatorManager::start( SimulationConfiguration configuration)
 {
@@ -64,6 +67,11 @@ void SimulatorManager::start( SimulationConfiguration configuration)
             add_plant(m_plant_factory.generate(specie_it->first));
         }
     }
+//    m_state = Running;
+
+//    while(true)
+//        trigger();
+
     m_state = Running;
     m_stopping.store(false);
     m_time_keeper.start();
@@ -98,7 +106,9 @@ void SimulatorManager::stop()
 #endif
 
     m_plant_storage.clear();
+    m_environment_mgr.reset();
     m_elapsed_months = 0;
+    emit updated(0);
 }
 
 void SimulatorManager::trigger()
@@ -111,89 +121,54 @@ void SimulatorManager::trigger()
     if(m_configuration.m_duration != -1 && m_elapsed_months >= m_configuration.m_duration)
         stop();
 
-    m_plant_storage.lock();
-
-    std::vector<Plant> plants(m_plant_storage.getPlants());
-//    /*
-//     * ITERATION # 1:
-//     * - Based on environmental factors calculates the strength of each plant
-//     * - Checks the status of the plant and acts accordingly (dies or grows)
-//     */
-    int month((m_elapsed_months%12) + 1);
-
-    m_environment_mgr.setMonth(month);
-
-#pragma omp parallel for
-    for(int i = 0; i < plants.size(); i++)
-    {
-        Plant p (plants.at(i));
-        //Shade
-        int daily_illumination(m_environment_mgr.getDailyIllumination(p.m_center_position, p.m_unique_id, p.getCanopyWidth(), p.getHeight()));
-
-        //Humidity
-        int soil_humidity(m_environment_mgr.getSoilHumidity(p.m_center_position, p.getRootSize(), p.m_unique_id));
-
-        //Temperature [This is static but refetched each time in case it gets dynamic]
-        int temp(m_environment_mgr.getTemperature());
-
-        p.calculateStrength(daily_illumination, soil_humidity, temp);
-    }
-
-    // Check plant status
-    std::vector<Plant> plants_to_remove;
-
     /*
      * ITERATION # 1:
      * - Based on environmental factors calculates the strength of each plant
      * - Checks the status of the plant and acts accordingly (dies or grows)
-     * - Updates the environment with the effect of the plant growth
      */
-    for(int i = 0; i < plants.size(); i++)
-    {
-        Plant p ( plants.at(i) );
-        Plant::PlantStatus status (p.getStatus());
-        if(status == Plant::PlantStatus::Alive)
-        {
-            p.newMonth();
+    int month((m_elapsed_months%12) + 1);
 
-            // Update the environment
-            m_environment_mgr.updateEnvironment(p.m_center_position, p.getCanopyWidth(), p.getHeight(),
-                                                p.getRootSize(), p.m_unique_id, p.getMinimumSoilHumidityRequirement());
-        }
-        else
-        {
-            plants_to_remove.push_back(p);
-            m_environment_mgr.remove(p.m_center_position, p.getCanopyWidth(), p.getRootSize(), p.m_unique_id);
-            emit removedPlant(p.m_specie_name, plant_status_to_string(status));
-        }
+    m_environment_mgr.setMonth(month);
+
+    // Update all the plants
+    std::vector<Plant> surviving_plants;
+    std::vector<Plant> deceased_plants;
+    m_plant_storage.update(m_environment_mgr, surviving_plants, deceased_plants);
+
+    // Update the environment
+    for(Plant & p : surviving_plants)
+    {
+        m_environment_mgr.updateEnvironment(p.m_center_position, p.getCanopyWidth(), p.getHeight(),
+                                            p.getRootSize(), p.m_unique_id, p.getMinimumSoilHumidityRequirement());
     }
-
-    // Remove the plants
-    for(Plant p : plants_to_remove)
+    for(Plant & p : deceased_plants)
     {
-        remove_plant(p);
+        m_environment_mgr.updateEnvironment(p.m_center_position, p.getCanopyWidth(), p.getHeight(),
+                                            p.getRootSize(), p.m_unique_id, p.getMinimumSoilHumidityRequirement());
+        m_environment_mgr.remove(p.m_center_position, p.getCanopyWidth(), p.getRootSize(), p.m_unique_id);
+        emit removedPlant(p.m_specie_name, plant_status_to_string(p.getStatus()));
     }
 
     // Seeding
     if(m_seeding_enabled && m_elapsed_months % 12 == 6)
     {
-        PlantStorageStructure species(m_plant_storage.getPlantsBySpecies());
+        std::set<int> species(m_plant_storage.getSpecieIds());
 
-        for(auto specie(species.begin()); specie != species.end(); specie++)
+        for(int specie_id : species)
         {
-            int specie_id(specie->first);
             int specie_seed_count(m_plant_factory.getSpecieProperties(specie_id).seeding_properties.seed_count);
-
-            if(specie->second.size() > 0) // Use existing plants to seed
+            if(m_plant_storage.containsSpecie(specie_id)) // Use existing plants to seed
             {
                 std::vector<Plant> seeding_plants(m_plant_storage.getOnePlantPerCell(specie_id));
 
                 auto plant_it(seeding_plants.begin());
 
+                assert(plant_it != seeding_plants.end());
+
                 int seed_count(0);
                 while(seed_count++ < specie_seed_count)
                 {
-                    Plant seeding_plant (*plant_it);
+                    Plant & seeding_plant (*plant_it);
                     QPoint position (seeding_plant.seed(1).at(0));
                     if(position.x() >= 0 && position.x() < SimulatorManager::_AREA_WIDTH_HEIGHT &&
                         position.y() >= 0 && position.y() < SimulatorManager::_AREA_WIDTH_HEIGHT)
@@ -216,7 +191,7 @@ void SimulatorManager::trigger()
                     for(; n_planted < specie_seed_count/2; n_planted++)
                     {
                         // Select a random plant
-                        Plant random_plant(*(plants.begin() + (rand()%plants.size())));
+                        Plant & random_plant(*(plants.begin() + (rand()%plants.size())));
                         QPoint location(Utils::getRandomPointInCircle(random_plant.m_center_position,
                                                                             std::max(1.0f,random_plant.getCanopyWidth()/2.f)));
                         add_plant(m_plant_factory.generate(specie_id, location));
@@ -227,8 +202,6 @@ void SimulatorManager::trigger()
             }
         }
     }
-
-    m_plant_storage.unlock();
 
 #ifdef GUI_MODE
     refresh_rendering_data();
@@ -279,6 +252,7 @@ QString SimulatorManager::plant_status_to_string(Plant::PlantStatus status)
 void SimulatorManager::refresh_rendering_data()
 {
     m_plant_rendering_data.lock();
+
     m_plant_rendering_data.clear();
 
     for(Plant & p : m_plant_storage.getSortedPlants(SortingCriteria::Height))
@@ -292,11 +266,18 @@ void SimulatorManager::refresh_rendering_data()
 
 void SimulatorManager::generateSnapshot()
 {
-    new std::thread(&PlantStorage::generateSnapshot, &m_plant_storage);
+    if(m_snapshot_creator_thread)
+        delete m_snapshot_creator_thread;
+
+    m_snapshot_creator_thread = new std::thread(&PlantStorage::generateSnapshot, &m_plant_storage, true);
 }
 
 void SimulatorManager::generateStatisticalSnapshot()
 {
-    new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
-                    m_environment_mgr.getTemperatures(), m_elapsed_months);
+    if(m_statistical_snapshot_thread)
+        delete m_statistical_snapshot_thread;
+
+    m_statistical_snapshot_thread =
+            new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
+                    m_environment_mgr.getTemperatures(), m_elapsed_months, true);
 }

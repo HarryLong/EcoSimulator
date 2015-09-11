@@ -1,5 +1,4 @@
 #include "plant_factory.h"
-#include "plant.h"
 #include "plantDB/plant_db.h"
 
 #include <QColor>
@@ -79,9 +78,6 @@ std::vector<QColor> PlantFactory::get_specie_colors()
 {
     std::vector<QColor> ret;
     ret.push_back(Qt::white);
-    ret.push_back(Qt::darkGray);
-    ret.push_back(Qt::gray);
-    ret.push_back(Qt::lightGray);
     ret.push_back(Qt::red);
     ret.push_back(Qt::green);
     ret.push_back(Qt::blue);

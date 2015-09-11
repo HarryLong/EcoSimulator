@@ -1,6 +1,7 @@
 #include "environment_soil_humidity.h"
 #include <math.h>
 #include "../data_holders/pixel_data.h"
+#include <QDebug>
 
 EnvironmentSoilHumidity::EnvironmentSoilHumidity()
 {
@@ -24,7 +25,6 @@ int EnvironmentSoilHumidity::getSoilHumidity(EnvironmentSpatialHashMap & map, QP
 void EnvironmentSoilHumidity::update(EnvironmentSpatialHashMap & map, QPoint p_center, float p_roots_size, int p_id, int p_minimum_humidity)
 {
     std::vector<QPoint> cells(map.getPoints(p_center, p_roots_size));
-
     for(QPoint & cell : cells)
     {
         map[cell].soil_humidity_cell.update(p_id, p_roots_size, p_minimum_humidity);
