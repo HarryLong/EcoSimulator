@@ -3,24 +3,69 @@
 #include "overview_widget.h"
 
 #include <QGridLayout>
-#include <QPushButton>
 #include <QSlider>
 #include <QComboBox>
 #include <functional>
+#include <QMovie>
+#include <QDebug>
 
+#include <QFile>
+
+/************************
+ * ANIMATED PUSH BUTTON *
+ ************************/
+AnimatedPushButton::AnimatedPushButton(const QString &text, const QString & link_to_animation, QWidget *parent) : QPushButton(text, parent),
+    m_animation(new QMovie(link_to_animation)), m_text(text)
+{
+    connect(m_animation, SIGNAL(frameChanged(int)), this, SLOT(frame_changed(int)));
+}
+
+AnimatedPushButton::~AnimatedPushButton()
+{
+    delete m_animation;
+}
+
+void AnimatedPushButton::startAnimation()
+{
+    setEnabled(false);
+    m_animation->start();
+}
+
+void AnimatedPushButton::stopAnimation()
+{
+    m_animation->stop();
+    setIcon(QIcon());
+    setEnabled(true);
+}
+
+void AnimatedPushButton::frame_changed(int frame)
+{
+    setIcon(QIcon(m_animation->currentPixmap()));
+
+    if(frame == m_animation->frameCount()-1)
+        startAnimation();
+}
+
+/******************
+ * CENTRAL WIDGET *
+ ******************/
 #define MAX_UNIT_TIME 5000
 #define TIME_SLIDER_MAX 4950 // 5000-4950 = 50
 #define TIME_SLIDER_DEFAULT 2000 // 1000ms
 #define TIME_SLIDER_MIN 0 // 5000 ms
-
 CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
     QWidget(parent, f),
     m_simulator_manager(),
     m_start_config_dialog(this),
     m_render_manager(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT,
                      std::bind(&SimulatorManager::getPlantRenderingData, &m_simulator_manager),
-                     std::bind(&SimulatorManager::getEnvironmentRenderingData, &m_simulator_manager))
+                     std::bind(&SimulatorManager::getEnvironmentRenderingData, &m_simulator_manager)),
+    m_generate_statistical_snapshot_btn(new AnimatedPushButton("Generate Statistical Snapshot", ":/icons/loading.gif"))
 {
+    std::function<void()> callback_function(
+                std::bind(&AnimatedPushButton::stopAnimation, m_generate_statistical_snapshot_btn));
+    m_statistical_callback_listener = new CallbackListener(callback_function);
+
     init_widgets();
     init_layout();
     init_signals();
@@ -89,7 +134,6 @@ void CentralWidget::init_layout()
     // Buttons
     {
         m_generate_snapshot_btn = new QPushButton("Generate Snapshot");
-        m_generate_statistical_snapshot_btn = new QPushButton("Generate Statistical Snapshot");
 
         QHBoxLayout * buttons_layout = new QHBoxLayout;
         buttons_layout->addWidget(m_generate_snapshot_btn);
@@ -136,7 +180,7 @@ void CentralWidget::init_signals()
 
     // Snapshot generation
     connect(m_generate_snapshot_btn, SIGNAL(clicked()), &m_simulator_manager, SLOT(generateSnapshot()));
-    connect(m_generate_statistical_snapshot_btn, SIGNAL(clicked()), &m_simulator_manager, SLOT(generateStatisticalSnapshot()));
+    connect(m_generate_statistical_snapshot_btn, SIGNAL(clicked()), this, SLOT(generate_statistical_snapshot()));
 
     // Config dialog
     connect(&m_start_config_dialog, SIGNAL(accepted()), this, SLOT(start_simulation()));
@@ -215,4 +259,10 @@ void CentralWidget::display_start_configuration_dialog()
 {
     m_start_config_dialog.reset();
     m_start_config_dialog.exec();
+}
+
+void CentralWidget::generate_statistical_snapshot()
+{
+    m_generate_statistical_snapshot_btn->startAnimation();
+    m_simulator_manager.generateStatisticalSnapshot(m_statistical_callback_listener);
 }

@@ -17,7 +17,7 @@
 #include <map>
 #include <unordered_set>
 #include <uchar.h>
-
+class CallbackListener;
 class SimulatorManager : public QObject, public TimeManager::TimeListener
 {
     Q_OBJECT
@@ -54,7 +54,7 @@ public slots:
     void resume();
     void stop();
     void generateSnapshot();
-    void generateStatisticalSnapshot();
+    void generateStatisticalSnapshot(CallbackListener * completion_listener);
 
 signals:
     void updated(int);

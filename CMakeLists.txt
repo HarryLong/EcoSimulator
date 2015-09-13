@@ -33,7 +33,7 @@ data_holders/plant_rendering_data data_holders/plant_rendering_data_container)
 set(SIMULATOR_CORE_SRC_FILES simulator/core/simulation_configuration simulator/core/simulator_manager)
 set(SIMULATOR_PLANTS_SRC_FILES simulator/plants/plant_factory simulator/plants/plants_storage simulator/plants/plant simulator/plants/growth_manager simulator/plants/constrainers)
 SET(MATH_SRC_FILES math/linear_equation math/dice_roller)
-SET(UTILS_SRC_FILES utils/utils utils/time_manager utils/debuger)
+SET(UTILS_SRC_FILES utils/utils utils/time_manager utils/debuger utils/callback_listener)
 
 #link_directories("${CMAKE_SOURCE_DIR}/lib/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/lib/ecodata-tracker/")
 include_directories(${INCLUDE_DIRECTORIES})
@@ -46,6 +46,10 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -std=c++11 -DGUI_MODE -W
 SET(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 #SET(CMAKE_BUILD_TYPE DEBUG)
 
+# RESOURCES
+set(ICON_RESOURCES ${CMAKE_SOURCE_DIR}/icons.qrc)
+qt5_add_resources(RESOURCES ${ICON_RESOURCES})
+
 add_executable(EcoSim main
 ${RESOURCES_SRC_FILES}
 ${WIDGETS_SRC_FILES}
@@ -56,7 +60,8 @@ ${RENDERING_SRC_FILES}
 ${SIMULATOR_CORE_SRC_FILES}
 ${SIMULATOR_PLANTS_SRC_FILES}
 ${MATH_SRC_FILES}
-${UTILS_SRC_FILES})
+${UTILS_SRC_FILES}
+${RESOURCES})
 
 target_link_libraries(EcoSim ${LIBS})
 # Use the Widgets module from Qt 5.

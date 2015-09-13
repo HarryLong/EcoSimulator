@@ -1,4 +1,6 @@
 #include "plants_storage.h"
+#include "../../utils/callback_listener.h"
+
 #include <ecotracker/tracker.h>
 #include <radialDistribution/analysis_point.h>
 #include <radialDistribution/analyser/analyzer.h>
@@ -373,26 +375,26 @@ void PlantStorage::generateSnapshot(bool mutex_lock) const
 }
 
 void PlantStorage::generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months,
-                                               bool mutex_lock)
+                                               CallbackListener * work_completion_listener, bool mutex_lock)
 {
     QTemporaryDir tmp_dir;
     if(tmp_dir.isValid())
     {
         std::map<float,int> avg_height_to_specie_id;
         // Create analysis points
-        std::map<int, std::vector<AnalysisPoint*>> specie_analysis_points;
+        std::map<int, std::vector<AnalysisPoint>> specie_analysis_points;
         if(mutex_lock)
             lock();
         for(auto specie(m_specie_id_queryable_plants.begin()); specie != m_specie_id_queryable_plants.end(); specie++)
         {
             int specie_id(specie->first);
             float avg_height = 0;
-            std::vector<AnalysisPoint*> analysis_points;
+            std::vector<AnalysisPoint> analysis_points;
             for(auto plant(specie->second.begin()); plant != specie->second.end(); plant++)
             {
                 Plant p ( this->operator []( *plant) );
                 avg_height += p.getHeight();
-                analysis_points.push_back(new AnalysisPoint(specie_id, p.m_center_position, std::max(1.0f,p.getCanopyWidth()/2.0f)));
+                analysis_points.push_back(AnalysisPoint(specie_id, p.m_center_position, std::max(1.0f,p.getCanopyWidth()/2.0f)));
             }
             avg_height /= specie->second.size();
             avg_height_to_specie_id.emplace(avg_height, specie_id);
@@ -417,6 +419,8 @@ void PlantStorage::generateStatisticalSnapshot(std::vector<int> humidities, std:
     {
         qCritical() << "Failed to create temporary directory for statistical snapshot...";
     }
+    if(work_completion_listener)
+        work_completion_listener->complete();
 }
 
 void PlantStorage::lock() const

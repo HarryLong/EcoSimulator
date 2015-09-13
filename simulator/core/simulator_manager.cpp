@@ -6,6 +6,7 @@
 
 #include "../../utils/utils.h"
 #include "../plants/plant.h"
+#include "../../utils/callback_listener.h"
 
 #include <QDebug>
 
@@ -23,9 +24,15 @@ SimulatorManager::SimulatorManager() : m_time_keeper(),
 SimulatorManager::~SimulatorManager()
 {
     if(m_snapshot_creator_thread)
+    {
+        m_snapshot_creator_thread->join();
         delete m_snapshot_creator_thread;
+    }
     if(m_statistical_snapshot_thread)
+    {
+        m_statistical_snapshot_thread->join();
         delete m_statistical_snapshot_thread;
+    }
 }
 
 void SimulatorManager::PerformSimulation(SimulationConfiguration simulation_config)
@@ -267,17 +274,23 @@ void SimulatorManager::refresh_rendering_data()
 void SimulatorManager::generateSnapshot()
 {
     if(m_snapshot_creator_thread)
+    {
+        m_snapshot_creator_thread->join();
         delete m_snapshot_creator_thread;
+    }
 
     m_snapshot_creator_thread = new std::thread(&PlantStorage::generateSnapshot, &m_plant_storage, true);
 }
 
-void SimulatorManager::generateStatisticalSnapshot()
+void SimulatorManager::generateStatisticalSnapshot(CallbackListener * completion_listener)
 {
     if(m_statistical_snapshot_thread)
+    {
+        m_statistical_snapshot_thread->join();
         delete m_statistical_snapshot_thread;
+    }
 
     m_statistical_snapshot_thread =
             new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
-                    m_environment_mgr.getTemperatures(), m_elapsed_months, true);
+                    m_environment_mgr.getTemperatures(), m_elapsed_months, completion_listener, true);
 }

@@ -27,7 +27,7 @@ public:
     LocationCell() : species() {}
     SpecieLocationQueryablePlants species;
 };
-
+class CallbackListener;
 class PlantStorage{
 public:
     typedef SpatialHashMap<LocationCell> PlantSpatialHashMap;
@@ -58,7 +58,8 @@ public:
 
     SpecieQueryablePlants getPlantsBySpecies();
     void generateSnapshot(bool mutex_lock = true) const;
-    void generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months, bool mutex_lock = true);
+    void generateStatisticalSnapshot(std::vector<int> humidities, std::vector<int> illuminations, std::vector<int> temperatures, int elapsed_months,
+                                     CallbackListener * work_completion_listener = nullptr, bool mutex_lock = true);
     void update(EnvironmentManager & environment_manager, std::vector<Plant> & surviving_plants, std::vector<Plant> & deceased_plants, bool mutex_lock = true);
 
 private:
