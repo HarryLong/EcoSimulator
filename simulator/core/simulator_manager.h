@@ -28,10 +28,13 @@ public:
         Stopped
     };
 
+    class ProgressListener{
+    public:
+        virtual void progressUpdate(float percent) = 0;
+    };
+
     SimulatorManager();
     ~SimulatorManager();
-
-    static void PerformSimulation(SimulationConfiguration simulation_config);
 
     int getElapsedMonths() { return m_elapsed_months; }
 
@@ -44,12 +47,17 @@ public:
 #ifdef GUI_MODE
     const PlantRenderDataContainer & getPlantRenderingData();
     const EnvironmentSpatialHashMap & getEnvironmentRenderingData();
+#else
+static void start(SimulationConfiguration configuration, std::vector<ProgressListener> & progress_listeners);
 #endif
 
     static const int _AREA_WIDTH_HEIGHT;//10000; //10000 // Centimeters ==> [50m x 50m]
 
 public slots:
+#ifdef GUI_MODE
     void start(SimulationConfiguration configuration);
+#endif
+    void setConfiguration(SimulationConfiguration configuration);
     void pause();
     void resume();
     void stop();
@@ -88,9 +96,6 @@ private:
 
     std::thread * m_snapshot_creator_thread;
     std::thread * m_statistical_snapshot_thread;
-
-    // Configuration
-    bool m_seeding_enabled;
 };
 
 #endif //SIMULATOR_MANAGER_H

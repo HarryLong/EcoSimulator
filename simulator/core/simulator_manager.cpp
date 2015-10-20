@@ -35,12 +35,6 @@ SimulatorManager::~SimulatorManager()
     }
 }
 
-void SimulatorManager::PerformSimulation(SimulationConfiguration simulation_config)
-{
-    SimulatorManager simulator;
-    simulator.start(simulation_config);
-}
-
 void SimulatorManager::add_plant(Plant p_plant)
 {
     if(!m_plant_storage.isPlantAtLocation(p_plant.m_center_position))
@@ -58,7 +52,7 @@ void SimulatorManager::add_plant(Plant p_plant)
 //    m_plant_storage.remove(p);
 //}
 
-void SimulatorManager::start( SimulationConfiguration configuration)
+void SimulatorManager::setConfiguration(SimulationConfiguration configuration)
 {
     m_configuration = configuration;
     m_environment_mgr.setEnvironmentProperties(configuration.m_slope,
@@ -66,7 +60,6 @@ void SimulatorManager::start( SimulationConfiguration configuration)
                                                configuration.m_illumination,
                                                configuration.m_temperature);
 
-    m_seeding_enabled = configuration.m_seeding_enabled;
     for(auto specie_it(configuration.m_plants_to_generate.begin()); specie_it != configuration.m_plants_to_generate.end(); specie_it++)
     {
         for(int plant_count(0); plant_count < specie_it->second; plant_count++)
@@ -74,6 +67,13 @@ void SimulatorManager::start( SimulationConfiguration configuration)
             add_plant(m_plant_factory.generate(specie_it->first));
         }
     }
+}
+
+#ifdef GUI_MODE
+void SimulatorManager::start( SimulationConfiguration configuration)
+{
+    setConfiguration(configuration);
+
 //    m_state = Running;
 
 //    while(true)
@@ -83,6 +83,23 @@ void SimulatorManager::start( SimulationConfiguration configuration)
     m_stopping.store(false);
     m_time_keeper.start();
 }
+#else
+void SimulatorManager::start( SimulationConfiguration configuration, std::vector<ProgressListener> & progress_listeners)
+{
+    SimulatorManager sm;
+    sm.setConfiguration(configuration);
+
+    int elapsed_months(0);
+    while((elapsed_months = sm.getElapsedMonths()) < configuration.m_duration)
+    {
+        sm.trigger();
+        for(ProgressListener & listener : progress_listeners)
+            listener.progressUpdate((elapsed_months*100.f)/configuration.m_duration);
+    }
+
+    sm.generateStatisticalSnapshot(nullptr);
+}
+#endif
 
 void SimulatorManager::resume()
 {
@@ -125,9 +142,6 @@ void SimulatorManager::trigger()
 
     m_elapsed_months++;
 
-    if(m_configuration.m_duration != -1 && m_elapsed_months >= m_configuration.m_duration)
-        stop();
-
     /*
      * ITERATION # 1:
      * - Based on environmental factors calculates the strength of each plant
@@ -157,7 +171,7 @@ void SimulatorManager::trigger()
     }
 
     // Seeding
-    if(m_seeding_enabled && m_elapsed_months % 12 == 6)
+    if(m_configuration.m_seeding_enabled && m_elapsed_months % 12 == 6)
     {
         std::set<int> species(m_plant_storage.getSpecieIds());
 

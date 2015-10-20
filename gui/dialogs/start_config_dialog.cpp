@@ -11,7 +11,6 @@
 #include "monthly_illumination_edit_dlg.h"
 #include "../widgets/simulation_configuration_widget.h"
 #include "../widgets/plant_configuration_widget.h"
-//#include "../widgets/input_widgets.h"
 
 #define START_DIALOG_DIALOG_WIDTH 900
 #define START_DIALOG_DIALOG_HEIGHT 900
