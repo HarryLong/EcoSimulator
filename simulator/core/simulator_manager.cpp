@@ -84,7 +84,7 @@ void SimulatorManager::start( SimulationConfiguration configuration)
     m_time_keeper.start();
 }
 #else
-void SimulatorManager::start( SimulationConfiguration configuration, std::vector<ProgressListener> & progress_listeners)
+void SimulatorManager::start( SimulationConfiguration configuration, std::vector<ProgressListener*> & progress_listeners)
 {
     SimulatorManager sm;
     sm.setConfiguration(configuration);
@@ -93,8 +93,8 @@ void SimulatorManager::start( SimulationConfiguration configuration, std::vector
     while((elapsed_months = sm.getElapsedMonths()) < configuration.m_duration)
     {
         sm.trigger();
-        for(ProgressListener & listener : progress_listeners)
-            listener.progressUpdate((elapsed_months*100.f)/configuration.m_duration);
+        for(ProgressListener * listener : progress_listeners)
+            listener->progressUpdate((elapsed_months*100.f)/configuration.m_duration);
     }
 
     sm.generateStatisticalSnapshot(nullptr);

@@ -31,6 +31,7 @@ public:
     class ProgressListener{
     public:
         virtual void progressUpdate(float percent) = 0;
+        virtual void complete() = 0;
     };
 
     SimulatorManager();
@@ -48,7 +49,7 @@ public:
     const PlantRenderDataContainer & getPlantRenderingData();
     const EnvironmentSpatialHashMap & getEnvironmentRenderingData();
 #else
-static void start(SimulationConfiguration configuration, std::vector<ProgressListener> & progress_listeners);
+static void start(SimulationConfiguration configuration, std::vector<ProgressListener*> & progress_listeners);
 #endif
 
     static const int _AREA_WIDTH_HEIGHT;//10000; //10000 // Centimeters ==> [50m x 50m]

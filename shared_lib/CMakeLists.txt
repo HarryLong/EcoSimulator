@@ -28,7 +28,14 @@ set(SIMULATOR_PLANTS_SRC_FILES ../simulator/plants/plant_factory ../simulator/pl
 SET(MATH_SRC_FILES ../math/linear_equation ../math/dice_roller)
 SET(UTILS_SRC_FILES ../utils/utils ../utils/time_manager ../utils/debuger)
 
-SET(API_HEADER_FILES ../simulator/core/simulator_manager.h ../simulator/core/simulation_configuration.h)
+SET(CORE_HEADER_FILES ../simulator/core/simulator_manager.h ../simulator/core/simulation_configuration.h)
+SET(UTILS_HEADER_FILES ../utils/time_manager.h)
+SET(PLANTS_HEADER_FILES ../simulator/plants/plant_factory.h ../simulator/plants/plants_storage.h ../simulator/plants/plant.h ../simulator/plants/growth_manager.h
+../simulator/plants/constrainers.h)
+SET(RESOURCES_HEADER_FILES ../resources/environment_manager.h ../resources/environment_illumination.h ../resources/environment_soil_humidity.h
+../resources/environment_temp.h)
+SET(MATH_HEADER_FILES ../math/dice_roller.h ../math/linear_equation.h)
+SET(DATA_HOLDERS_HEADER_FILES ../data_holders/environment_spatial_hashmap.h)
 
 set(LIB_SRC_FILES
 ${RESOURCES_SRC_FILES}
@@ -57,6 +64,21 @@ install(TARGETS EcoSimulator
         LIBRARY DESTINATION lib
         CONFIGURATIONS RELWITHDEBINFO)
 
-# INSTALL HEADER FILES
-install(FILES ${API_HEADER_FILES}
-        DESTINATION include/ecosimulator)
+# INSTAL CORE HEADER FILES
+install(FILES ${CORE_HEADER_FILES}
+        DESTINATION include/ecosimulator/simulator/core)
+# INSTAL UTILS HEADER FILES
+install(FILES ${UTILS_HEADER_FILES}
+        DESTINATION include/ecosimulator/utils)
+# INSTAL PLANTS HEADER FILES
+install(FILES ${PLANTS_HEADER_FILES}
+        DESTINATION include/ecosimulator/simulator/plants)
+# INSTALL RESOURCE HEADER FILES
+install(FILES ${RESOURCES_HEADER_FILES}
+        DESTINATION include/ecosimulator/resources)
+# INSTALL MATH HEADER FILES
+install(FILES ${MATH_HEADER_FILES}
+        DESTINATION include/ecosimulator/math)
+# INSTALL DATA HOLDERS HEADER FILES
+install(FILES ${DATA_HOLDERS_HEADER_FILES}
+        DESTINATION include/ecosimulator/data_holders)
