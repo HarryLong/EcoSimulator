@@ -62,10 +62,13 @@ void SimulatorManager::setConfiguration(SimulationConfiguration configuration)
 
     for(auto specie_it(configuration.m_plants_to_generate.begin()); specie_it != configuration.m_plants_to_generate.end(); specie_it++)
     {
-        for(int plant_count(0); plant_count < specie_it->second; plant_count++)
-        {
-            add_plant(m_plant_factory.generate(specie_it->first));
-        }
+        int specie_id(specie_it->first);
+        int plant_count(specie_it->second);
+        if(plant_count == -1) // Seeding quantity
+            plant_count = m_plant_factory.getSpecieProperties(specie_id).seeding_properties.seed_count;
+
+        for(int i(0); i < plant_count; i++)
+            add_plant(m_plant_factory.generate(specie_id));
     }
 }
 
@@ -84,7 +87,7 @@ void SimulatorManager::start( SimulationConfiguration configuration)
     m_time_keeper.start();
 }
 #else
-void SimulatorManager::start( SimulationConfiguration configuration, std::vector<ProgressListener*> & progress_listeners)
+void SimulatorManager::start( SimulationConfiguration configuration, ProgressListener* progress_listener)
 {
     SimulatorManager sm;
     sm.setConfiguration(configuration);
@@ -93,11 +96,13 @@ void SimulatorManager::start( SimulationConfiguration configuration, std::vector
     while((elapsed_months = sm.getElapsedMonths()) < configuration.m_duration)
     {
         sm.trigger();
-        for(ProgressListener * listener : progress_listeners)
-            listener->progressUpdate((elapsed_months*100.f)/configuration.m_duration);
+        progress_listener->progressUpdate((elapsed_months*100.f)/configuration.m_duration);
     }
 
-    sm.generateStatisticalSnapshot(nullptr);
+    progress_listener->progressUpdate("Generating statistical snapshot... This can take some time.");
+    sm.generateStatisticalSnapshot();
+
+    progress_listener->complete();
 }
 #endif
 
@@ -294,6 +299,12 @@ void SimulatorManager::generateSnapshot()
     }
 
     m_snapshot_creator_thread = new std::thread(&PlantStorage::generateSnapshot, &m_plant_storage, true);
+}
+
+void SimulatorManager::generateStatisticalSnapshot()
+{
+    m_plant_storage.generateStatisticalSnapshot(m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
+                                                m_environment_mgr.getTemperatures(), m_elapsed_months);
 }
 
 void SimulatorManager::generateStatisticalSnapshot(CallbackListener * completion_listener)

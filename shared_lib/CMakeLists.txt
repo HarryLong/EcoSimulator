@@ -10,7 +10,7 @@ find_package(Qt5Gui REQUIRED)
 find_package(OpenMP REQUIRED)
 ##find_package(PlantDB REQUIRED)
 
-set(LIBS ${LIBS} ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} PlantDB)
+set(LIBS ${LIBS} ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} ${Qt5Gui_LIBRARIES} PlantDB EcoDataTracker RadialDistributionAnalyser)
 set(INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/spatial_hashmap/" ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS})
 
 #"${CMAKE_SOURCE_DIR}/include/statistical-analysis-tool/" "${CMAKE_SOURCE_DIR}/include/ecodata-tracker/"
@@ -26,7 +26,7 @@ SET(DATA_HOLDERS_SRC_FILES ../data_holders/environment_spatial_hashmap ../data_h
 set(SIMULATOR_CORE_SRC_FILES ../simulator/core/simulation_configuration ../simulator/core/simulator_manager)
 set(SIMULATOR_PLANTS_SRC_FILES ../simulator/plants/plant_factory ../simulator/plants/plants_storage ../simulator/plants/plant ../simulator/plants/growth_manager ../simulator/plants/constrainers)
 SET(MATH_SRC_FILES ../math/linear_equation ../math/dice_roller)
-SET(UTILS_SRC_FILES ../utils/utils ../utils/time_manager ../utils/debuger)
+SET(UTILS_SRC_FILES ../utils/utils ../utils/time_manager ../utils/debuger ../utils/callback_listener)
 
 SET(CORE_HEADER_FILES ../simulator/core/simulator_manager.h ../simulator/core/simulation_configuration.h)
 SET(UTILS_HEADER_FILES ../utils/time_manager.h)

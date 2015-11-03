@@ -5,7 +5,8 @@
 #include <QImage>
 #include <array>
 
-struct SimulationConfiguration {
+class SimulationConfiguration {
+public:
     std::map<int, int> m_plants_to_generate;
     float m_slope;
     std::vector<int> m_humidity;
@@ -16,6 +17,8 @@ struct SimulationConfiguration {
     bool m_seeding_enabled;
 
     SimulationConfiguration() {}
+
+    ~SimulationConfiguration() {}
 
     SimulationConfiguration(std::map<int, int> plants_to_generate,
                             float slope,

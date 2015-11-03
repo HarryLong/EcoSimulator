@@ -31,6 +31,7 @@ public:
     class ProgressListener{
     public:
         virtual void progressUpdate(float percent) = 0;
+        virtual void progressUpdate(QString info) = 0;
         virtual void complete() = 0;
     };
 
@@ -49,7 +50,7 @@ public:
     const PlantRenderDataContainer & getPlantRenderingData();
     const EnvironmentSpatialHashMap & getEnvironmentRenderingData();
 #else
-static void start(SimulationConfiguration configuration, std::vector<ProgressListener*> & progress_listeners);
+static void start(SimulationConfiguration configuration, ProgressListener* progress_listener);
 #endif
 
     static const int _AREA_WIDTH_HEIGHT;//10000; //10000 // Centimeters ==> [50m x 50m]
@@ -64,6 +65,7 @@ public slots:
     void stop();
     void generateSnapshot();
     void generateStatisticalSnapshot(CallbackListener * completion_listener);
+    void generateStatisticalSnapshot(); // non-asynchronous
 
 signals:
     void updated(int);

@@ -9,15 +9,6 @@
 #include "growth_manager.h"
 #include "constrainers.h"
 
-enum ConstrainerType{
-    Age,
-    Illumination,
-    SoilHumidity,
-    Temperature
-};
-
-typedef std::map<ConstrainerType, float> Strengths;
-
 class Plant {
 public:
     enum PlantStatus{
@@ -30,6 +21,15 @@ public:
         DeathByCold,
         DeathByHeat
     };
+
+    enum ConstrainerType{
+        Age,
+        Illumination,
+        SoilHumidity,
+        Temperature
+    };
+    typedef std::map<ConstrainerType, float> Strengths;
+
 
     Plant(SpecieProperties m_specie_properties, QColor p_color, QPoint p_center_coord, long p_unique_id, int p_random_id);
     ~Plant();
