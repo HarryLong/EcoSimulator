@@ -16,7 +16,8 @@ SimulatorManager::SimulatorManager() : m_time_keeper(),
     m_plant_storage(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_environment_mgr(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_plant_factory(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
-    m_elapsed_months(0), m_state(Stopped), m_snapshot_creator_thread(nullptr), m_statistical_snapshot_thread(nullptr)
+    m_elapsed_months(0), m_state(Stopped), m_snapshot_creator_thread(nullptr), m_statistical_snapshot_thread(nullptr),
+    m_stopping(false)
 {
     m_time_keeper.addListener(this);
 }
@@ -142,8 +143,10 @@ void SimulatorManager::stop()
 
 void SimulatorManager::trigger()
 {
+#ifdef GUI_MODE
     if(m_stopping.load())
         return;
+#endif
 
     m_elapsed_months++;
 
