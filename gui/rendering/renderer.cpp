@@ -180,7 +180,7 @@ IlluminationRenderer::IlluminationRenderer(int area_width, int area_height, std:
 
 int IlluminationRenderer::getResource(const EnvironmentSpatialHashMap & environment_spatial_hashmap, QPoint pos)
 {
-    return environment_spatial_hashmap[pos].illumination_cell.getRenderingIllumination();
+    return environment_spatial_hashmap.getCell(pos, EnvironmentSpatialHashMap::Space::_HASHMAP).illumination_cell.getRenderingIllumination();
 }
 
 /*****************
@@ -194,7 +194,7 @@ SoilHumidityRenderer::SoilHumidityRenderer(int area_width, int area_height, std:
 
 int SoilHumidityRenderer::getResource(const EnvironmentSpatialHashMap & environment_spatial_hashmap, QPoint pos)
 {
-    return environment_spatial_hashmap[pos].soil_humidity_cell.getRenderingHumidity();
+    return environment_spatial_hashmap.getCell(pos, EnvironmentSpatialHashMap::Space::_HASHMAP).soil_humidity_cell.getRenderingHumidity();
 }
 
 /************************
@@ -208,7 +208,7 @@ TemperatureRenderer::TemperatureRenderer(int area_width, int area_height, std::f
 
 int TemperatureRenderer::getResource(const EnvironmentSpatialHashMap & environment_spatial_hashmap, QPoint pos)
 {
-    return environment_spatial_hashmap[pos].temp_cell.getTemperature();
+    return environment_spatial_hashmap.getCell(pos, EnvironmentSpatialHashMap::Space::_HASHMAP).temp_cell.getTemperature();
 //    return QRgb();
 //    TemperatureCell * cell_content(m_render_data.get_const(pos)->temp_cell);
 //    return m_translator->toRGB(cell_content->get());

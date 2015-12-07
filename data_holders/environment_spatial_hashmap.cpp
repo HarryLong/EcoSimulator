@@ -250,7 +250,7 @@ EnvironmentSpatialHashMap::~EnvironmentSpatialHashMap()
 
 }
 
-std::vector<QPoint> EnvironmentSpatialHashMap::getPoints(QPoint p_center, float p_radius)
+std::vector<QPoint> EnvironmentSpatialHashMap::getPoints(QPoint p_center, float p_radius) const
 {
     return SpatialHashMap<EnvironmentSpatialHashMapCell>::getPoints(p_center, p_radius, true);
 }

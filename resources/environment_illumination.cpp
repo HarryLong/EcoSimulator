@@ -25,7 +25,7 @@ int EnvironmentIllumination::getDailyIllumination(EnvironmentSpatialHashMap & ma
 
     for(QPoint & cell : cells)
     {
-        aggregated_daily_illumination += map[cell].illumination_cell.getIllumination(p_id, height);
+        aggregated_daily_illumination += map.getCell(cell, EnvironmentSpatialHashMap::Space::_HASHMAP).illumination_cell.getIllumination(p_id, height);
     }
 
     return std::round(aggregated_daily_illumination/cells.size()); // Divide by cells iterated over
@@ -37,7 +37,7 @@ void EnvironmentIllumination::update(EnvironmentSpatialHashMap & map, QPoint p_c
 
     for(QPoint & cell : cells)
     {
-        map[cell].illumination_cell.update(p_id, p_height);
+        map.getCell(cell, EnvironmentSpatialHashMap::Space::_HASHMAP).illumination_cell.update(p_id, p_height);
     }
 }
 
@@ -47,6 +47,6 @@ void EnvironmentIllumination::remove(EnvironmentSpatialHashMap & map, QPoint p_c
 
     for(QPoint & cell : cells)
     {
-        map[cell].illumination_cell.remove(p_id);
+        map.getCell(cell, EnvironmentSpatialHashMap::Space::_HASHMAP).illumination_cell.remove(p_id);
     }
 }

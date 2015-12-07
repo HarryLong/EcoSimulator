@@ -92,7 +92,7 @@ class EnvironmentSpatialHashMap : public SpatialHashMap<EnvironmentSpatialHashMa
 public:
     EnvironmentSpatialHashMap(int area_width, int area_height);
     ~EnvironmentSpatialHashMap();
-    std::vector<QPoint> getPoints(QPoint p_center, float p_radius);
+    std::vector<QPoint> getPoints(QPoint p_center, float p_radius) const;
     void setAvailableResources(int p_available_illumination, int p_available_humidity, int p_temperature );
     void resetAllCells();
 };

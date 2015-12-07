@@ -37,7 +37,7 @@ bool operator<(const QPoint & lhs, const QPoint & rhs)
 PlantStorage::PlantStorage(int area_width, int area_height) : m_plants(), m_plant_count(0),
   m_location_queryable_plants(LOCATION_STORAGE_CELL_SIZE, LOCATION_STORAGE_CELL_SIZE, std::ceil(((float)area_width)/LOCATION_STORAGE_CELL_SIZE),
                             std::ceil(((float)area_height)/LOCATION_STORAGE_CELL_SIZE)),
-  m_statistical_analyzer_config(0, 500, 20, area_width, area_width),
+  m_statistical_analyzer_config(0, 200, 20, area_width, area_width),
   m_area_width(area_width), m_area_height(area_height)
 {
 
@@ -110,7 +110,7 @@ void PlantStorage::add(const Plant & p_plant, bool mutex_lock )
     m_specie_id_queryable_plants[p_plant.m_specie_id].insert(p_plant.m_unique_id);
 
     // By Location
-    LocationCell & cell(m_location_queryable_plants.getCell(p_plant.m_center_position));
+    LocationCell & cell(m_location_queryable_plants.getCell(p_plant.m_center_position, PlantSpatialHashMap::Space::_WORLD));
     cell.species[p_plant.m_specie_id].emplace(p_plant.m_center_position, p_plant.m_unique_id);
 
     m_plant_count++;
@@ -139,7 +139,7 @@ void PlantStorage::remove(const Plant & p_plant, bool mutex_lock)
         m_specie_id_queryable_plants[p_plant.m_specie_id].erase(p_plant.m_unique_id);
 
         // By Location
-        LocationCell & cell(m_location_queryable_plants.getCell(p_plant.m_center_position));
+        LocationCell & cell(m_location_queryable_plants.getCell(p_plant.m_center_position, PlantSpatialHashMap::Space::_WORLD));
 //        qCritical() << "PLANTS BY LOCATION CONTAINS ? " << ( cell.species[p_plant.m_specie_id].find(p_plant.m_center_position) == cell.species[p_plant.m_specie_id].end() ? "NO" : "YES" );
         cell.species[p_plant.m_specie_id].erase(p_plant.m_center_position);
 
@@ -270,7 +270,7 @@ bool PlantStorage::isPlantAtLocation(QPoint p_location, bool mutex_lock) const
         return false;
     }
 
-    const LocationCell & cell (m_location_queryable_plants.getCell(p_location));
+    const LocationCell & cell (m_location_queryable_plants.getCell(p_location, PlantSpatialHashMap::Space::_WORLD));
 
     bool found(false);
     for(auto it(cell.species.begin()); it != cell.species.end() && !found; it++)

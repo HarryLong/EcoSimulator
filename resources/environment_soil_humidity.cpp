@@ -16,7 +16,7 @@ int EnvironmentSoilHumidity::getSoilHumidity(EnvironmentSpatialHashMap & map, QP
 
     for(QPoint & cell : cells)
     {
-        aggregated_humidity_percentage += map[cell].soil_humidity_cell.getGrantedHumidity(p_id);
+        aggregated_humidity_percentage +=  map.getCell(cell, EnvironmentSpatialHashMap::Space::_HASHMAP).soil_humidity_cell.getGrantedHumidity(p_id);
     }
     return aggregated_humidity_percentage/cells.size(); // Return percentage
 }
@@ -27,7 +27,7 @@ void EnvironmentSoilHumidity::update(EnvironmentSpatialHashMap & map, QPoint p_c
     std::vector<QPoint> cells(map.getPoints(p_center, p_roots_size));
     for(QPoint & cell : cells)
     {
-        map[cell].soil_humidity_cell.update(p_id, p_roots_size, p_minimum_humidity);
+         map.getCell(cell, EnvironmentSpatialHashMap::Space::_HASHMAP).soil_humidity_cell.update(p_id, p_roots_size, p_minimum_humidity);
     }
 }
 
@@ -37,7 +37,7 @@ void EnvironmentSoilHumidity::remove(EnvironmentSpatialHashMap & map, QPoint p_c
 
     for(QPoint & cell : cells)
     {
-        map[cell].soil_humidity_cell.remove(p_id);
+         map.getCell(cell, EnvironmentSpatialHashMap::Space::_HASHMAP).soil_humidity_cell.remove(p_id);
     }
 }
 

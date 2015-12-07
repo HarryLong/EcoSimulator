@@ -10,6 +10,9 @@
 
 #include <QDebug>
 
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
+
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 const int SimulatorManager::_AREA_WIDTH_HEIGHT = 10000;
 SimulatorManager::SimulatorManager() : m_time_keeper(),
@@ -143,6 +146,8 @@ void SimulatorManager::stop()
 
 void SimulatorManager::trigger()
 {
+    auto start(Clock::now());
+
 #ifdef GUI_MODE
     if(m_stopping.load())
         return;
@@ -236,6 +241,69 @@ void SimulatorManager::trigger()
     refresh_rendering_data();
 #endif
     emit updated(month);
+    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+
+    // PLANT COUNT BASED TIMING
+    {
+        int key(m_plant_storage.getPlantCount()/100);
+        auto it(_plant_count_based_timing.find(key));
+        if(it == _plant_count_based_timing.end())
+            _plant_count_based_timing.emplace(key, time);
+        else
+            it->second = (it->second+time)/2;
+    }
+
+    // PLANTS PER MONTH
+    {
+        _plant_count_per_month.emplace(m_elapsed_months, m_plant_storage.getPlantCount());
+    }
+
+    // ELAPSED TIME BASED TIMING
+    {
+        _elapsed_months_based_timing.emplace(m_elapsed_months, time);
+    }
+
+    // PLANT AVERAGE SIZE
+    {
+        std::map<int, float> specie_avg_sizes;
+        std::map<int, int> specie_count;
+
+        for(int specie_id : m_plant_storage.getSpecieIds())
+        {
+            specie_avg_sizes[specie_id] = 0;
+            specie_count[specie_id] = 0;
+        }
+
+        std::vector<Plant> plants(m_plant_storage.getPlants());
+        for(Plant & p : plants)
+        {
+            specie_avg_sizes[p.m_specie_id] += p.getCanopyWidth();
+            specie_count[p.m_specie_id]++;
+        }
+
+        for(auto it(specie_count.begin()); it != specie_count.end(); it++)
+        {
+            _specie_average_size[it->first].push_back(((float)specie_avg_sizes[it->first]) / it->second);
+        }
+    }
+
+    if(m_elapsed_months == 1200)
+    {
+        std::cout << "******************SPECIE AVERAGE SIZE*************" << std::endl;
+        for(auto it(_specie_average_size.begin()); it != _specie_average_size.end(); it++)
+        {
+            std::cout << "SPECIE --> " << it->first << std::endl;
+            for(int i(0); i < it->second.size(); i++)
+                std::cout << (i+1) << " , " << it->second.at(i) << std::endl;
+
+        }
+//        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
+//        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
+//            std::cout << it->first << ", " << it->second << std::endl;
+//        std::cout << "******************MONTH BASED*************" << std::endl;
+//        for(auto it(_elapsed_months_based_timing.begin()); it != _elapsed_months_based_timing.end(); it++)
+//            std::cout << it->first << ", " << _plant_count_per_month[it->first] << ", " << it->second << std::endl;
+    }
 }
 
 #ifdef GUI_MODE
