@@ -397,6 +397,8 @@ void PlantStorage::generateStatisticalSnapshot(std::vector<int> humidities, std:
                 analysis_points.push_back(AnalysisPoint(specie_id, p.m_center_position, std::max(1.0f,p.getCanopyWidth()/2.0f)));
             }
             avg_height /= specie->second.size();
+            while(avg_height_to_specie_id.find(avg_height) != avg_height_to_specie_id.end())
+                avg_height++;
             avg_height_to_specie_id.emplace(avg_height, specie_id);
             specie_analysis_points.emplace(specie_id, analysis_points);
         }
