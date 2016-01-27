@@ -240,7 +240,7 @@ void SimulatorManager::trigger()
 #ifdef GUI_MODE
     refresh_rendering_data();
 #endif
-    emit updated(month);
+    emit updated(month);    
     auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
 
     // PLANT COUNT BASED TIMING
@@ -340,6 +340,8 @@ QString SimulatorManager::plant_status_to_string(Plant::PlantStatus status)
             return QString("Cold");
         case Plant::PlantStatus::DeathByHeat:
             return QString("Heat");
+        case Plant::PlantStatus::DeathBySlope:
+            return QString("Slope");
     default:
         return QString("This is a bug!");
     }

@@ -7,6 +7,7 @@
 #include <QBoxLayout>
 #include <QLabel>
 #include <QButtonGroup>
+#include <QSpinBox>
 
 #define SIMULATION_CONFIGURATION_WIDGET_WIDTH_HEIGHT 700
 
@@ -15,13 +16,15 @@
  ***********************************/
 SimulationConfigurationWidget::SimulationConfigurationWidget(QWidget * parent) :
     QWidget(parent), m_seeding_enabled_cb(new QCheckBox),
-    m_seeding_disabled_cb(new QCheckBox), m_seeding_button_group(new QButtonGroup)
+    m_seeding_disabled_cb(new QCheckBox), m_seeding_button_group(new QButtonGroup),
+    m_slope_sb(new QSpinBox)
 {
     setFixedSize(SIMULATION_CONFIGURATION_WIDGET_WIDTH_HEIGHT,SIMULATION_CONFIGURATION_WIDGET_WIDTH_HEIGHT);
 
-    // Defaults
     m_seeding_button_group->addButton(m_seeding_enabled_cb);
     m_seeding_button_group->addButton(m_seeding_disabled_cb);
+
+    m_slope_sb->setRange(0,90);
 
     init_layout();
     reset();
@@ -41,6 +44,11 @@ void SimulationConfigurationWidget::reset()
 bool SimulationConfigurationWidget::seedingEnabled()
 {
     return m_seeding_enabled_cb->isChecked();
+}
+
+int SimulationConfigurationWidget::slope()
+{
+    return m_slope_sb->value();
 }
 
 //SimulationOptions SimulationConfigurationWidget::getSimulationConfiguration()
@@ -74,6 +82,23 @@ void SimulationConfigurationWidget::init_layout()
         seeding_disabled_layout->addWidget(m_seeding_disabled_cb,0, Qt::AlignRight|Qt::AlignTop);
         main_layout->addLayout(seeding_disabled_layout, 0);
     }
+    // SLOPE
+    {
+        QHBoxLayout * slope_layout(new QHBoxLayout);
+
+        // Title
+        {
+            QFont title_font( "Arial", 16, QFont::Bold );
+            QLabel * slope_title = new QLabel("Slope:");
+            slope_title->setFont(title_font);
+            slope_layout->addWidget(slope_title);
+            slope_layout->addWidget(m_slope_sb);
+            slope_layout->addWidget(new QLabel(" Degrees"));
+        }
+
+        main_layout->addLayout(slope_layout, 0);
+    }
+
     main_layout->addLayout(new QHBoxLayout,1); // Padding
 
     setLayout(main_layout);

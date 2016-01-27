@@ -19,14 +19,16 @@ public:
         DeathByDrought,
         DeathByFlood,
         DeathByCold,
-        DeathByHeat
+        DeathByHeat,
+        DeathBySlope
     };
 
     enum ConstrainerType{
         Age,
         Illumination,
         SoilHumidity,
-        Temperature
+        Temperature,
+        Slope
     };
     typedef std::map<ConstrainerType, float> Strengths;
 
@@ -48,7 +50,7 @@ public:
     QColor getColor() const;
 
     PlantStatus getStatus();
-    void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp);
+    void calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp, int p_slope);
 
     long m_unique_id;
     QPoint m_center_position;

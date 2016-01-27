@@ -74,8 +74,9 @@ void PlantStorage::update(EnvironmentManager & environment_manager, std::vector<
         int illum(environment_manager.getDailyIllumination(p.m_center_position, p.m_unique_id, p.getCanopyWidth(), p.getHeight()));
         int sh(environment_manager.getSoilHumidity(p.m_center_position, p.getRootSize(), p.m_unique_id));
         int temp(environment_manager.getTemperature());
+        int slope(environment_manager.getSlope());
 
-        p.calculateStrength(illum, sh, temp);
+        p.calculateStrength(illum, sh, temp, slope);
 
         if(p.getStatus() == Plant::PlantStatus::Alive)
         {

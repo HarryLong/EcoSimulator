@@ -11,7 +11,8 @@ Plant::Plant(SpecieProperties p_specie_properties, QColor p_color, QPoint p_cent
     m_constrainers(AgeConstrainer(p_specie_properties.ageing_properties),
                    IlluminationConstrainer(p_specie_properties.illumination_properties),
                    SoilHumidityConstrainer(p_specie_properties.soil_humidity_properties),
-                   TemperatureConstrainer(p_specie_properties.temperature_properties)),
+                   TemperatureConstrainer(p_specie_properties.temperature_properties),
+                   SlopeConstrainer(p_specie_properties.slope_properties)),
     m_seeding_properties(p_specie_properties.seeding_properties),
     m_growth_manager(GrowthManager(p_specie_properties.growth_properties, p_specie_properties.ageing_properties)),
     m_pain_enducer(0)
@@ -20,6 +21,7 @@ Plant::Plant(SpecieProperties p_specie_properties, QColor p_color, QPoint p_cent
     m_strengths.emplace(ConstrainerType::Illumination, Constrainer::_MIN_STRENGTH);
     m_strengths.emplace(ConstrainerType::SoilHumidity, Constrainer::_MIN_STRENGTH);
     m_strengths.emplace(ConstrainerType::Temperature, Constrainer::_MIN_STRENGTH);
+    m_strengths.emplace(ConstrainerType::Slope, Constrainer::_MIN_STRENGTH);
 }
 
 Plant::~Plant()
@@ -61,7 +63,7 @@ void Plant::newMonth()
         m_growth_manager.grow(m_strength); // TODO: Replace with calculated strength
 }
 
-void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp) // Must be called before newMonth is triggered
+void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_percentage, int p_temp, int p_slope) // Must be called before newMonth is triggered
 {
     /*******
      * AGE *
@@ -107,6 +109,19 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
         min_strength = temp_strength;
         bottleneck = ConstrainerType::Temperature;
     }
+
+    /*********
+     * SLOPE *
+     *********/
+    m_constrainers.slope_constrainer.setSlope(p_slope);
+    int slope_strength ( m_constrainers.slope_constrainer.getStrength() );
+    m_strengths.find(ConstrainerType::Slope)->second = slope_strength;
+    if(slope_strength < min_strength)
+    {
+        min_strength = slope_strength;
+        bottleneck = ConstrainerType::Slope;
+    }
+    qCritical() << "Slope: " << p_slope << "| Strength: " << slope_strength;
 
     // Pain enducer is used to prevent a plant from being in negative strength too long
     if(min_strength < 0)
@@ -185,6 +200,8 @@ Plant::PlantStatus Plant::getStatus()
                 return DeathByCold;
             else
                 return DeathByHeat;
+        case Slope:
+                return DeathBySlope;
         }
     }
     return Alive;

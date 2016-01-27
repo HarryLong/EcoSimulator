@@ -9,9 +9,11 @@ const int Constrainer::_MAX_STRENGTH = 100;
  * WRAPPER *
  ***********/
 ConstrainersWrapper::ConstrainersWrapper( AgeConstrainer age_constrainer, IlluminationConstrainer illumination_constrainer,
-                                          SoilHumidityConstrainer soil_humidity_constrainer, TemperatureConstrainer temp_constrainer):
+                                          SoilHumidityConstrainer soil_humidity_constrainer, TemperatureConstrainer temp_constrainer,
+                                          SlopeConstrainer slope_constrainer):
                                           age_constrainer(age_constrainer), illumination_constrainer(illumination_constrainer),
-                                          soil_humidity_constrainer(soil_humidity_constrainer), temp_constrainer(temp_constrainer)
+                                          soil_humidity_constrainer(soil_humidity_constrainer), temp_constrainer(temp_constrainer),
+                                          slope_constrainer(slope_constrainer)
 {
 
 }
@@ -278,4 +280,36 @@ void TemperatureConstrainer::setTemperature(int p_temp)
 bool TemperatureConstrainer::isTooCold() const
 {
     return m_temperature < m_properties.prime_temp.first;
+}
+
+/*********
+ * SLOPE *
+ *********/
+SlopeConstrainer::SlopeConstrainer(const SlopeProperties & p_slope_properties) :
+    m_properties(p_slope_properties)
+{
+    // Build coldness equation
+    m_slope_equation.a = ((float)Constrainer::_MAX_STRENGTH*-2.0f) / (m_properties.max - m_properties.start_of_decline);
+    m_slope_equation.b = Constrainer::_MAX_STRENGTH - (m_slope_equation.a * m_properties.start_of_decline);
+}
+
+SlopeConstrainer::~SlopeConstrainer()
+{
+
+}
+
+int SlopeConstrainer::getStrength() const
+{
+    if(m_slope < m_properties.start_of_decline)
+        return Constrainer::_MAX_STRENGTH;
+
+    if(m_slope > m_properties.max)
+        return Constrainer::_MIN_STRENGTH;
+
+    return m_slope_equation.calculateY(m_slope);
+}
+
+void SlopeConstrainer::setSlope(int p_slope)
+{
+    m_slope = p_slope;
 }

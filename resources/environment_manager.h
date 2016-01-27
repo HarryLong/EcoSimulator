@@ -22,6 +22,7 @@ public:
     int getDailyIllumination(QPoint p_center, int p_id, float p_canopy_width, float height);
     int getSoilHumidity(QPoint p_center, float p_roots_size, int p_id);
     int getTemperature();
+    float getSlope();
 
     void setMonth(int p_month);
     void remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id);
@@ -40,6 +41,7 @@ private:
     ResourceControllers m_resource_controllers;
 
     int m_month;
+    int m_slope;
     std::vector<int> m_humidities;
     std::vector<int> m_illuminations;
     std::vector<int> m_temperatures;

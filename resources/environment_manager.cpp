@@ -27,6 +27,11 @@ int EnvironmentManager::getTemperature()
     return m_temperatures.at(m_month-1);
 }
 
+float EnvironmentManager::getSlope()
+{
+    return m_slope;
+}
+
 void EnvironmentManager::remove(QPoint p_center, float p_canopy_width, float p_roots_size, int p_id)
 {
     if(p_canopy_width > 0)
@@ -59,6 +64,7 @@ void EnvironmentManager::setEnvironmentProperties( float slope, std::vector<int>
 {
     m_environment_spatial_hashmap.resetAllCells();
 
+    m_slope = slope;
     m_humidities = humidity;
     m_illuminations = illumination;
     m_temperatures = temperature;

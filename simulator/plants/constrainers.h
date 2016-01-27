@@ -105,6 +105,27 @@ private:
     int m_temperature;
 };
 
+/*********
+ * SLOPE *
+ *********/
+class SlopeConstrainer : public Constrainer
+{
+public:
+    SlopeConstrainer(const SlopeProperties & p_temperature_properties);
+    ~SlopeConstrainer();
+//    TemperatureConstrainer & operator=(const TemperatureConstrainer& other);
+
+
+    virtual int getStrength() const;
+
+    void setSlope(int p_slope);
+
+private:
+    LinearEquation m_slope_equation;
+    SlopeProperties m_properties;
+    int m_slope;
+};
+
 /***********
  * WRAPPER *
  ***********/
@@ -113,7 +134,8 @@ public:
     ConstrainersWrapper(AgeConstrainer age_constrainer,
                         IlluminationConstrainer illumination_constrainer,
                         SoilHumidityConstrainer soil_humidity_constrainer,
-                        TemperatureConstrainer temp_constrainer);
+                        TemperatureConstrainer temp_constrainer,
+                        SlopeConstrainer slope_constrainer);
     ~ConstrainersWrapper();
 //    ConstrainersWrapper & operator=(const ConstrainersWrapper& other);
 
@@ -121,6 +143,7 @@ public:
     IlluminationConstrainer illumination_constrainer;
     SoilHumidityConstrainer soil_humidity_constrainer;
     TemperatureConstrainer temp_constrainer;
+    SlopeConstrainer slope_constrainer;
 };
 
 #endif //CONSTRAINERS_H

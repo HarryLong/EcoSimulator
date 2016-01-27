@@ -109,10 +109,11 @@ SimulationConfiguration StartConfigDialog::getStartConfiguration()
     MonthlyEditDialog * temp_dlg (static_cast<MonthlyEditDialog*>(m_widgets[StartConfigDialogWidgets::WidgetType::Temperature]));
 
     bool seeding_enabled(static_cast<SimulationConfigurationWidget*>(m_widgets[StartConfigDialogWidgets::WidgetType::SimulationOptions])->seedingEnabled());
+    int slope(static_cast<SimulationConfigurationWidget*>(m_widgets[StartConfigDialogWidgets::WidgetType::SimulationOptions])->slope());
 
     SimulationConfiguration ret(
                 static_cast<PlantConfigurationWidget*>(m_widgets[StartConfigDialogWidgets::WidgetType::PlantConfiguration])->getPlantsToCreate(),
-                0, // SLOPE
+                slope,
                 humidity_dlg->values(),
                 illumination_dlg->values(),
                 temp_dlg->values(),
