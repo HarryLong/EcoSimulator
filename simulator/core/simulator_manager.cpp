@@ -93,9 +93,10 @@ void SimulatorManager::start( SimulationConfiguration configuration)
 #else
 void SimulatorManager::start( SimulationConfiguration configuration, ProgressListener* progress_listener)
 {
+
     SimulatorManager sm;
     sm.setConfiguration(configuration);
-
+    auto start(Clock::now());
     int elapsed_months(0);
     while((elapsed_months = sm.getElapsedMonths()) < configuration.m_duration)
     {
@@ -104,8 +105,10 @@ void SimulatorManager::start( SimulationConfiguration configuration, ProgressLis
     }
 
     progress_listener->progressUpdate("Generating statistical snapshot... This can take some time.");
-    sm.generateStatisticalSnapshot();
 
+    sm.generateStatisticalSnapshot();
+    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+    qCritical() << "SIMULATION TIME --> " << time << "ms";
     progress_listener->complete();
 }
 #endif
@@ -146,8 +149,6 @@ void SimulatorManager::stop()
 
 void SimulatorManager::trigger()
 {
-    auto start(Clock::now());
-
 #ifdef GUI_MODE
     if(m_stopping.load())
         return;
@@ -228,7 +229,8 @@ void SimulatorManager::trigger()
                         Plant & random_plant(*(plants.begin() + (rand()%plants.size())));
                         QPoint location(Utils::getRandomPointInCircle(random_plant.m_center_position,
                                                                             std::max(1.0f,random_plant.getCanopyWidth()/2.f)));
-                        add_plant(m_plant_factory.generate(specie_id, location));
+                        if(location.x() < _AREA_WIDTH_HEIGHT && location.y() < _AREA_WIDTH_HEIGHT)
+                            add_plant(m_plant_factory.generate(specie_id, location));
                     }
                 }
                 for(; n_planted < specie_seed_count; n_planted++)
@@ -241,69 +243,69 @@ void SimulatorManager::trigger()
     refresh_rendering_data();
 #endif
     emit updated(month);    
-    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+//    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
 
-    // PLANT COUNT BASED TIMING
-    {
-        int key(m_plant_storage.getPlantCount()/100);
-        auto it(_plant_count_based_timing.find(key));
-        if(it == _plant_count_based_timing.end())
-            _plant_count_based_timing.emplace(key, time);
-        else
-            it->second = (it->second+time)/2;
-    }
+//    // PLANT COUNT BASED TIMING
+//    {
+//        int key(m_plant_storage.getPlantCount()/100);
+//        auto it(_plant_count_based_timing.find(key));
+//        if(it == _plant_count_based_timing.end())
+//            _plant_count_based_timing.emplace(key, time);
+//        else
+//            it->second = (it->second+time)/2;
+//    }
 
-    // PLANTS PER MONTH
-    {
-        _plant_count_per_month.emplace(m_elapsed_months, m_plant_storage.getPlantCount());
-    }
+//    // PLANTS PER MONTH
+//    {
+//        _plant_count_per_month.emplace(m_elapsed_months, m_plant_storage.getPlantCount());
+//    }
 
-    // ELAPSED TIME BASED TIMING
-    {
-        _elapsed_months_based_timing.emplace(m_elapsed_months, time);
-    }
+//    // ELAPSED TIME BASED TIMING
+//    {
+//        _elapsed_months_based_timing.emplace(m_elapsed_months, time);
+//    }
 
-    // PLANT AVERAGE SIZE
-    {
-        std::map<int, float> specie_avg_sizes;
-        std::map<int, int> specie_count;
+//    // PLANT AVERAGE SIZE
+//    {
+//        std::map<int, float> specie_avg_sizes;
+//        std::map<int, int> specie_count;
 
-        for(int specie_id : m_plant_storage.getSpecieIds())
-        {
-            specie_avg_sizes[specie_id] = 0;
-            specie_count[specie_id] = 0;
-        }
+//        for(int specie_id : m_plant_storage.getSpecieIds())
+//        {
+//            specie_avg_sizes[specie_id] = 0;
+//            specie_count[specie_id] = 0;
+//        }
 
-        std::vector<Plant> plants(m_plant_storage.getPlants());
-        for(Plant & p : plants)
-        {
-            specie_avg_sizes[p.m_specie_id] += p.getCanopyWidth();
-            specie_count[p.m_specie_id]++;
-        }
+//        std::vector<Plant> plants(m_plant_storage.getPlants());
+//        for(Plant & p : plants)
+//        {
+//            specie_avg_sizes[p.m_specie_id] += p.getCanopyWidth();
+//            specie_count[p.m_specie_id]++;
+//        }
 
-        for(auto it(specie_count.begin()); it != specie_count.end(); it++)
-        {
-            _specie_average_size[it->first].push_back(((float)specie_avg_sizes[it->first]) / it->second);
-        }
-    }
+//        for(auto it(specie_count.begin()); it != specie_count.end(); it++)
+//        {
+//            _specie_average_size[it->first].push_back(((float)specie_avg_sizes[it->first]) / it->second);
+//        }
+//    }
 
-    if(m_elapsed_months == 1200)
-    {
-        std::cout << "******************SPECIE AVERAGE SIZE*************" << std::endl;
-        for(auto it(_specie_average_size.begin()); it != _specie_average_size.end(); it++)
-        {
-            std::cout << "SPECIE --> " << it->first << std::endl;
-            for(int i(0); i < it->second.size(); i++)
-                std::cout << (i+1) << " , " << it->second.at(i) << std::endl;
+//    if(m_elapsed_months == 1200)
+//    {
+//        std::cout << "******************SPECIE AVERAGE SIZE*************" << std::endl;
+//        for(auto it(_specie_average_size.begin()); it != _specie_average_size.end(); it++)
+//        {
+//            std::cout << "SPECIE --> " << it->first << std::endl;
+//            for(int i(0); i < it->second.size(); i++)
+//                std::cout << (i+1) << " , " << it->second.at(i) << std::endl;
 
-        }
-//        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
-//        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
-//            std::cout << it->first << ", " << it->second << std::endl;
-//        std::cout << "******************MONTH BASED*************" << std::endl;
-//        for(auto it(_elapsed_months_based_timing.begin()); it != _elapsed_months_based_timing.end(); it++)
-//            std::cout << it->first << ", " << _plant_count_per_month[it->first] << ", " << it->second << std::endl;
-    }
+//        }
+////        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
+////        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
+////            std::cout << it->first << ", " << it->second << std::endl;
+////        std::cout << "******************MONTH BASED*************" << std::endl;
+////        for(auto it(_elapsed_months_based_timing.begin()); it != _elapsed_months_based_timing.end(); it++)
+////            std::cout << it->first << ", " << _plant_count_per_month[it->first] << ", " << it->second << std::endl;
+//    }
 }
 
 #ifdef GUI_MODE
@@ -376,7 +378,7 @@ void SimulatorManager::generateSnapshot()
 
 void SimulatorManager::generateStatisticalSnapshot()
 {
-    m_plant_storage.generateStatisticalSnapshot(m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
+    m_plant_storage.generateStatisticalSnapshot(m_environment_mgr.getSlope(), m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
                                                 m_environment_mgr.getTemperatures(), m_elapsed_months);
 }
 
@@ -389,6 +391,6 @@ void SimulatorManager::generateStatisticalSnapshot(CallbackListener * completion
     }
 
     m_statistical_snapshot_thread =
-            new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
+            new std::thread(&PlantStorage::generateStatisticalSnapshot, &m_plant_storage, m_environment_mgr.getSlope(), m_environment_mgr.getHumidities(), m_environment_mgr.getIlluminations(),
                     m_environment_mgr.getTemperatures(), m_elapsed_months, completion_listener, true);
 }

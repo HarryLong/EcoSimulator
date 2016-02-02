@@ -121,7 +121,6 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
         min_strength = slope_strength;
         bottleneck = ConstrainerType::Slope;
     }
-    qCritical() << "Slope: " << p_slope << "| Strength: " << slope_strength;
 
     // Pain enducer is used to prevent a plant from being in negative strength too long
     if(min_strength < 0)

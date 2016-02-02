@@ -66,7 +66,7 @@ int PlantFactory::get_specie_id(const QString & name)
 
 QPoint PlantFactory::generate_random_position()
 {
-    return QPoint(rand()%m_area_width, rand()%m_area_height);
+    return QPoint(rand()%(m_area_width-1), rand()%(m_area_height-1));
 }
 
 const SpecieProperties & PlantFactory::getSpecieProperties(int p_specie_id)
