@@ -293,10 +293,8 @@ std::set<int> PlantStorage::getSpecieIds(bool mutex_lock) const
     if(mutex_lock)
         lock();
     for(auto it(m_specie_id_queryable_plants.begin()); it != m_specie_id_queryable_plants.end(); it++)
-    {
-        if(it->second.size() > 0)
-            specie_ids.insert(it->first);\
-    }
+        specie_ids.insert(it->first);\
+
     if(mutex_lock)
         unlock();
     return specie_ids;

@@ -128,6 +128,20 @@ void Plant::calculateStrength(int p_daily_illumination, int p_soil_humidity_perc
     else
         m_pain_enducer = 0;
 
+//    qCritical() << "***************************";
+//    qCritical() << "Strength: " << m_strength;
+//    qCritical() << "Bottleneck:";
+//    if(bottleneck == ConstrainerType::Age)
+//        qCritical() << "Age!";
+//    else if(bottleneck == ConstrainerType::Illumination)
+//        qCritical() << "Illumination!";
+//    else if(bottleneck == ConstrainerType::SoilHumidity)
+//        qCritical() << "SoilHumidity!";
+//    else if(bottleneck == ConstrainerType::Temperature)
+//        qCritical() << "Temperature!";
+//    else if(bottleneck == ConstrainerType::Slope)
+//        qCritical() << "Slope!";
+
     m_strength = min_strength-m_pain_enducer;
 
     m_strength_bottleneck = bottleneck;
