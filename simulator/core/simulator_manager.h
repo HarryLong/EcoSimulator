@@ -18,6 +18,12 @@
 #include <unordered_set>
 #include <uchar.h>
 class CallbackListener;
+
+struct TimeAndCount{
+    int time;
+    int count;
+};
+
 class SimulatorManager : public QObject, public TimeManager::TimeListener
 {
     Q_OBJECT
@@ -102,7 +108,7 @@ private:
 
 
     std::map<int, std::vector<float> > _specie_average_size;
-    std::map<int, int> _plant_count_based_timing;
+    std::map<int, TimeAndCount> _plant_count_based_timing;
     std::map<int, int> _plant_count_per_month;
     std::map<int, int> _elapsed_months_based_timing;
 };

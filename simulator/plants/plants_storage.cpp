@@ -424,9 +424,8 @@ void PlantStorage::generateStatisticalSnapshot(float slope, std::vector<int> hum
 
             m_statistical_analyzer_config.setPrioritySortedCategoryIds(priority_sorted_category_ids);
 
-            Analyzer::analyze(tmp_dir.path(), specie_analysis_points, m_statistical_analyzer_config);
-
-            Tracker::addEntry(std::round(slope), humidities, illuminations, temperatures, elapsed_months, getSpecieIds(), tmp_dir);
+            unsigned long timestamp( Analyzer::analyze(tmp_dir.path(), specie_analysis_points, m_statistical_analyzer_config) );
+            Tracker::addEntry(timestamp, std::round(slope), humidities, illuminations, temperatures, elapsed_months, getSpecieIds(), tmp_dir);
         }
     }
     else

@@ -13,6 +13,7 @@
 #include <chrono>
 typedef std::chrono::high_resolution_clock Clock;
 
+
 static QRgb s_black_color_rgb(QColor(Qt::GlobalColor::black).rgb());
 const int SimulatorManager::_AREA_WIDTH_HEIGHT = 10000;
 SimulatorManager::SimulatorManager() : m_time_keeper(),
@@ -153,7 +154,7 @@ void SimulatorManager::trigger()
     if(m_stopping.load())
         return;
 #endif
-
+    auto start(Clock::now());
     m_elapsed_months++;
 
     /*
@@ -223,14 +224,17 @@ void SimulatorManager::trigger()
                 {
                     // shade loving - spawn half at existing plant locations (shaded)
                     std::vector<Plant> plants (m_plant_storage.getPlants());
-                    for(; n_planted < specie_seed_count/2; n_planted++)
+                    if(plants.size() > 0)
                     {
-                        // Select a random plant
-                        Plant & random_plant(*(plants.begin() + (rand()%plants.size())));
-                        QPoint location(Utils::getRandomPointInCircle(random_plant.m_center_position,
-                                                                            std::max(1.0f,random_plant.getCanopyWidth()/2.f)));
-                        if(location.x() < _AREA_WIDTH_HEIGHT && location.y() < _AREA_WIDTH_HEIGHT)
-                            add_plant(m_plant_factory.generate(specie_id, location));
+                        for(; n_planted < specie_seed_count/2; n_planted++)
+                        {
+                            // Select a random plant
+                            Plant & random_plant(*(plants.begin() + (rand()%plants.size())));
+                            QPoint location(Utils::getRandomPointInCircle(random_plant.m_center_position,
+                                                                                std::max(1.0f,random_plant.getCanopyWidth()/2.f)));
+                            if(location.x() < _AREA_WIDTH_HEIGHT && location.y() < _AREA_WIDTH_HEIGHT)
+                                add_plant(m_plant_factory.generate(specie_id, location));
+                        }
                     }
                 }
                 for(; n_planted < specie_seed_count; n_planted++)
@@ -243,17 +247,25 @@ void SimulatorManager::trigger()
     refresh_rendering_data();
 #endif
     emit updated(month);    
-//    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
 
-//    // PLANT COUNT BASED TIMING
-//    {
-//        int key(m_plant_storage.getPlantCount()/100);
-//        auto it(_plant_count_based_timing.find(key));
-//        if(it == _plant_count_based_timing.end())
-//            _plant_count_based_timing.emplace(key, time);
-//        else
-//            it->second = (it->second+time)/2;
-//    }
+    // PLANT COUNT BASED TIMING
+    {
+        int key(m_plant_storage.getPlantCount()/1000.f);
+        auto it(_plant_count_based_timing.find(key));
+        if(it == _plant_count_based_timing.end())
+        {
+            TimeAndCount time_and_count;
+            time_and_count.time = time;
+            time_and_count.count = 1;
+            _plant_count_based_timing.emplace(key, time_and_count);
+        }
+        else
+        {
+            it->second.time += time;
+            it->second.count++;
+        }
+    }
 
 //    // PLANTS PER MONTH
 //    {
@@ -289,8 +301,8 @@ void SimulatorManager::trigger()
 //        }
 //    }
 
-//    if(m_elapsed_months == 1200)
-//    {
+    if(m_elapsed_months == 1200)
+    {
 //        std::cout << "******************SPECIE AVERAGE SIZE*************" << std::endl;
 //        for(auto it(_specie_average_size.begin()); it != _specie_average_size.end(); it++)
 //        {
@@ -299,13 +311,13 @@ void SimulatorManager::trigger()
 //                std::cout << (i+1) << " , " << it->second.at(i) << std::endl;
 
 //        }
-////        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
-////        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
-////            std::cout << it->first << ", " << it->second << std::endl;
+        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
+        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
+            std::cout << it->first << ", " << (it->second.time/(float)it->second.count) << std::endl;
 ////        std::cout << "******************MONTH BASED*************" << std::endl;
 ////        for(auto it(_elapsed_months_based_timing.begin()); it != _elapsed_months_based_timing.end(); it++)
 ////            std::cout << it->first << ", " << _plant_count_per_month[it->first] << ", " << it->second << std::endl;
-//    }
+    }
 }
 
 #ifdef GUI_MODE
