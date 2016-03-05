@@ -21,7 +21,7 @@ SimulatorManager::SimulatorManager() : m_time_keeper(),
     m_environment_mgr(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_plant_factory(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT),
     m_elapsed_months(0), m_state(Stopped), m_snapshot_creator_thread(nullptr), m_statistical_snapshot_thread(nullptr),
-    m_stopping(false)
+    m_stopping(false), m_generate_rendering_data(true)
 {
     m_time_keeper.addListener(this);
 }
@@ -244,28 +244,29 @@ void SimulatorManager::trigger()
     }
 
 #ifdef GUI_MODE
-    refresh_rendering_data();
+    if(m_generate_rendering_data.load())
+        refresh_rendering_data();
 #endif
     emit updated(month);    
-    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
+//    auto time(std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - start).count());
 
-    // PLANT COUNT BASED TIMING
-    {
-        int key(m_plant_storage.getPlantCount()/1000.f);
-        auto it(_plant_count_based_timing.find(key));
-        if(it == _plant_count_based_timing.end())
-        {
-            TimeAndCount time_and_count;
-            time_and_count.time = time;
-            time_and_count.count = 1;
-            _plant_count_based_timing.emplace(key, time_and_count);
-        }
-        else
-        {
-            it->second.time += time;
-            it->second.count++;
-        }
-    }
+//    // PLANT COUNT BASED TIMING
+//    {
+//        int key(m_plant_storage.getPlantCount()/1000.f);
+//        auto it(_plant_count_based_timing.find(key));
+//        if(it == _plant_count_based_timing.end())
+//        {
+//            TimeAndCount time_and_count;
+//            time_and_count.time = time;
+//            time_and_count.count = 1;
+//            _plant_count_based_timing.emplace(key, time_and_count);
+//        }
+//        else
+//        {
+//            it->second.time += time;
+//            it->second.count++;
+//        }
+//    }
 
 //    // PLANTS PER MONTH
 //    {
@@ -301,23 +302,28 @@ void SimulatorManager::trigger()
 //        }
 //    }
 
-    if(m_elapsed_months == 1200)
-    {
-//        std::cout << "******************SPECIE AVERAGE SIZE*************" << std::endl;
-//        for(auto it(_specie_average_size.begin()); it != _specie_average_size.end(); it++)
-//        {
-//            std::cout << "SPECIE --> " << it->first << std::endl;
-//            for(int i(0); i < it->second.size(); i++)
-//                std::cout << (i+1) << " , " << it->second.at(i) << std::endl;
+//    if(m_elapsed_months == 1200)
+//    {
+////        std::cout << "******************SPECIE AVERAGE SIZE*************" << std::endl;
+////        for(auto it(_specie_average_size.begin()); it != _specie_average_size.end(); it++)
+////        {
+////            std::cout << "SPECIE --> " << it->first << std::endl;
+////            for(int i(0); i < it->second.size(); i++)
+////                std::cout << (i+1) << " , " << it->second.at(i) << std::endl;
 
-//        }
-        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
-        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
-            std::cout << it->first << ", " << (it->second.time/(float)it->second.count) << std::endl;
-////        std::cout << "******************MONTH BASED*************" << std::endl;
-////        for(auto it(_elapsed_months_based_timing.begin()); it != _elapsed_months_based_timing.end(); it++)
-////            std::cout << it->first << ", " << _plant_count_per_month[it->first] << ", " << it->second << std::endl;
-    }
+////        }
+//        std::cout << "******************PLANT COUNT BASED*************" << std::endl;
+//        for(auto it(_plant_count_based_timing.begin()); it != _plant_count_based_timing.end(); it++)
+//            std::cout << it->first << ", " << (it->second.time/(float)it->second.count) << std::endl;
+//////        std::cout << "******************MONTH BASED*************" << std::endl;
+//////        for(auto it(_elapsed_months_based_timing.begin()); it != _elapsed_months_based_timing.end(); it++)
+//////            std::cout << it->first << ", " << _plant_count_per_month[it->first] << ", " << it->second << std::endl;
+//    }
+}
+
+void SimulatorManager::generate_rendering_data(bool generate)
+{
+    m_generate_rendering_data.store(generate);
 }
 
 #ifdef GUI_MODE

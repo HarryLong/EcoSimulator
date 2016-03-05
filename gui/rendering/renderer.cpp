@@ -161,9 +161,14 @@ void ResourceRenderer::paintEvent(QPaintEvent * event)
 
         for(int y ( 0 ); y < environment_resources.getVerticalCellCount(); y++)
         {
+            QPoint cell(x,y);
             int y_screen_space(to_screen_space(cell_height * y));
-            int resource_value(getResource(environment_resources, QPoint(x,y)));
-            QColor color(m_resource_visual_converter->toRGB(resource_value));
+            QColor color(Qt::black);
+            if(environment_resources.initialised(cell))
+            {
+                int resource_value(getResource(environment_resources, QPoint(x,y)));
+                color = QColor(m_resource_visual_converter->toRGB(resource_value));
+            }
             painter.fillRect(QRect(x_screen_space, y_screen_space, cell_width_screen_space, cell_height_screen_space), QBrush(color));
         }
     }

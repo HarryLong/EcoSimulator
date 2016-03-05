@@ -18,6 +18,7 @@ class QComboBox;
 class StartConfigDialog;
 class OverViewWidget;
 class QMovie;
+class QCheckBox;
 
 const static QString START_BTN_TEXT = "Start";
 const static QString STOP_BTN_TEXT = "Stop";
@@ -67,6 +68,7 @@ private slots:
     void display_start_configuration_dialog();
     void start_simulation();
     void generate_statistical_snapshot();
+    void active_renderer(bool);
 
 private:
     void init_layout();
@@ -83,6 +85,7 @@ private:
     StartConfigDialog m_start_config_dialog;
 
     // UI ELEMENTS
+    QCheckBox * m_enable_render_cb;
     QSlider * m_time_control_slider;
     QPushButton * m_generate_snapshot_btn;
     AnimatedPushButton * m_generate_statistical_snapshot_btn;

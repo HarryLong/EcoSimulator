@@ -41,6 +41,16 @@ void RendererManager::trigger()
     m_renderers[m_active_renderer]->render();
 }
 
+void RendererManager::hide()
+{
+    inactivate_all();
+}
+
+void RendererManager::show()
+{
+    m_renderers[m_active_renderer]->setVisible(true);
+}
+
 void RendererManager::setActiveRenderer(RendererTypes p_render_type)
 {
     m_active_renderer = p_render_type;

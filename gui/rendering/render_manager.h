@@ -33,6 +33,8 @@ public:
     virtual void trigger();
     void stop();
     void start();
+    void hide();
+    void show();
 
 public slots:
     void setActiveRenderer(int index);

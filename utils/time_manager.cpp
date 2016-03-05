@@ -22,7 +22,7 @@ TimeManager::~TimeManager()
 
 void TimeManager::start()
 {
-    if(m_unit_time != -1)
+    if(m_unit_time.load() != -1)
     {
         m_stop.store(false);
         m_time_keeper = new std::thread(&TimeManager::process_one_unit_time, this);
@@ -70,10 +70,13 @@ void TimeManager::process_one_unit_time()
 
 void TimeManager::unit_time_complete_callback()
 {
-    for(TimeManager::TimeListener * l : m_listeners)
-    {
-        l->trigger();
-    }
+    callback_listeners();
     if(!m_stop.load()) // continue to run
         start();
+}
+
+void TimeManager::callback_listeners()
+{
+    for(TimeManager::TimeListener * l : m_listeners)
+        l->trigger();
 }

@@ -8,7 +8,7 @@
 #include <functional>
 #include <QMovie>
 #include <QDebug>
-
+#include <QCheckBox>
 #include <QFile>
 
 /************************
@@ -60,7 +60,8 @@ CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
     m_render_manager(SimulatorManager::_AREA_WIDTH_HEIGHT, SimulatorManager::_AREA_WIDTH_HEIGHT,
                      std::bind(&SimulatorManager::getPlantRenderingData, &m_simulator_manager),
                      std::bind(&SimulatorManager::getEnvironmentRenderingData, &m_simulator_manager)),
-    m_generate_statistical_snapshot_btn(new AnimatedPushButton("Generate Statistical Snapshot", ":/icons/loading.gif"))
+    m_generate_statistical_snapshot_btn(new AnimatedPushButton("Generate Statistical Snapshot", ":/icons/loading.gif")),
+    m_enable_render_cb(new QCheckBox(this))
 {
     std::function<void()> callback_function(
                 std::bind(&AnimatedPushButton::stopAnimation, m_generate_statistical_snapshot_btn));
@@ -69,11 +70,33 @@ CentralWidget::CentralWidget(QWidget * parent, Qt::WindowFlags f) :
     init_widgets();
     init_layout();
     init_signals();
+
+    m_enable_render_cb->setChecked(true);
+    m_renderers_cb->setCurrentIndex(static_cast<int>(RendererManager::_DEFAULT_RENDER_TYPE));
+    active_renderer(true);
 }
 
 CentralWidget::~CentralWidget()
 {
 
+}
+
+void CentralWidget::active_renderer(bool activate)
+{
+    m_renderers_cb->setEnabled(activate);
+    m_simulator_manager.generate_rendering_data(activate);
+    if(activate)
+    {
+        m_render_manager.start();
+        m_render_manager.show();
+    }
+    else
+    {
+        m_render_manager.stop();
+        m_render_manager.hide();
+    }
+//    m_overview_widget->adjustSize();
+//    this->adjustSize();
 }
 
 void CentralWidget::init_layout()
@@ -91,45 +114,53 @@ void CentralWidget::init_layout()
 
     QVBoxLayout * info_heading_layout = new QVBoxLayout();
     {
-        // Renderers combo box
-        QHBoxLayout * heading_layout = new QHBoxLayout();
-        m_renderers_cb = new QComboBox();
-
-        QString * render_names(m_render_manager.getRendererNames());
-        for(int i(0); i < RendererManager::RendererTypes::_N_RENDERERS; i++)
-            m_renderers_cb->addItem(render_names[i]);
-
-        heading_layout->addWidget(new QLabel("Active Renderer: "));
-        heading_layout->addWidget(m_renderers_cb);
-
         // Trigger freuqncy label
-        m_trigger_frequency_lbl = new QLabel();
+        {
+            m_trigger_frequency_lbl = new QLabel();
+            info_heading_layout->addWidget(m_trigger_frequency_lbl, 0, Qt::AlignCenter);
+        }
 
         // Elapsed time label
-        m_elapsed_time_lbl = new QLabel();
-        update_elapsed_time_label(0);
+        {
+            m_elapsed_time_lbl = new QLabel();
+            update_elapsed_time_label(0);
+            info_heading_layout->addWidget(m_elapsed_time_lbl, 0, Qt::AlignCenter);
+        }
 
         // QButtons
-        m_stop_start_button = new QPushButton(START_BTN_TEXT);
-        m_pause_resume_button = new QPushButton(PAUSE_BTN_TEXT);
-        m_pause_resume_button->setEnabled(false);
+        {
+            m_stop_start_button = new QPushButton(START_BTN_TEXT);
+            m_pause_resume_button = new QPushButton(PAUSE_BTN_TEXT);
+            m_pause_resume_button->setEnabled(false);
+            info_heading_layout->addWidget(m_stop_start_button, 0, Qt::AlignCenter);
+            info_heading_layout->addWidget(m_pause_resume_button, 0, Qt::AlignCenter);
+        }
 
-        info_heading_layout->addLayout(heading_layout);
-        info_heading_layout->addWidget(m_trigger_frequency_lbl);
-        info_heading_layout->addWidget(m_elapsed_time_lbl);
-        info_heading_layout->addWidget(m_stop_start_button);
-        info_heading_layout->addWidget(m_pause_resume_button);
+        {
+            QHBoxLayout * enable_rendering_layout(new QHBoxLayout);
+
+            // Renderers combo box
+            m_renderers_cb = new QComboBox();
+            QString * render_names(m_render_manager.getRendererNames());
+            for(int i(0); i < RendererManager::RendererTypes::_N_RENDERERS; i++)
+                m_renderers_cb->addItem(render_names[i]);
+
+
+            enable_rendering_layout->addWidget(m_enable_render_cb, 0, Qt::AlignCenter);
+            enable_rendering_layout->addWidget(m_renderers_cb,0, Qt::AlignCenter);
+            info_heading_layout->addLayout(enable_rendering_layout, 0);
+        }
+
     }
 
     QGridLayout * main_layout = new QGridLayout;
     main_layout->addLayout(info_heading_layout,0,0,1,2, Qt::AlignCenter);
-
     // Add renderers
     Renderer ** renderers(m_render_manager.getRendererWidgets());
     for(int i(0); i < RendererManager::RendererTypes::_N_RENDERERS; i++)
-        main_layout->addWidget(renderers[i],1,0,9,1, Qt::AlignCenter);
+        main_layout->addWidget(renderers[i],1,0,9,2, Qt::AlignLeft);
 
-    main_layout->addWidget(m_overview_widget,1,1,9,1, Qt::AlignCenter);
+    main_layout->addWidget(m_overview_widget,1,0,9,2, Qt::AlignRight);
 
     // Buttons
     {
@@ -168,7 +199,8 @@ void CentralWidget::init_signals()
     connect(&m_simulator_manager, SIGNAL(updated(int)), this, SLOT(updateRender()));
 
     connect(m_renderers_cb, SIGNAL( currentIndexChanged(int)) , &m_render_manager, SLOT( setActiveRenderer(int) ));
-    m_renderers_cb->setCurrentIndex(static_cast<int>(RendererManager::_DEFAULT_RENDER_TYPE));
+
+    connect(m_enable_render_cb, SIGNAL(clicked(bool)), this, SLOT(active_renderer(bool)));
 
     // The overview widget to the simulator
     connect(&m_simulator_manager, SIGNAL(newPlant(QString, QColor)), m_overview_widget, SLOT(addPlant(QString, QColor)));
@@ -202,8 +234,15 @@ void CentralWidget::update_elapsed_time_label(int p_months)
 
 void CentralWidget::setTimeAcceleration(int p_acceleration)
 {
-    int unit_time(MAX_UNIT_TIME+1-p_acceleration);
-    m_trigger_frequency_lbl->setText(QString("Trigger frequency: %1 ms").arg(unit_time));
+    int unit_time (0);
+    if(p_acceleration == TIME_SLIDER_MAX)
+        m_trigger_frequency_lbl->setText(QString("Trigger frequency: MAX"));
+    else
+    {
+        unit_time = MAX_UNIT_TIME+1-p_acceleration;
+        m_trigger_frequency_lbl->setText(QString("Trigger frequency: %1 ms").arg(unit_time));
+    }
+
     m_simulator_manager.setMonthlyTriggerFrequency(unit_time);
 }
 

@@ -23,6 +23,8 @@ public:
     void start();
     void stop();
     void setUnitTime(int p_unit_time_ms);
+    static const int _FASTEST;
+
 private:
     std::atomic<int> m_unit_time;
     std::atomic<bool> m_stop;
@@ -32,6 +34,7 @@ private:
 
     void process_one_unit_time();
     void unit_time_complete_callback();
+    void callback_listeners();
 };
 
 #endif // TIME_MANAGER_H

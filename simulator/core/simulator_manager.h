@@ -72,6 +72,7 @@ public slots:
     void generateSnapshot();
     void generateStatisticalSnapshot(CallbackListener * completion_listener);
     void generateStatisticalSnapshot(); // non-asynchronous
+    void generate_rendering_data(bool);
 
 signals:
     void updated(int);
@@ -106,7 +107,7 @@ private:
     std::thread * m_snapshot_creator_thread;
     std::thread * m_statistical_snapshot_thread;
 
-
+    std::atomic<bool> m_generate_rendering_data;
     std::map<int, std::vector<float> > _specie_average_size;
     std::map<int, TimeAndCount> _plant_count_based_timing;
     std::map<int, int> _plant_count_per_month;
